@@ -33,11 +33,10 @@ function optionalText(formData: FormData, name: string) {
 
 /** Reads every checked value for one structured form group. */
 function selectedValues(formData: FormData, name: string) {
-  return formData
-    .getAll(name)
-    .map(String)
-    .map((value) => value.trim())
-    .filter(Boolean);
+  return formData.getAll(name).flatMap((value) => {
+    const selected = String(value).trim();
+    return selected ? [selected] : [];
+  });
 }
 
 /** Reads the two visible language rows without exposing storage grammar. */
@@ -60,7 +59,6 @@ export function Profile() {
 
   /** Validates one structured profile and persists it through Convex. */
   async function submit(formData: FormData) {
-    setPending(true);
     const otherSkill = optionalText(formData, "otherSkill");
     const role = optionalText(formData, "role");
     const country = optionalText(formData, "country");
@@ -92,28 +90,32 @@ export function Profile() {
       Schema.decodeUnknownEffect(ProfileInput)(candidate).pipe(Effect.option)
     );
 
-    try {
-      if (decoded._tag === "None") {
-        throw new Error("Invalid profile");
-      }
-      await saveProfile({
-        ...decoded.value,
-        desiredLocations: [...decoded.value.desiredLocations],
-        desiredRoles: [...decoded.value.desiredRoles],
-        documents: [...decoded.value.documents],
-        education: [...decoded.value.education],
-        languages: decoded.value.languages.map((item) => ({ ...item })),
-        licenses: [...decoded.value.licenses],
-        pathways: [...decoded.value.pathways],
-        skills: [...decoded.value.skills],
-        workModes: [...decoded.value.workModes],
-      });
-      toast.success(t("saved"));
-    } catch {
+    if (decoded._tag === "None") {
       toast.error(common("error"));
-    } finally {
-      setPending(false);
+      return;
     }
+    setPending(true);
+    const saved = await saveProfile({
+      ...decoded.value,
+      desiredLocations: [...decoded.value.desiredLocations],
+      desiredRoles: [...decoded.value.desiredRoles],
+      documents: [...decoded.value.documents],
+      education: [...decoded.value.education],
+      languages: decoded.value.languages.map((item) => ({ ...item })),
+      licenses: [...decoded.value.licenses],
+      pathways: [...decoded.value.pathways],
+      skills: [...decoded.value.skills],
+      workModes: [...decoded.value.workModes],
+    }).then(
+      () => true,
+      () => false
+    );
+    setPending(false);
+    if (!saved) {
+      toast.error(common("error"));
+      return;
+    }
+    toast.success(t("saved"));
   }
 
   return (

@@ -38,22 +38,33 @@ export function Cv({ current }: CvProps) {
       return;
     }
     setPending(true);
-    try {
-      const uploadUrl = await createUpload();
-      const response = await fetch(uploadUrl, {
-        body: file,
-        headers: { "Content-Type": file.type },
-        method: "POST",
-      });
-      const payload = (await response.json()) as { storageId: Id<"_storage"> };
-      await extractCv({ fileId: payload.storageId, fileName: file.name });
-      setFile(null);
-      toast.success(t("uploaded"));
-    } catch {
+    const uploaded = await createUpload()
+      .then(async (uploadUrl) => {
+        const response = await fetch(uploadUrl, {
+          body: file,
+          headers: { "Content-Type": file.type },
+          method: "POST",
+        });
+        if (!response.ok) {
+          return false;
+        }
+        const payload = (await response.json()) as {
+          storageId: Id<"_storage">;
+        };
+        await extractCv({ fileId: payload.storageId, fileName: file.name });
+        return true;
+      })
+      .then(
+        (value) => value,
+        () => false
+      );
+    setPending(false);
+    if (!uploaded) {
       toast.error(common("error"));
-    } finally {
-      setPending(false);
+      return;
     }
+    setFile(null);
+    toast.success(t("uploaded"));
   }
 
   return (

@@ -89,20 +89,22 @@ export function Search() {
     }
 
     setSubmitting(true);
-    try {
-      const started = await startSearch({
-        ...(country ? { country } : {}),
-        locale,
-        ...(pathway ? { pathway } : {}),
-        query,
-        ...(workMode ? { workMode } : {}),
-      });
-      setActiveSearchId(started.searchId);
-    } catch {
+    const started = await startSearch({
+      ...(country ? { country } : {}),
+      locale,
+      ...(pathway ? { pathway } : {}),
+      query,
+      ...(workMode ? { workMode } : {}),
+    }).then(
+      (value) => value,
+      () => null
+    );
+    setSubmitting(false);
+    if (!started) {
       toast.error(common("error"));
-    } finally {
-      setSubmitting(false);
+      return;
     }
+    setActiveSearchId(started.searchId);
   }
 
   return (

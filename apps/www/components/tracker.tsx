@@ -88,17 +88,18 @@ export function Tracker() {
   /** Provisions a private inbox when needed and sends the latest digest. */
   async function emailDigest() {
     setMailPending(true);
-    try {
-      if (!inbox) {
-        await provision({});
-      }
-      await sendDigest({});
-      toast.success(t("mailSent"));
-    } catch {
+    const sent = await (inbox ? Promise.resolve() : provision({}))
+      .then(() => sendDigest({}))
+      .then(
+        () => true,
+        () => false
+      );
+    setMailPending(false);
+    if (!sent) {
       toast.error(common("error"));
-    } finally {
-      setMailPending(false);
+      return;
     }
+    toast.success(t("mailSent"));
   }
 
   return (
@@ -222,25 +223,28 @@ function ApplicationSheet({ record }: { record: ApplicationRecord }) {
 
   /** Saves one domain-valid status transition and its private notes. */
   async function update(formData: FormData) {
-    setPending(true);
-    try {
-      const status = Option.getOrUndefined(
-        Schema.decodeUnknownOption(ApplicationStatus)(formData.get("status"))
-      );
-      if (!status) {
-        throw new Error("Invalid application status");
-      }
-      await transition({
-        applicationId: record.application._id,
-        notes: String(formData.get("notes") ?? ""),
-        status,
-      });
-      toast.success(t("updated"));
-    } catch {
+    const status = Option.getOrUndefined(
+      Schema.decodeUnknownOption(ApplicationStatus)(formData.get("status"))
+    );
+    if (!status) {
       toast.error(common("error"));
-    } finally {
-      setPending(false);
+      return;
     }
+    setPending(true);
+    const updated = await transition({
+      applicationId: record.application._id,
+      notes: String(formData.get("notes") ?? ""),
+      status,
+    }).then(
+      () => true,
+      () => false
+    );
+    setPending(false);
+    if (!updated) {
+      toast.error(common("error"));
+      return;
+    }
+    toast.success(t("updated"));
   }
 
   return (
@@ -307,6 +311,7 @@ function ApplicationSheet({ record }: { record: ApplicationRecord }) {
               nativeButton={false}
               render={
                 <a
+                  aria-label={search("apply")}
                   href={record.opportunity.opportunity.directApplyUrl}
                   rel="noreferrer"
                   target="_blank"

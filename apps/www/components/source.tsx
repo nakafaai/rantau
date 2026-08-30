@@ -7,7 +7,7 @@ import {
 } from "@repo/design-system/components/ui/hover-card";
 import { cn } from "@repo/design-system/lib/utils";
 import Image from "next/image";
-import { createContext, use, useMemo, useState } from "react";
+import { createContext, use, useState } from "react";
 
 type SourceValue = Readonly<{ domain: string; href: string }>;
 
@@ -40,10 +40,9 @@ type SourceProps = Readonly<{
 /** Provides one source URL to its compact and expanded views. */
 export function Source({ children, href }: SourceProps) {
   const domain = sourceDomain(href);
-  const value = useMemo(() => ({ domain, href }), [domain, href]);
 
   return (
-    <SourceContext.Provider value={value}>
+    <SourceContext.Provider value={{ domain, href }}>
       <HoverCard>{children}</HoverCard>
     </SourceContext.Provider>
   );
