@@ -70,8 +70,8 @@ export function Filters({ defaults, disabled }: FiltersProps) {
           {t("addFilter")}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-48">
-          <DropdownMenuLabel>{t("filterBy")}</DropdownMenuLabel>
           <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("filterBy")}</DropdownMenuLabel>
             <CountrySub onSelect={setCountry} />
             <PathwaySub onSelect={setPathway} />
             <WorkModeSub onSelect={setWorkMode} />
