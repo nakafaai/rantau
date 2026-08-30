@@ -17,3 +17,6 @@ allowBuilds:
   msgpackr-extract: true
   protobufjs: true
   sharp: true
+
+patchedDependencies:
+  '@agentmail/convex@0.1.0': patches/@agentmail__convex@0.1.0.patch
