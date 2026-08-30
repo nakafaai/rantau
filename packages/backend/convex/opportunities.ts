@@ -2,7 +2,7 @@ import { Agent } from "@convex-dev/agent";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { FirecrawlClient } from "@firecrawl/firecrawl-convex";
 import { components, internal } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { action, query } from "@repo/backend/convex/_generated/server";
 import { requireUserId } from "@repo/backend/convex/lib/guard";
 import { readinessStepValidator } from "@repo/backend/convex/model";
@@ -43,6 +43,34 @@ const extractionSchema = Schema.toStandardSchemaV1(ExtractionResult);
 type SearchOutcome =
   | { count: number; success: true }
   | { error: unknown; success: false };
+
+/** Projects one opportunity against the current candidate profile. */
+function readinessProjection(
+  profile: Doc<"profiles"> | null,
+  opportunity: Doc<"opportunities">
+) {
+  const readiness = [
+    ...buildReadinessPlan(
+      profile
+        ? {
+            documents: profile.documents,
+            education: profile.education,
+            experienceYears: profile.experienceYears,
+            languages: profile.languages,
+            licenses: profile.licenses,
+            skills: profile.skills,
+          }
+        : null,
+      opportunity.opportunity.requirements
+    ),
+  ];
+
+  return {
+    opportunity,
+    readiness,
+    readinessPercent: readinessPercent(readiness),
+  };
+}
 
 /** Copies Effect-decoded evidence into Convex-owned arrays and objects. */
 function storedOpportunity(opportunity: Opportunity) {
@@ -243,7 +271,13 @@ export const search = action({
 
 export const list = query({
   args: { searchId: v.id("searches") },
-  returns: v.array(schema.doc("opportunities")),
+  returns: v.array(
+    v.object({
+      opportunity: schema.doc("opportunities"),
+      readiness: v.array(readinessStepValidator),
+      readinessPercent: v.number(),
+    })
+  ),
   handler: async (ctx, args) => {
     const userId = await requireUserId(ctx);
     const searchRecord = await ctx.db.get("searches", args.searchId);
@@ -251,10 +285,20 @@ export const list = query({
       throw new ConvexError({ code: "NOT_FOUND" });
     }
 
-    return ctx.db
-      .query("opportunities")
-      .withIndex("by_search", (index) => index.eq("searchId", args.searchId))
-      .take(20);
+    const [profile, opportunities] = await Promise.all([
+      ctx.db
+        .query("profiles")
+        .withIndex("by_user", (index) => index.eq("userId", userId))
+        .unique(),
+      ctx.db
+        .query("opportunities")
+        .withIndex("by_search", (index) => index.eq("searchId", args.searchId))
+        .take(20),
+    ]);
+
+    return opportunities.map((opportunity) =>
+      readinessProjection(profile, opportunity)
+    );
   },
 });
 
@@ -276,26 +320,6 @@ export const detail = query({
       .query("profiles")
       .withIndex("by_user", (index) => index.eq("userId", userId))
       .unique();
-    const readiness = [
-      ...buildReadinessPlan(
-        profile
-          ? {
-              documents: profile.documents,
-              education: profile.education,
-              experienceYears: profile.experienceYears,
-              languages: profile.languages,
-              licenses: profile.licenses,
-              skills: profile.skills,
-            }
-          : null,
-        opportunity.opportunity.requirements
-      ),
-    ];
-
-    return {
-      opportunity,
-      readiness,
-      readinessPercent: readinessPercent(readiness),
-    };
+    return readinessProjection(profile, opportunity);
   },
 });

@@ -1,7 +1,6 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -12,7 +11,8 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Progress } from "@repo/design-system/components/ui/progress";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import {
   ArrowUpRight,
   Bookmark,
@@ -25,7 +25,11 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
-type OpportunityProps = Readonly<{ record: Doc<"opportunities"> }>;
+type OpportunityRecord = FunctionReturnType<
+  typeof api.opportunities.list
+>[number];
+
+type OpportunityProps = Readonly<{ record: OpportunityRecord }>;
 
 /** Presents one sourced opportunity with readiness and direct apply actions. */
 export function Opportunity({ record }: OpportunityProps) {
@@ -33,15 +37,13 @@ export function Opportunity({ record }: OpportunityProps) {
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(false);
   const save = useMutation(api.applications.save);
-  const detail = useQuery(api.opportunities.detail, {
-    opportunityId: record._id,
-  });
-  const { opportunity } = record;
+  const { opportunity: stored, readiness, readinessPercent } = record;
+  const { opportunity } = stored;
 
   /** Saves this source-backed opportunity to the application tracker. */
   async function saveOpportunity() {
     try {
-      await save({ opportunityId: record._id });
+      await save({ opportunityId: stored._id });
       setSaved(true);
       toast.success(t("saved"));
     } catch {
@@ -75,25 +77,23 @@ export function Opportunity({ record }: OpportunityProps) {
       </CardHeader>
       <CardContent className="space-y-5 px-5 sm:px-6">
         <p className="text-sm leading-relaxed">{opportunity.summary}</p>
-        {detail ? (
-          <div className="space-y-2 rounded-lg bg-muted p-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">
-                {detail.readinessPercent}% {t("readiness")}
-              </span>
-              <span className="text-muted-foreground">
-                {detail.readiness.length} {t("requirements").toLowerCase()}
-              </span>
-            </div>
-            <Progress value={detail.readinessPercent} />
+        <div className="space-y-2 rounded-lg bg-muted p-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium">
+              {readinessPercent}% {t("readiness")}
+            </span>
+            <span className="text-muted-foreground">
+              {readiness.length} {t("requirements").toLowerCase()}
+            </span>
           </div>
-        ) : null}
+          <Progress value={readinessPercent} />
+        </div>
         {expanded ? (
           <div className="grid gap-6 border-t pt-5 md:grid-cols-2">
             <div className="space-y-3">
               <h3 className="font-semibold text-sm">{t("requirements")}</h3>
               <ul className="space-y-2 text-sm">
-                {detail?.readiness.map((step) => (
+                {readiness.map((step) => (
                   <li
                     className="flex gap-2"
                     key={`${step.category}-${step.description}`}
@@ -105,7 +105,7 @@ export function Opportunity({ record }: OpportunityProps) {
                     )}
                     <span>{step.description}</span>
                   </li>
-                )) ?? null}
+                ))}
               </ul>
             </div>
             <div className="space-y-3">

@@ -91,7 +91,7 @@ export function Search() {
           </p>
           {opportunities.length ? (
             opportunities.map((record) => (
-              <Opportunity key={record._id} record={record} />
+              <Opportunity key={record.opportunity._id} record={record} />
             ))
           ) : (
             <Card>
