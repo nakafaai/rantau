@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { String as EffectString, pipe, Schema } from "effect";
 
 export const HttpUrl = Schema.String.check(
   Schema.isPattern(/^https?:\/\/[^\s]+$/iu)
@@ -83,3 +83,19 @@ export type OpportunityRequirement = Schema.Schema.Type<
   typeof OpportunityRequirement
 >;
 export type SupportResource = Schema.Schema.Type<typeof SupportResource>;
+
+/** Creates a stable identity for one role across mirrored source URLs. */
+export function opportunityFingerprint(
+  opportunity: Pick<Opportunity, "company" | "location" | "title">
+) {
+  return [opportunity.company, opportunity.title, opportunity.location]
+    .map((value) =>
+      pipe(
+        value,
+        EffectString.trim,
+        EffectString.toLowerCase,
+        EffectString.replace(/\s+/gu, " ")
+      )
+    )
+    .join("|");
+}

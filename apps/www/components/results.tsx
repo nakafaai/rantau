@@ -1,21 +1,6 @@
 "use client";
 
-import {
-  ArrowLeft01Icon,
-  ArrowRight01Icon,
-  Bookmark01Icon,
-  Loading03Icon,
-} from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import {
   Table,
@@ -38,10 +23,12 @@ import {
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { resultColumnClass, useResultColumns } from "@/components/columns";
+import { useResultColumns } from "@/components/columns";
 import { OpportunitySheet } from "@/components/opportunity";
+import { ResultsFooter } from "@/components/results-footer";
 import { useSaveApplication, useSaveApplications } from "@/hooks/applications";
 import type { OpportunityRecord } from "@/lib/opportunity";
+import { resultColumnClass } from "@/lib/result-column";
 
 const LOADING_ROW_COUNT = 6;
 const LOADING_ROW_KEYS = [
@@ -173,8 +160,8 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
       className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border"
     >
       <Table
-        className="table-fixed"
-        containerClassName="min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
+        className="min-w-full table-auto"
+        containerClassName="min-h-0 flex-1 overflow-auto overscroll-contain [scrollbar-gutter:stable]"
       >
         <TableHeader className="sticky top-0 z-10 bg-background">
           {table.getHeaderGroups().map((headerGroup) => (
@@ -229,85 +216,24 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
         </TableBody>
       </Table>
 
-      <footer className="flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-t bg-muted/20 px-3 py-2 text-muted-foreground text-sm">
-        <span className="whitespace-nowrap">
-          {t("resultRange", {
-            from: pageStart,
-            to: pageEnd,
-            total: records.length,
-          })}
-        </span>
-        <span className="grid size-4 place-items-center" role="status">
-          {running || loading ? (
-            <HugeIcons className="size-4 animate-spin" icon={Loading03Icon} />
-          ) : null}
-          <span className="sr-only">
-            {running || loading ? t("working") : ""}
-          </span>
-        </span>
-        {failed && rows.length ? (
-          <span
-            className="min-w-0 flex-1 truncate text-destructive"
-            role="alert"
-          >
-            {t("failed")}
-          </span>
-        ) : null}
-        {selected.length ? (
-          <Button onClick={saveSelected} size="sm" variant="outline">
-            <HugeIcons className="size-4" icon={Bookmark01Icon} />
-            {t("saveSelected", { count: selected.length })}
-          </Button>
-        ) : null}
-        <div className="ml-auto flex items-center gap-1.5">
-          <span className="hidden whitespace-nowrap lg:inline">
-            {t("rowsPerPage")}
-          </span>
-          <Select
-            onValueChange={(value) => table.setPageSize(Number(value))}
-            value={String(pagination.pageSize)}
-          >
-            <SelectTrigger
-              aria-label={t("rowsPerPage")}
-              className="w-16"
-              size="sm"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end">
-              {[10, 25, 50].map((size) => (
-                <SelectItem key={size} value={String(size)}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="hidden whitespace-nowrap sm:inline">
-            {t("page", {
-              current: pagination.pageIndex + 1,
-              total: Math.max(table.getPageCount(), 1),
-            })}
-          </span>
-          <Button
-            aria-label={t("previous")}
-            disabled={!table.getCanPreviousPage()}
-            onClick={() => table.previousPage()}
-            size="icon-sm"
-            variant="outline"
-          >
-            <HugeIcons className="size-4" icon={ArrowLeft01Icon} />
-          </Button>
-          <Button
-            aria-label={t("next")}
-            disabled={!table.getCanNextPage()}
-            onClick={() => table.nextPage()}
-            size="icon-sm"
-            variant="outline"
-          >
-            <HugeIcons className="size-4" icon={ArrowRight01Icon} />
-          </Button>
-        </div>
-      </footer>
+      <ResultsFooter
+        canNext={table.getCanNextPage()}
+        canPrevious={table.getCanPreviousPage()}
+        currentPage={pagination.pageIndex + 1}
+        failed={failed}
+        from={pageStart}
+        hasRows={rows.length > 0}
+        onNext={() => table.nextPage()}
+        onPageSizeChange={(pageSize) => table.setPageSize(pageSize)}
+        onPrevious={() => table.previousPage()}
+        onSaveSelected={saveSelected}
+        pageCount={Math.max(table.getPageCount(), 1)}
+        pageSize={pagination.pageSize}
+        selectedCount={selected.length}
+        to={pageEnd}
+        total={records.length}
+        working={running || loading}
+      />
 
       <OpportunitySheet
         onOpenChange={(open) => {

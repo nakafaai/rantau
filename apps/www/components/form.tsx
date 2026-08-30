@@ -59,8 +59,8 @@ function SettingsFooter({
   label,
 }: Readonly<{ disabled: boolean; helper: string; label: string }>) {
   return (
-    <CardFooter className="justify-between gap-4">
-      <p className="text-muted-foreground text-xs">{helper}</p>
+    <CardFooter className="flex-wrap justify-between gap-4">
+      <p className="text-muted-foreground text-sm">{helper}</p>
       <Button disabled={disabled} size="sm" type="submit">
         <HugeIcons className="size-4" icon={SaveIcon} />
         {label}

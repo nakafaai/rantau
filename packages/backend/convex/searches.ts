@@ -12,9 +12,10 @@ import {
 } from "@repo/backend/convex/lib/searchwork";
 import { opportunityValidator } from "@repo/backend/convex/model";
 import schema from "@repo/backend/convex/schema";
+import { SEARCH_RESULT_LIMIT } from "@repo/domain/discoveryplan";
+import { opportunityFingerprint } from "@repo/domain/opportunity";
 import { ConvexError, v } from "convex/values";
 
-const MAX_SEARCH_RESULTS = 100;
 const laneContextValidator = v.object({
   laneId: v.id("searchLanes"),
   searchId: v.id("searches"),
@@ -66,20 +67,30 @@ export const append = internalMutation({
       throw new ConvexError({ code: "SEARCH_SESSION_MISMATCH" });
     }
     const resultCount = search.resultCount ?? 0;
-    if (resultCount >= MAX_SEARCH_RESULTS) {
+    if (resultCount >= SEARCH_RESULT_LIMIT) {
       return false;
     }
 
-    const sameUrl = await ctx.db
-      .query("opportunities")
-      .withIndex("by_search_and_url", (index) =>
-        index
-          .eq("searchId", args.searchId)
-          .eq("opportunity.directApplyUrl", args.opportunity.directApplyUrl)
-      )
-      .take(MAX_SEARCH_RESULTS);
+    const fingerprint = opportunityFingerprint(args.opportunity);
+    const [sameUrl, sameFingerprint] = await Promise.all([
+      ctx.db
+        .query("opportunities")
+        .withIndex("by_search_and_url", (index) =>
+          index
+            .eq("searchId", args.searchId)
+            .eq("opportunity.directApplyUrl", args.opportunity.directApplyUrl)
+        )
+        .take(SEARCH_RESULT_LIMIT),
+      ctx.db
+        .query("opportunities")
+        .withIndex("by_search_and_fingerprint", (index) =>
+          index.eq("searchId", args.searchId).eq("fingerprint", fingerprint)
+        )
+        .first(),
+    ]);
     const title = args.opportunity.title.toLocaleLowerCase();
     if (
+      sameFingerprint ||
       sameUrl.some(
         (record) => record.opportunity.title.toLocaleLowerCase() === title
       )
@@ -88,6 +99,7 @@ export const append = internalMutation({
     }
 
     await ctx.db.insert("opportunities", {
+      fingerprint,
       opportunity: args.opportunity,
       searchId: args.searchId,
       userId: args.userId,

@@ -9,37 +9,16 @@ import {
   decodeDiscoverySources,
   ExtractionResult,
 } from "@repo/domain/discovery";
+import type { DiscoveryLane } from "@repo/domain/discoveryplan";
 import type { Opportunity } from "@repo/domain/opportunity";
 import { SearchExecutionError, type SearchIntent } from "@repo/domain/search";
 import { gateway, jsonSchema } from "ai";
-import { DateTime, Effect, Schema } from "effect";
+import { DateTime, Effect, Array as EffectArray, Schema } from "effect";
 
 export const DISCOVERY_MODEL = "google/gemini-3.7-flash";
 
-const SOURCE_LIMIT = 100;
 const SOURCE_BATCH = 10;
-const GLOBAL_MARKETS = [
-  "Australia",
-  "Brazil",
-  "Canada",
-  "France",
-  "Germany",
-  "India",
-  "Indonesia",
-  "Japan",
-  "Mexico",
-  "Netherlands",
-  "New Zealand",
-  "Nigeria",
-  "Poland",
-  "Singapore",
-  "South Africa",
-  "South Korea",
-  "Spain",
-  "United Arab Emirates",
-  "United Kingdom",
-  "United States",
-] as const;
+const FIRST_SOURCE_BATCH = 5;
 
 const firecrawl = new FirecrawlClient(components.firecrawl);
 const analyst = new Agent(components.agent, {
@@ -59,33 +38,12 @@ export type DiscoveryRun = Readonly<{
   threadId: string;
 }>;
 
-export type DiscoveryLane = Readonly<{
-  limit: number;
-  market: string;
-}>;
-
 type OpportunityWriter = (opportunity: Opportunity) => Promise<boolean>;
-
-/** Resolves the bounded regional lanes for one validated search intent. */
-export function discoveryLanes(intent: SearchIntent): readonly DiscoveryLane[] {
-  const markets = intent.country ? [intent.country] : [...GLOBAL_MARKETS];
-  const limit = intent.country
-    ? SOURCE_LIMIT
-    : Math.ceil(SOURCE_LIMIT / markets.length);
-  return markets.map((market) => ({ limit, market }));
-}
-
-/** Builds a first-party web query for one regional search lane. */
-function webQuery(intent: SearchIntent, market: string) {
-  const filters = [market, intent.pathway, intent.workMode]
-    .filter(Boolean)
-    .join(" ");
-  return `${intent.query} ${filters} (apply OR careers OR ausbildung OR apprenticeship OR internship) -site:linkedin.com -site:indeed.com -site:glassdoor.com`;
-}
 
 /** Builds an evidence-only prompt for one bounded source batch. */
 function analysisPrompt(
   intent: SearchIntent,
+  market: string,
   sources: readonly DiscoverySource[]
 ) {
   const evidence = sources
@@ -96,25 +54,21 @@ function analysisPrompt(
     .join("\n\n");
   const language = intent.locale === "id" ? "Bahasa Indonesia" : "English";
 
-  return `User search: ${intent.query}\nCountry: ${intent.country ?? "Worldwide"}\nPathway: ${intent.pathway ?? "Any"}\nWork mode: ${intent.workMode ?? "Any"}\nOutput language: ${language}\n\nReturn every current, distinct, direct opportunity supported by these sources, up to ${SOURCE_BATCH}. Include city, country, and 2-letter ISO countryCode when supported. sourceIndex must identify the exact supplied source. Application steps must be the shortest truthful route. Exclude stale, unclear, duplicate, aggregator-only, or non-application pages.\n\n${evidence}`;
+  return `User search: ${intent.query}\nSearch market: ${market}\nCountry filter: ${intent.country ?? "Worldwide"}\nPathway: ${intent.pathway ?? "Any"}\nWork mode: ${intent.workMode ?? "Any"}\nOutput language: ${language}\n\nReturn every current, distinct opportunity supported by these sources, up to ${SOURCE_BATCH}. A valid opportunity has a specific role or program and a usable application route. Prefer employer, government, school, or program pages, but include a trustworthy marketplace listing when it represents a real current opening. Include city, country, and 2-letter ISO countryCode when supported. sourceIndex must identify the exact supplied source. Application steps must be the shortest truthful route. Exclude stale, unclear, duplicate, course-advertising, article, and search-result-list pages.\n\n${evidence}`;
 }
 
 /** Splits source evidence into bounded Agent context batches. */
 function batches(sources: readonly DiscoverySource[]) {
-  return Array.from(
-    { length: Math.ceil(sources.length / SOURCE_BATCH) },
-    (_, index) =>
-      sources.slice(index * SOURCE_BATCH, (index + 1) * SOURCE_BATCH)
-  );
+  if (sources.length <= SOURCE_BATCH) {
+    return [sources];
+  }
+  const first = sources.slice(0, FIRST_SOURCE_BATCH);
+  const remaining = sources.slice(FIRST_SOURCE_BATCH);
+  return [first, ...EffectArray.chunksOf(remaining, SOURCE_BATCH)];
 }
 
 /** Searches one market and decodes only readable source evidence. */
-function searchMarket(
-  ctx: ActionCtx,
-  intent: SearchIntent,
-  market: string,
-  limit: number
-) {
+function searchMarket(ctx: ActionCtx, lane: DiscoveryLane) {
   return Effect.tryPromise({
     catch: () =>
       new SearchExecutionError({
@@ -122,10 +76,10 @@ function searchMarket(
         stage: "search",
       }),
     try: () =>
-      firecrawl.search(ctx, webQuery(intent, market), {
+      firecrawl.search(ctx, lane.sourceQuery, {
         excludeDomains: ["linkedin.com", "indeed.com", "glassdoor.com"],
-        limit,
-        location: market,
+        limit: lane.limit,
+        location: lane.market,
         scrapeOptions: {
           formats: ["markdown"],
           maxAge: 3_600_000,
@@ -140,6 +94,7 @@ function searchMarket(
 function analyzeBatch(
   ctx: ActionCtx,
   intent: SearchIntent,
+  market: string,
   sources: readonly DiscoverySource[],
   userId: Id<"users">,
   retrievedAt: string
@@ -161,7 +116,7 @@ function analyzeBatch(
         }),
       try: () =>
         thread.thread.generateObject({
-          prompt: analysisPrompt(intent, sources),
+          prompt: analysisPrompt(intent, market, sources),
           providerOptions: {
             gateway: {
               tags: ["feature:opportunity-search"],
@@ -225,7 +180,7 @@ export const discoverLane = Effect.fn("opportunities.discoverLane")(function* (
   writeOpportunity: OpportunityWriter
 ) {
   const now = DateTime.formatIso(yield* DateTime.now);
-  const sources = yield* searchMarket(ctx, intent, lane.market, lane.limit);
+  const sources = yield* searchMarket(ctx, lane);
   if (sources.length === 0) {
     return yield* Effect.fail(
       new SearchExecutionError({
@@ -234,13 +189,20 @@ export const discoverLane = Effect.fn("opportunities.discoverLane")(function* (
       })
     );
   }
-  const analyzed = yield* Effect.forEach(
+  const analyzedAndPersisted = yield* Effect.forEach(
     batches(sources),
     (sourceBatch) =>
-      analyzeBatch(ctx, intent, sourceBatch, userId, now).pipe(Effect.result),
-    { concurrency: 3 }
+      analyzeBatch(ctx, intent, lane.market, sourceBatch, userId, now).pipe(
+        Effect.flatMap((analysis) =>
+          persistOpportunities(analysis.opportunities, writeOpportunity).pipe(
+            Effect.map((resultCount) => ({ ...analysis, resultCount }))
+          )
+        ),
+        Effect.result
+      ),
+    { concurrency: 1 }
   );
-  const completed = analyzed.flatMap((result) =>
+  const completed = analyzedAndPersisted.flatMap((result) =>
     result._tag === "Success" ? [result.success] : []
   );
   if (completed.length === 0) {
@@ -251,11 +213,6 @@ export const discoverLane = Effect.fn("opportunities.discoverLane")(function* (
       })
     );
   }
-  const resultCount = yield* persistOpportunities(
-    completed.flatMap((result) => result.opportunities),
-    writeOpportunity
-  );
-
   return {
     inputTokens: completed.reduce(
       (total, result) => total + result.inputTokens,
@@ -265,7 +222,10 @@ export const discoverLane = Effect.fn("opportunities.discoverLane")(function* (
       (total, result) => total + result.outputTokens,
       0
     ),
-    resultCount,
+    resultCount: completed.reduce(
+      (total, result) => total + result.resultCount,
+      0
+    ),
     threadId: completed.map((result) => result.threadId).join(","),
   } satisfies DiscoveryRun;
 });

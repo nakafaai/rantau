@@ -21,11 +21,13 @@ export default defineSchema({
     .index("by_user_updatedAt", ["userId", "updatedAt"])
     .index("by_user_opportunity", ["userId", "opportunityId"]),
   opportunities: defineTable({
+    fingerprint: v.optional(v.string()),
     opportunity: opportunityValidator,
     searchId: v.id("searches"),
     userId: v.id("users"),
   })
     .index("by_search", ["searchId"])
+    .index("by_search_and_fingerprint", ["searchId", "fingerprint"])
     .index("by_search_and_url", ["searchId", "opportunity.directApplyUrl"]),
   profiles: defineTable({
     ...profileInputValidator.fields,
@@ -66,6 +68,7 @@ export default defineSchema({
       v.literal("failed")
     ),
     threadId: v.optional(v.string()),
+    targetCount: v.optional(v.number()),
     userId: v.id("users"),
     workMode: v.optional(
       v.union(v.literal("onsite"), v.literal("hybrid"), v.literal("remote"))
@@ -79,6 +82,7 @@ export default defineSchema({
     outputTokens: v.optional(v.number()),
     resultCount: v.optional(v.number()),
     searchId: v.id("searches"),
+    sourceQuery: v.optional(v.string()),
     status: v.union(
       v.literal("queued"),
       v.literal("running"),
