@@ -4,6 +4,10 @@ export const HttpUrl = Schema.String.check(
   Schema.isPattern(/^https?:\/\/[^\s]+$/iu)
 );
 
+export const SupportUrl = Schema.String.check(
+  Schema.isPattern(/^(?:https?:\/\/[^\s]+|mailto:[^\s@]+@[^\s@]+\.[^\s@]+)$/iu)
+);
+
 export const OpportunityPathway = Schema.Literals([
   "job",
   "ausbildung",
@@ -46,7 +50,7 @@ export const OpportunityRequirement = Schema.Struct({
 export const SupportResource = Schema.Struct({
   description: Schema.String,
   name: Schema.String,
-  url: Schema.NullOr(HttpUrl),
+  url: Schema.NullOr(SupportUrl),
 });
 
 export const Opportunity = Schema.Struct({

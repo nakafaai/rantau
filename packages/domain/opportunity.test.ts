@@ -59,4 +59,37 @@ describe("Opportunity", () => {
       })
     ).toThrow();
   });
+
+  it("accepts a validated email contact for support", () => {
+    const opportunity = Schema.decodeUnknownSync(Opportunity)({
+      applicationSteps: ["Open the employer application"],
+      company: "Example Health",
+      deadline: null,
+      directApplyUrl: "https://example.com/jobs/nurse",
+      employmentType: "Full time",
+      location: "Berlin",
+      pathway: "ausbildung",
+      publishedAt: null,
+      requirements: [],
+      salary: null,
+      source: {
+        kind: "employer",
+        name: "Example Health careers",
+        retrievedAt: "2026-08-30T00:00:00.000Z",
+        url: "https://example.com/jobs/nurse",
+      },
+      summary: "Nursing training with direct employer support.",
+      support: [
+        {
+          description: "Contact the training team",
+          name: "Training team",
+          url: "mailto:training@example.com",
+        },
+      ],
+      title: "Nursing trainee",
+      workMode: "onsite",
+    });
+
+    expect(opportunity.support[0]?.url).toBe("mailto:training@example.com");
+  });
 });
