@@ -22,16 +22,16 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { readinessCounts } from "@repo/domain/readiness";
 import { useMutation } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CountryFlag } from "@/components/country-flag";
 import { Source, SourceContent, SourceTrigger } from "@/components/source";
-
-export type OpportunityRecord = FunctionReturnType<
-  typeof api.opportunities.list
->[number];
+import {
+  locationLabel,
+  mapsUrl,
+  type OpportunityRecord,
+} from "@/lib/opportunity";
 
 const pathwayColors = {
   apprenticeship:
@@ -44,17 +44,6 @@ const pathwayColors = {
   vocational:
     "border-rose-500/40 bg-rose-500/10 text-rose-800 dark:text-rose-300",
 } as const;
-
-/** Builds the clearest supported city and country label. */
-export function locationLabel(record: OpportunityRecord) {
-  const { city, country, location } = record.opportunity.opportunity;
-  return [city, country].filter(Boolean).join(", ") || location;
-}
-
-/** Builds a deterministic Google Maps search link for a source-backed place. */
-export function mapsUrl(record: OpportunityRecord) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationLabel(record))}`;
-}
 
 /** Renders a color-distinct pathway badge for rapid scanning. */
 export function PathwayBadge({ record }: { record: OpportunityRecord }) {
@@ -240,6 +229,7 @@ export function OpportunitySheet({
             nativeButton={false}
             render={
               <a
+                aria-label={t("apply")}
                 href={opportunity.directApplyUrl}
                 rel="noreferrer"
                 target="_blank"

@@ -35,18 +35,18 @@ import {
 } from "@tanstack/react-table";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { resultColumnClass, useResultColumns } from "@/components/columns";
-import {
-  type OpportunityRecord,
-  OpportunitySheet,
-} from "@/components/opportunity";
+import { OpportunitySheet } from "@/components/opportunity";
+import type { OpportunityRecord } from "@/lib/opportunity";
 
 type ResultsProps = Readonly<{ records: readonly OpportunityRecord[] }>;
 
 /** Renders a full TanStack data table with selection and row actions. */
 export function Results({ records }: ResultsProps) {
+  "use no memo";
+
   const t = useTranslations("search");
   const common = useTranslations("common");
   const save = useMutation(api.applications.save);
@@ -60,6 +60,7 @@ export function Results({ records }: ResultsProps) {
   const [sorting, setSorting] = useState<SortingState>([
     { desc: true, id: "recommendation" },
   ]);
+  const data = useMemo(() => [...records], [records]);
   const saveOne = useCallback(
     /** Saves one row from its action menu. */
     async (record: OpportunityRecord) => {
@@ -73,9 +74,11 @@ export function Results({ records }: ResultsProps) {
     [common, save, t]
   );
   const columns = useResultColumns({ onDetails: setActive, onSave: saveOne });
+  // TanStack Table intentionally manages mutable state outside React Compiler.
+  // react-doctor-disable-next-line react-hooks-js/incompatible-library
   const table = useReactTable({
     columns,
-    data: [...records],
+    data,
     enableRowSelection: true,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

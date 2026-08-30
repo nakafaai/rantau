@@ -20,13 +20,13 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { CountryFlag } from "@/components/country-flag";
+import { PathwayBadge } from "@/components/opportunity";
+import { Source, SourceContent, SourceTrigger } from "@/components/source";
 import {
   locationLabel,
   mapsUrl,
   type OpportunityRecord,
-  PathwayBadge,
-} from "@/components/opportunity";
-import { Source, SourceContent, SourceTrigger } from "@/components/source";
+} from "@/lib/opportunity";
 
 type ResultActions = Readonly<{
   onDetails: (record: OpportunityRecord) => void;
@@ -85,8 +85,12 @@ function SortButton({
 
 /** Builds the search-specific TanStack column contract. */
 export function useResultColumns({ onDetails, onSave }: ResultActions) {
+  "use no memo";
+
   const t = useTranslations("search");
 
+  // TanStack Table requires stable column identity across controlled state updates.
+  // react-doctor-disable-next-line react-doctor/react-compiler-no-manual-memoization
   return useMemo<ColumnDef<OpportunityRecord>[]>(
     () => [
       {
@@ -252,6 +256,7 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
               <DropdownMenuItem
                 render={
                   <a
+                    aria-label={t("apply")}
                     href={row.original.opportunity.opportunity.directApplyUrl}
                     rel="noreferrer"
                     target="_blank"
