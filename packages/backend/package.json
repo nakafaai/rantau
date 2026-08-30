@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@agentmail/convex": "0.1.0",
-    "@ai-sdk/gateway": "4.0.68",
+    "@ai-sdk/gateway": "4.0.69",
     "@convex-dev/agent": "0.7.1",
     "@convex-dev/auth": "2.0.0-alpha.1",
     "@convex-dev/rate-limiter": "0.3.2",
@@ -27,7 +27,7 @@
     "@convex-dev/workpool": "0.4.10",
     "@firecrawl/firecrawl-convex": "0.1.1",
     "@repo/domain": "workspace:*",
-    "ai": "7.0.84",
+    "ai": "7.0.85",
     "convex": "1.45.0",
     "effect": "catalog:",
     "lucia": "3.2.2",
