@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth v2 password provider with isolated JWT and JWKS keys
 - **AI models:** `openai/gpt-5.4-mini` through Vercel AI Gateway with `google/gemini-3.5-flash-lite` fallback
 - **Started:** 2026-08-30T04:20:15Z
-- **Last updated:** 2026-08-30T13:52:30Z
+- **Last updated:** 2026-08-30T14:07:30Z
 
 ## Log
 
@@ -68,8 +68,8 @@ Merged PR #24 after exact head `76350f00737e8a10903bf0cedf02f0e23ce15247` passed
 
 Production probes return 200 for the locale root, profile, and applications routes, redirect the legacy `index.html` URL to the clean locale URL with 308, and return 404 for an unknown route. Local Chrome geometry checks at 1920 px and 1280 px confirmed that page and table scroll widths equal their client widths and rows remain 56 px tall.
 
-### 2026-08-30 - working tree
+### 2026-08-30 - 297e42e
 
-Traced intermittent password login failures to the browser client using the non-regional Convex origin for a Europe deployment. The browser now receives the exact regional deployment URL in local and Static Hosting builds, without reconstructing hostnames at runtime. Generic auth failures were also replaced with tested, concise credential, account, or connection feedback. Fresh account creation, workspace entry, and authenticated refresh now pass against the development deployment (`apps/www/lib/auth.ts`, `apps/www/components/auth.tsx`, `packages/backend/package.json`).
+Traced intermittent password login failures to deployment-specific browser state. Development requires its exact regional Convex origin, while Static Hosting supplies the canonical production origin. Convex Auth now uses a stable Rantau-owned storage namespace, so tokens left under the earlier address-derived namespaces cannot trap the provider in loading or interrupt a new password exchange. Generic auth failures were also replaced with tested, concise credential, account, or connection feedback (`apps/www/lib/auth.ts`, `apps/www/components/auth.tsx`, `apps/www/components/providers.tsx`).
 
 Also repaired the add-filter menu's Base UI group ownership so its label and filter branches open without a runtime crash. The local gate passes 56 tests, all package typechecks, Ultracite and Biome checks, Effect source verification, repository quality contracts, and the static Next.js production build (`apps/www/components/filters.tsx`).
