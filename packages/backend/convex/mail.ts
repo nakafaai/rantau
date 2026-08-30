@@ -8,7 +8,11 @@ import {
   query,
 } from "@repo/backend/convex/_generated/server";
 import { requireUserId } from "@repo/backend/convex/lib/guard";
-import { decodeInbox, makeInboxClientId } from "@repo/domain/mail";
+import {
+  decodeInbox,
+  MailProvisionError,
+  makeInboxClientId,
+} from "@repo/domain/mail";
 import { ConvexError, v } from "convex/values";
 import { Effect } from "effect";
 
@@ -167,12 +171,20 @@ export const provision = action({
     const outcome = await Effect.runPromise(
       makeInboxClientId(userId).pipe(
         Effect.flatMap((clientId) =>
-          Effect.tryPromise(() =>
-            agentmail.createInbox(ctx, {
-              clientId,
-              displayName: "Rantau applications",
-            })
-          )
+          Effect.tryPromise({
+            catch: (cause) =>
+              new MailProvisionError({
+                message:
+                  cause instanceof Error
+                    ? cause.message
+                    : "AgentMail rejected the inbox request.",
+              }),
+            try: () =>
+              agentmail.createInbox(ctx, {
+                clientId,
+                displayName: "Rantau applications",
+              }),
+          })
         ),
         Effect.flatMap(decodeInbox),
         Effect.match({
