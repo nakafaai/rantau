@@ -8,13 +8,22 @@ import { v } from "convex/values";
 
 const app = defineApp({
   env: {
+    AGENTMAIL_API_KEY: v.string(),
+    AGENTMAIL_BASE_URL: v.optional(v.string()),
+    AGENTMAIL_WEBHOOK_SECRET: v.optional(v.string()),
     FIRECRAWL_API_KEY: v.string(),
     FIRECRAWL_WEBHOOK_SECRET: v.optional(v.string()),
   },
 });
 
 app.use(agent);
-app.use(agentmail);
+app.use(agentmail, {
+  env: {
+    AGENTMAIL_API_KEY: app.env.AGENTMAIL_API_KEY,
+    AGENTMAIL_BASE_URL: app.env.AGENTMAIL_BASE_URL,
+    AGENTMAIL_WEBHOOK_SECRET: app.env.AGENTMAIL_WEBHOOK_SECRET,
+  },
+});
 app.use(rateLimiter);
 app.use(firecrawl, {
   httpPrefix: "/firecrawl/",
