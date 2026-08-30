@@ -45,16 +45,22 @@ function ActiveBadge({ active }: { active: boolean }) {
 }
 
 /** Renders locale choices and preserves the active workspace destination. */
-function LanguageItems() {
+function LanguageItems({ onNavigate }: { onNavigate?: () => void }) {
   const currentLocale = useLocale();
   const pathname = usePathname();
 
   return languages.map((language) => (
     <DropdownMenuLinkItem
       className="cursor-pointer"
+      closeOnClick
       key={language.value}
       render={
-        <Link href={localizedPath(language.value, pathname)} prefetch replace />
+        <Link
+          href={localizedPath(language.value, pathname)}
+          onClick={onNavigate}
+          prefetch
+          replace
+        />
       }
     >
       <CountryFlag countryCode={language.countryCode} />
@@ -103,8 +109,10 @@ function ThemeItems() {
 
 /** Renders Nakafa-style preference submenus inside the account dropdown. */
 export function PreferenceSubmenus({
+  onNavigate,
   side,
 }: {
+  onNavigate?: () => void;
   side: ComponentProps<typeof DropdownMenuSubContent>["side"];
 }) {
   const t = useTranslations("common");
@@ -118,7 +126,7 @@ export function PreferenceSubmenus({
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent side={side}>
           <DropdownMenuGroup>
-            <LanguageItems />
+            <LanguageItems onNavigate={onNavigate} />
           </DropdownMenuGroup>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
