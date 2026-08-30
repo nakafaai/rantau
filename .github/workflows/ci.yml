@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  merge_group:
+    branches: [main]
+    types: [checks_requested]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up toolchain
+        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
+        with:
+          cache: true
+          install: false
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint source
+        run: pnpm lint
+      - name: Check types
+        run: pnpm typecheck
+      - name: Run tests
+        run: pnpm test
+      - name: Build shared packages
+        run: pnpm --filter @repo/domain --filter @repo/design-system build
+      - name: Build static application
+        env:
+          NEXT_PUBLIC_CONVEX_URL: https://ci-placeholder.convex.cloud
+        run: pnpm --filter www build
