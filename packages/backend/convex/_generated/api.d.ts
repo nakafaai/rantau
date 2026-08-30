@@ -12,6 +12,7 @@ import type * as accounts from "../accounts.js";
 import type * as applications from "../applications.js";
 import type * as auth from "../auth.js";
 import type * as cv from "../cv.js";
+import type * as hosting from "../hosting.js";
 import type * as http from "../http.js";
 import type * as lib_guard from "../lib/guard.js";
 import type * as mail from "../mail.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   applications: typeof applications;
   auth: typeof auth;
   cv: typeof cv;
+  hosting: typeof hosting;
   http: typeof http;
   "lib/guard": typeof lib_guard;
   mail: typeof mail;

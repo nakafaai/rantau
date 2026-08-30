@@ -6,6 +6,7 @@ import {
   httpAction,
 } from "@repo/backend/convex/_generated/server";
 import { auth } from "@repo/backend/convex/auth";
+import { registerPageRoutes } from "@repo/backend/convex/hosting";
 import { httpRouter } from "convex/server";
 
 const http = httpRouter();
@@ -30,6 +31,7 @@ http.route({
   path: "/agentmail/webhook",
 });
 
+registerPageRoutes(http);
 registerStaticRoutes(http, components.staticHosting);
 
 export default http;
