@@ -6,13 +6,6 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import {
   Table,
@@ -28,14 +21,13 @@ import { Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CountryFlag } from "@/components/country-flag";
-import { Header } from "@/components/header";
+import { resultColumnClass } from "@/components/columns";
+import { Filters } from "@/components/filters";
 import { Results } from "@/components/results";
-import { countries, pathways, workModes } from "@/lib/options";
 
 const skeletonColumns = [
   "select",
-  "match",
+  "recommendation",
   "role",
   "company",
   "location",
@@ -50,7 +42,7 @@ const skeletonRows = ["first", "second", "third", "fourth", "fifth"];
 /** Returns a selected form value or removes the neutral any option. */
 function selected(formData: FormData, name: string) {
   const value = String(formData.get(name) ?? "");
-  return value === "any" ? undefined : value;
+  return value === "any" || value === "" ? undefined : value;
 }
 
 /** Runs filtered discovery and renders one durable realtime search session. */
@@ -114,84 +106,48 @@ export function Search() {
   }
 
   return (
-    <section>
-      <div className="space-y-6 border-b pb-8">
-        <Header title={t("title")} />
-
-        <form
-          action={submit}
-          className="space-y-3"
-          key={profile?.updatedAt ?? "search"}
-        >
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Input
-              className="flex-1"
-              defaultValue={profile?.desiredRoles[0] ?? ""}
-              disabled={disabled}
-              maxLength={400}
-              name="query"
-              placeholder={t("placeholder")}
-            />
-            <Button className="shrink-0" disabled={disabled} type="submit">
-              <HugeIcons
-                className={running ? "size-4 animate-spin" : "size-4"}
-                icon={running ? Loading03Icon : Search02Icon}
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <header className="sticky top-16 z-10 shrink-0 border-b bg-background lg:top-0">
+        <div className="mx-auto w-full max-w-[90rem] px-4 py-3 sm:px-6">
+          <h1 className="sr-only">{t("title")}</h1>
+          <form
+            action={submit}
+            className="space-y-3"
+            key={profile?.updatedAt ?? "search"}
+          >
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                className="flex-1"
+                defaultValue={profile?.desiredRoles[0] ?? ""}
+                disabled={disabled}
+                maxLength={400}
+                name="query"
+                placeholder={t("placeholder")}
               />
-              {running ? t("working") : t("button")}
-            </Button>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-3">
-            <Select
-              defaultValue={profile?.desiredLocations[0] ?? "any"}
-              name="country"
-            >
-              <SelectTrigger className="w-full" disabled={disabled}>
-                <SelectValue placeholder={t("country")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">{t("anyCountry")}</SelectItem>
-                {countries.map((country) => (
-                  <SelectItem key={country.code} value={country.value}>
-                    <CountryFlag countryCode={country.code} />
-                    {common(`countries.${country.code}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select defaultValue={profile?.pathways[0] ?? "any"} name="pathway">
-              <SelectTrigger className="w-full" disabled={disabled}>
-                <SelectValue placeholder={t("pathway")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">{t("anyPathway")}</SelectItem>
-                {pathways.map((pathway) => (
-                  <SelectItem key={pathway} value={pathway}>
-                    {t(pathway)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              defaultValue={profile?.workModes[0] ?? "any"}
-              name="workMode"
-            >
-              <SelectTrigger className="w-full" disabled={disabled}>
-                <SelectValue placeholder={t("workMode")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">{t("anyWorkMode")}</SelectItem>
-                {workModes.map((workMode) => (
-                  <SelectItem key={workMode} value={workMode}>
-                    {t(workMode)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </form>
-      </div>
+              <Button className="shrink-0" disabled={disabled} type="submit">
+                <HugeIcons
+                  className={running ? "size-4 animate-spin" : "size-4"}
+                  icon={running ? Loading03Icon : Search02Icon}
+                />
+                {running ? t("working") : t("button")}
+              </Button>
+            </div>
+            <Filters
+              defaults={{
+                country: profile?.desiredLocations[0],
+                pathway: profile?.pathways[0],
+                workMode: profile?.workModes[0],
+              }}
+              disabled={disabled}
+            />
+          </form>
+        </div>
+      </header>
 
-      <div aria-live="polite" className="min-h-56 pt-8">
+      <div
+        aria-live="polite"
+        className="mx-auto min-h-56 w-full min-w-0 max-w-[90rem] flex-1 px-4 py-4 sm:px-6"
+      >
         {hydrating ||
         running ||
         (session?.status === "complete" && !opportunities) ? (
@@ -223,12 +179,12 @@ export function Search() {
 function SearchSkeleton() {
   return (
     <div aria-hidden className="overflow-hidden rounded-md border">
-      <Table>
+      <Table className="table-fixed" containerClassName="overflow-hidden">
         <TableHeader>
           <TableRow>
             {skeletonColumns.map((column) => (
-              <TableHead key={column}>
-                <Skeleton className="h-4 w-20" />
+              <TableHead className={resultColumnClass(column)} key={column}>
+                <Skeleton className="h-4 max-w-full" />
               </TableHead>
             ))}
           </TableRow>
@@ -237,8 +193,11 @@ function SearchSkeleton() {
           {skeletonRows.map((row) => (
             <TableRow key={row}>
               {skeletonColumns.map((column) => (
-                <TableCell key={`${row}-${column}`}>
-                  <Skeleton className="h-5 w-24" />
+                <TableCell
+                  className={resultColumnClass(column)}
+                  key={`${row}-${column}`}
+                >
+                  <Skeleton className="h-5 max-w-full" />
                 </TableCell>
               ))}
             </TableRow>
