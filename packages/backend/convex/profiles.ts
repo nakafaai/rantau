@@ -29,6 +29,7 @@ function storedProfile(profile: Profile) {
   };
 }
 
+/** Loads the current authenticated candidate profile. */
 export const get = query({
   args: {},
   returns: v.union(schema.doc("profiles"), v.null()),
@@ -41,6 +42,7 @@ export const get = query({
   },
 });
 
+/** Validates and upserts one profile for the current authenticated user. */
 export const upsert = mutation({
   args: profileInputValidator.fields,
   returns: v.id("profiles"),
@@ -79,6 +81,7 @@ export const upsert = mutation({
   },
 });
 
+/** Creates a short-lived upload URL for an authenticated CV intake. */
 export const uploadUrl = mutation({
   args: {},
   returns: v.string(),
@@ -88,6 +91,7 @@ export const uploadUrl = mutation({
   },
 });
 
+/** Persists a validated CV while preventing storage reuse across profiles. */
 export const saveCv = internalMutation({
   args: {
     fileId: v.id("_storage"),
@@ -113,6 +117,14 @@ export const saveCv = internalMutation({
       throw new ConvexError({ code: "PROFILE_REQUIRED" });
     }
 
+    const existingOwner = await ctx.db
+      .query("profiles")
+      .withIndex("by_cv", (index) => index.eq("cvStorageId", args.fileId))
+      .unique();
+    if (existingOwner && existingOwner.userId !== args.userId) {
+      throw new ConvexError({ code: "CV_ALREADY_OWNED" });
+    }
+
     await ctx.db.patch("profiles", profile._id, {
       cvFileName: args.fileName.slice(0, 160),
       cvStorageId: args.fileId,
@@ -121,6 +133,22 @@ export const saveCv = internalMutation({
     });
     if (profile.cvStorageId && profile.cvStorageId !== args.fileId) {
       await ctx.storage.delete(profile.cvStorageId);
+    }
+    return null;
+  },
+});
+
+/** Deletes an orphaned CV upload while preserving every referenced file. */
+export const discardCv = internalMutation({
+  args: { fileId: v.id("_storage") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const owner = await ctx.db
+      .query("profiles")
+      .withIndex("by_cv", (index) => index.eq("cvStorageId", args.fileId))
+      .unique();
+    if (!owner) {
+      await ctx.storage.delete(args.fileId);
     }
     return null;
   },
