@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth v2 password provider with isolated JWT and JWKS keys
 - **AI models:** `openai/gpt-5.4-mini` through Vercel AI Gateway with `google/gemini-3.5-flash-lite` fallback
 - **Started:** 2026-08-30T04:20:15Z
-- **Last updated:** 2026-08-30T12:12:46Z
+- **Last updated:** 2026-08-30T12:24:00Z
 
 ## Log
 
@@ -49,3 +49,9 @@ Disabled Static Hosting SPA fallback and registered exact server routes for ever
 Expanded direct opportunity discovery from one US-biased provider request into a bounded global pipeline across regional search lanes. Firecrawl evidence is analyzed in small isolated Agent batches, bound to verified source URLs, deduplicated, and ranked against explicit filters plus saved profile preferences before one durable Convex search completes (`packages/backend/convex/lib/discover.ts`, `packages/backend/convex/opportunities.ts`, `packages/domain/rank.ts`).
 
 Rebuilt the result experience as a Coss and TanStack table with sorting, pagination, page selection, atomic bulk save, compact row actions, color-coded pathways, source previews, country flags, external company and map links, and a wider detail Sheet. Grouped profile settings into capability-owned Cards, replaced the raw number control with the Coss Number Field, simplified CV intake, and moved application email actions into the page header. The complete verification gate passes 52 tests, all package typechecks, Ultracite and Biome checks, Effect source verification, and the static Next.js production build (`apps/www/components`, `packages/design-system/components/ui`).
+
+### 2026-08-30 - global search production release
+
+Merged the global ranked discovery and workspace revision through PR #22 after the exact head `3a402ce914e1b8e126210b5491d41751c89d0433` passed CI. Deployed the resulting `main` merge commit `65ee819f7057de2d312d168b9f1c91d9b772e9cb` to the isolated Rantau production backend `dusty-toad-573`, then atomically published 84 Next.js static assets with SPA fallback disabled.
+
+Verified the live release in Chrome at `https://dusty-toad-573.convex.site`: English and Indonesian locale switching, system and explicit themes, concise form validation, and a clean browser console. HTTP probes confirmed 200 responses for every canonical workspace route, 308 redirects from legacy `index.html` paths to clean URLs, and a real 404 for unknown routes.
