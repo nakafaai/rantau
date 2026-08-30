@@ -1,6 +1,7 @@
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 
+/** Renders the Textarea design-system primitive. */
 function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea

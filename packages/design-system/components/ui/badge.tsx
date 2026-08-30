@@ -25,6 +25,7 @@ const badgeVariants = cva(
   }
 );
 
+/** Renders the Badge design-system primitive. */
 function Badge({
   className,
   variant = "default",

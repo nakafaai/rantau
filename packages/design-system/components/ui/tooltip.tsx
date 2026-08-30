@@ -4,6 +4,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { Tooltip as TooltipPrimitive } from "radix-ui";
 import type * as React from "react";
 
+/** Renders the TooltipProvider design-system primitive. */
 function TooltipProvider({
   delayDuration = 0,
   ...props
@@ -17,18 +18,21 @@ function TooltipProvider({
   );
 }
 
+/** Renders the Tooltip design-system primitive. */
 function Tooltip({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
 }
 
+/** Renders the TooltipTrigger design-system primitive. */
 function TooltipTrigger({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 }
 
+/** Renders the TooltipContent design-system primitive. */
 function TooltipContent({
   className,
   sideOffset = 0,

@@ -1,5 +1,6 @@
 import { cn } from "@repo/design-system/lib/utils";
 
+/** Renders the Skeleton design-system primitive. */
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

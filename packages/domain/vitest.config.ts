@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     coverage: {
       enabled: true,
-      include: ["src/**/*.ts"],
+      include: ["*.ts", "!*.test.ts", "!vitest.config.ts"],
       provider: "v8",
       reporter: ["text", "json-summary"],
       thresholds: {

@@ -4,7 +4,10 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "paths": {
+      "@repo/*": ["../../packages/*"]
+    },
+    "rootDir": "."
   },
-  "include": ["src/**/*.ts"]
+  "include": ["*.ts"]
 }

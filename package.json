@@ -10,11 +10,13 @@
   "scripts": {
     "build": "turbo run build",
     "clean": "turbo run clean && git clean -xdf .turbo node_modules coverage",
+    "deploy": "pnpm --filter @repo/backend deploy:static",
     "dev": "turbo run dev --filter=www --filter=@repo/backend",
     "dev:web": "turbo run dev --filter=www",
     "effect:source:check": "node scripts/effect-source.mjs check",
-    "format": "ultracite fix",
-    "lint": "pnpm effect:source:check && ultracite check",
+    "format": "ultracite fix apps packages scripts package.json turbo.json tsconfig.base.json biome.jsonc",
+    "lint": "pnpm effect:source:check && pnpm quality && ultracite check apps packages scripts package.json turbo.json tsconfig.base.json biome.jsonc",
+    "quality": "node scripts/quality.ts",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
@@ -25,6 +27,7 @@
     "@turbo/gen": "2.10.11",
     "@types/node": "24.13.3",
     "@typescript/native": "npm:typescript@7.0.2",
+    "effect": "catalog:",
     "turbo": "2.10.11",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "ultracite": "7.10.6"

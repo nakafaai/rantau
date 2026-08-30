@@ -22,6 +22,8 @@ Build for longevity. Keep the product direct, typed, accessible, and easy to ver
 - `packages/domain` owns Effect schemas, branded values, policies, and deterministic projections.
 - `repos/effect` is read-only vendored reference source. Never import application code from it.
 - Same-workspace imports use `@/*`. Cross-workspace imports use `@repo/*`.
+- Hand-written imports never use relative paths or explicit `.js` or `.ts` extensions.
+- Folder and file names use one capability word where possible and never exceed two words.
 
 Read `CONTEXT.md` before changing domain language. Read relevant ADRs before structural work.
 
@@ -31,6 +33,7 @@ Read `CONTEXT.md` before changing domain language. Read relevant ADRs before str
 - Prefer direct control flow, early returns, schema-derived types, and domain-owned modules.
 - Do not add `any`, broad casts, generic errors, silent fallbacks, pass-through modules, or generic helper folders.
 - Every expected failure uses a tagged Effect error or an explicit Convex error at the framework seam.
+- Every named hand-written function and method has a concise JSDoc contract.
 - Use the deletion test before adding a module. A module must concentrate real complexity.
 
 ## Convex
@@ -48,6 +51,7 @@ Read `CONTEXT.md` before changing domain language. Read relevant ADRs before str
 - Export named `Effect.fn` programs.
 - Run Effects only at browser event, Convex action, CLI, script, or test seams.
 - Inspect `repos/effect` before writing or reviewing unfamiliar Effect patterns.
+- Read `repos/effect/LLMS.md` and `repos/effect/.agents/AGENTS.md` before Effect work.
 
 ## UI
 

@@ -29,6 +29,7 @@ const allowedTransitions = {
   withdrawn: ["saved"],
 } as const satisfies Record<ApplicationStatus, readonly ApplicationStatus[]>;
 
+/** Validates an application status change against the domain state machine. */
 export const validateApplicationTransition = Effect.fn(
   "application.validateTransition"
 )(function* (from: ApplicationStatus, to: ApplicationStatus) {

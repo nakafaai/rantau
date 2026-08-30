@@ -4,6 +4,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { Progress as ProgressPrimitive } from "radix-ui";
 import type * as React from "react";
 
+/** Renders the Progress design-system primitive. */
 function Progress({
   className,
   value,

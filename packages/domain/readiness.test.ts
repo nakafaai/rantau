@@ -1,5 +1,5 @@
+import { buildReadinessPlan, readinessPercent } from "@repo/domain/readiness";
 import { describe, expect, it } from "vitest";
-import { buildReadinessPlan, readinessPercent } from "./readiness";
 
 const requirements = [
   { category: "language" as const, description: "German B1", required: true },

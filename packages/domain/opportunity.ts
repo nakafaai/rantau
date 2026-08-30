@@ -39,8 +39,18 @@ export const OpportunityRequirement = Schema.Struct({
   required: Schema.Boolean,
 });
 
+export const SupportResource = Schema.Struct({
+  description: Schema.String,
+  name: Schema.String,
+  url: Schema.NullOr(Schema.String),
+});
+
 export const Opportunity = Schema.Struct({
+  applicationSteps: Schema.Array(Schema.String).check(
+    Schema.isLengthBetween(1, 8)
+  ),
   company: Schema.String,
+  deadline: Schema.NullOr(Schema.String),
   directApplyUrl: Schema.String,
   employmentType: Schema.String,
   location: Schema.String,
@@ -50,6 +60,7 @@ export const Opportunity = Schema.Struct({
   salary: Schema.NullOr(Schema.String),
   source: SourceEvidence,
   summary: Schema.String,
+  support: Schema.Array(SupportResource).check(Schema.isLengthBetween(0, 8)),
   title: Schema.String,
   workMode: WorkMode,
 });
@@ -58,3 +69,4 @@ export type Opportunity = Schema.Schema.Type<typeof Opportunity>;
 export type OpportunityRequirement = Schema.Schema.Type<
   typeof OpportunityRequirement
 >;
+export type SupportResource = Schema.Schema.Type<typeof SupportResource>;

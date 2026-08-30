@@ -5,28 +5,33 @@ import { XIcon } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import type * as React from "react";
 
+/** Renders the Sheet design-system primitive. */
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
 
+/** Renders the SheetTrigger design-system primitive. */
 function SheetTrigger({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
 }
 
+/** Renders the SheetClose design-system primitive. */
 function SheetClose({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Close>) {
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
 }
 
+/** Renders the SheetPortal design-system primitive. */
 function SheetPortal({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Portal>) {
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 }
 
+/** Renders the SheetOverlay design-system primitive. */
 function SheetOverlay({
   className,
   ...props
@@ -43,6 +48,7 @@ function SheetOverlay({
   );
 }
 
+/** Renders the SheetContent design-system primitive. */
 function SheetContent({
   className,
   children,
@@ -84,6 +90,7 @@ function SheetContent({
   );
 }
 
+/** Renders the SheetHeader design-system primitive. */
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -94,6 +101,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders the SheetFooter design-system primitive. */
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -104,6 +112,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders the SheetTitle design-system primitive. */
 function SheetTitle({
   className,
   ...props
@@ -117,6 +126,7 @@ function SheetTitle({
   );
 }
 
+/** Renders the SheetDescription design-system primitive. */
 function SheetDescription({
   className,
   ...props

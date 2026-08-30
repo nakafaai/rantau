@@ -5,24 +5,28 @@ import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { Select as SelectPrimitive } from "radix-ui";
 import type * as React from "react";
 
+/** Renders the Select design-system primitive. */
 function Select({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
 }
 
+/** Renders the SelectGroup design-system primitive. */
 function SelectGroup({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Group>) {
   return <SelectPrimitive.Group data-slot="select-group" {...props} />;
 }
 
+/** Renders the SelectValue design-system primitive. */
 function SelectValue({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Value>) {
   return <SelectPrimitive.Value data-slot="select-value" {...props} />;
 }
 
+/** Renders the SelectTrigger design-system primitive. */
 function SelectTrigger({
   className,
   size = "default",
@@ -49,6 +53,7 @@ function SelectTrigger({
   );
 }
 
+/** Renders the SelectContent design-system primitive. */
 function SelectContent({
   className,
   children,
@@ -86,6 +91,7 @@ function SelectContent({
   );
 }
 
+/** Renders the SelectLabel design-system primitive. */
 function SelectLabel({
   className,
   ...props
@@ -99,6 +105,7 @@ function SelectLabel({
   );
 }
 
+/** Renders the SelectItem design-system primitive. */
 function SelectItem({
   className,
   children,
@@ -126,6 +133,7 @@ function SelectItem({
   );
 }
 
+/** Renders the SelectSeparator design-system primitive. */
 function SelectSeparator({
   className,
   ...props
@@ -139,6 +147,7 @@ function SelectSeparator({
   );
 }
 
+/** Renders the SelectScrollUpButton design-system primitive. */
 function SelectScrollUpButton({
   className,
   ...props
@@ -157,6 +166,7 @@ function SelectScrollUpButton({
   );
 }
 
+/** Renders the SelectScrollDownButton design-system primitive. */
 function SelectScrollDownButton({
   className,
   ...props

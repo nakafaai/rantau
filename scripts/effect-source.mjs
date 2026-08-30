@@ -7,6 +7,7 @@ const vendoredPackage = new URL(
   import.meta.url
 );
 
+/** Verifies that vendored Effect source matches the installed runtime. */
 async function check() {
   const source = JSON.parse(await readFile(vendoredPackage, "utf8"));
   if (source.version !== expected) {

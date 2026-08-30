@@ -4,13 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./convex/_generated/*": "./convex/_generated/*.js",
     "./*": "./*.ts"
   },
   "scripts": {
     "build": "convex codegen",
     "clean": "git clean -xdf node_modules .turbo",
     "deploy": "convex deploy",
-    "deploy:static": "convex deploy --cmd 'pnpm --dir ../../apps/www build' --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL && pnpm exec static-hosting upload --prod --dir ../../apps/www/out",
+    "deploy:static": "static-hosting deploy --dist ../../apps/www/out --build-command 'pnpm --dir ../../apps/www build'",
     "dev": "convex dev --tail-logs",
     "setup:static": "static-hosting setup",
     "test": "vitest run --passWithNoTests",
@@ -27,10 +28,14 @@
     "@repo/domain": "workspace:*",
     "ai": "7.0.84",
     "convex": "1.45.0",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "unpdf": "1.8.1"
   },
   "devDependencies": {
+    "@edge-runtime/vm": "5.0.0",
+    "convex-test": "0.0.56",
     "typescript": "catalog:",
+    "vite": "8.2.2",
     "vitest": "4.1.11"
   }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
+import { makeSearchIntent } from "@repo/domain/search";
 import { Effect, Exit } from "effect";
-import { makeSearchIntent } from "./search";
 
 describe("makeSearchIntent", () => {
   it.effect("normalizes useful queries", () =>

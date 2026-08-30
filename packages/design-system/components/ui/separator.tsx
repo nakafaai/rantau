@@ -4,6 +4,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { Separator as SeparatorPrimitive } from "radix-ui";
 import type * as React from "react";
 
+/** Renders the Separator design-system primitive. */
 function Separator({
   className,
   orientation = "horizontal",
