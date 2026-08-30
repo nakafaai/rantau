@@ -15,11 +15,11 @@ export const documentOptions = [
 ] as const;
 
 export const languageOptions = [
-  { key: "english", value: "English" },
-  { key: "german", value: "German" },
-  { key: "indonesian", value: "Indonesian" },
-  { key: "japanese", value: "Japanese" },
-  { key: "french", value: "French" },
+  { countryCode: "GB", key: "english", value: "English" },
+  { countryCode: "DE", key: "german", value: "German" },
+  { countryCode: "ID", key: "indonesian", value: "Indonesian" },
+  { countryCode: "JP", key: "japanese", value: "Japanese" },
+  { countryCode: "FR", key: "french", value: "French" },
 ] as const;
 
 export const levelOptions = [

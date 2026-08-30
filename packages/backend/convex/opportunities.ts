@@ -2,12 +2,21 @@ import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import {
-  action,
   internalAction,
+  mutation,
   query,
 } from "@repo/backend/convex/_generated/server";
-import { DISCOVERY_MODEL, discover } from "@repo/backend/convex/lib/discover";
+import {
+  type DiscoveryRun,
+  discoverLane,
+  discoveryLanes,
+} from "@repo/backend/convex/lib/discover";
 import { requireUserId } from "@repo/backend/convex/lib/guard";
+import {
+  discoveryLaneResultValidator,
+  SEARCH_TIMEOUT_MS,
+  searchWork,
+} from "@repo/backend/convex/lib/searchwork";
 import {
   pathwayValidator,
   readinessStepValidator,
@@ -19,7 +28,6 @@ import { recommendationScore } from "@repo/domain/rank";
 import { buildReadinessPlan } from "@repo/domain/readiness";
 import {
   makeSearchIntent,
-  SearchExecutionError,
   SearchIntent,
   SearchQuery,
 } from "@repo/domain/search";
@@ -34,7 +42,6 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
     rate: 6,
   },
 });
-type SearchOutcome = { success: true } | { error: unknown; success: false };
 
 /** Projects one opportunity against the current candidate profile. */
 function readinessProjection(
@@ -77,16 +84,8 @@ function storedOpportunity(opportunity: Opportunity) {
   };
 }
 
-/** Converts an unknown execution failure into safe user-facing text. */
-function errorMessage(error: unknown) {
-  if (typeof error === "object" && error && "message" in error) {
-    return String(error.message).slice(0, 500);
-  }
-  return "Opportunity search could not be completed.";
-}
-
-/** Starts a durable search session and schedules vendor work in the background. */
-export const start = action({
+/** Creates one search and atomically hands every regional lane to Workpool. */
+export const start = mutation({
   args: {
     country: v.optional(v.string()),
     locale: v.union(v.literal("en"), v.literal("id")),
@@ -94,70 +93,111 @@ export const start = action({
     query: v.string(),
     workMode: v.optional(workModeValidator),
   },
-  returns: v.object({
-    searchId: v.id("searches"),
-  }),
+  returns: v.object({ searchId: v.id("searches") }),
   handler: async (ctx, args): Promise<{ searchId: Id<"searches"> }> => {
     const userId = await requireUserId(ctx);
-    const intentOutcome = await Effect.runPromise(
-      makeSearchIntent(args).pipe(
-        Effect.match({
-          onFailure: (error) => ({ error, success: false }) as const,
-          onSuccess: (intent) => ({ intent, success: true }) as const,
-        })
-      )
+    const intentResult = Effect.runSync(
+      makeSearchIntent(args).pipe(Effect.result)
     );
-    if (!intentOutcome.success) {
+    if (intentResult._tag === "Failure") {
       throw new ConvexError({
         code: "INVALID_SEARCH",
-        message: intentOutcome.error.message,
+        message: intentResult.failure.message,
       });
     }
-
+    const intent = intentResult.success;
     await rateLimiter.limit(ctx, "opportunitySearch", {
       key: userId,
       throws: true,
     });
 
-    const searchId: Id<"searches"> = await ctx.runMutation(
-      internal.searches.start,
-      {
-        country: intentOutcome.intent.country,
-        locale: intentOutcome.intent.locale,
-        pathway: intentOutcome.intent.pathway,
-        query: intentOutcome.intent.query,
-        userId,
-        workMode: intentOutcome.intent.workMode,
-      }
-    );
+    const createdAt = Date.now();
+    const searchId = await ctx.db.insert("searches", {
+      country: intent.country,
+      createdAt,
+      locale: intent.locale,
+      pathway: intent.pathway,
+      query: intent.query,
+      resultCount: 0,
+      status: "running",
+      userId,
+      workMode: intent.workMode,
+    });
 
-    await ctx.scheduler.runAfter(0, internal.opportunities.execute, {
-      country: intentOutcome.intent.country,
-      locale: intentOutcome.intent.locale,
-      pathway: intentOutcome.intent.pathway,
-      query: intentOutcome.intent.query,
+    await Effect.runPromise(
+      Effect.forEach(
+        discoveryLanes(intent),
+        (lane) =>
+          Effect.gen(function* () {
+            const laneId = yield* Effect.promise(() =>
+              ctx.db.insert("searchLanes", {
+                market: lane.market,
+                searchId,
+                status: "queued",
+                updatedAt: createdAt,
+                userId,
+              })
+            );
+            const workId = yield* Effect.promise(() =>
+              searchWork.enqueueAction(
+                ctx,
+                internal.opportunities.executeLane,
+                {
+                  country: intent.country,
+                  laneId,
+                  limit: lane.limit,
+                  locale: intent.locale,
+                  market: lane.market,
+                  pathway: intent.pathway,
+                  query: intent.query,
+                  searchId,
+                  userId,
+                  workMode: intent.workMode,
+                },
+                {
+                  context: { laneId, searchId, userId },
+                  onComplete: internal.searches.finishLane,
+                  retry: false,
+                }
+              )
+            );
+            yield* Effect.promise(() =>
+              ctx.db.patch("searchLanes", laneId, { workId })
+            );
+          }),
+        { concurrency: 1, discard: true }
+      )
+    );
+    await ctx.scheduler.runAfter(SEARCH_TIMEOUT_MS, internal.searches.expire, {
       searchId,
       userId,
-      workMode: intentOutcome.intent.workMode,
     });
 
     return { searchId };
   },
 });
 
-/** Executes one authenticated search session outside the browser request. */
-export const execute = internalAction({
+/** Executes one isolated regional lane whose completion Workpool guarantees. */
+export const executeLane = internalAction({
   args: {
     country: v.optional(v.string()),
+    laneId: v.id("searchLanes"),
+    limit: v.number(),
     locale: v.union(v.literal("en"), v.literal("id")),
+    market: v.string(),
     pathway: v.optional(pathwayValidator),
     query: v.string(),
     searchId: v.id("searches"),
     userId: v.id("users"),
     workMode: v.optional(workModeValidator),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
+  returns: discoveryLaneResultValidator,
+  handler: async (ctx, args): Promise<DiscoveryRun> => {
+    await ctx.runMutation(internal.searches.markLaneRunning, {
+      laneId: args.laneId,
+      searchId: args.searchId,
+      userId: args.userId,
+    });
     const intent = SearchIntent.make({
       country: args.country,
       locale: args.locale,
@@ -165,56 +205,30 @@ export const execute = internalAction({
       query: SearchQuery.make(args.query),
       workMode: args.workMode,
     });
-
-    const program: Effect.Effect<SearchOutcome> = Effect.gen(function* () {
-      const discovery = yield* discover(ctx, intent, args.userId);
-      const opportunities = discovery.opportunities.map(storedOpportunity);
-
-      yield* Effect.tryPromise({
-        catch: () =>
-          new SearchExecutionError({
-            message: "The results could not be saved.",
-            stage: "storage",
-          }),
-        try: (): Promise<null> =>
-          ctx.runMutation(internal.searches.complete, {
-            inputTokens: discovery.inputTokens,
-            model: DISCOVERY_MODEL,
-            opportunities,
-            outputTokens: discovery.outputTokens,
+    return Effect.runPromise(
+      discoverLane(
+        ctx,
+        intent,
+        { limit: args.limit, market: args.market },
+        args.userId,
+        (opportunity): Promise<boolean> =>
+          ctx.runMutation(internal.searches.append, {
+            opportunity: storedOpportunity(opportunity),
             searchId: args.searchId,
-            threadId: discovery.threadId,
             userId: args.userId,
-          }),
-      });
-
-      return null;
-    }).pipe(
-      Effect.match({
-        onFailure: (error) => ({ error, success: false }) as const,
-        onSuccess: () => ({ success: true }) as const,
-      })
+          })
+      )
     );
-
-    const outcome: SearchOutcome = await Effect.runPromise(program);
-    if (!outcome.success) {
-      const message = errorMessage(outcome.error);
-      await ctx.runMutation(internal.searches.fail, {
-        error: message,
-        searchId: args.searchId,
-        userId: args.userId,
-      });
-    }
-
-    return null;
   },
 });
 
+/** Lists the complete bounded result set in recommendation order. */
 export const list = query({
   args: { searchId: v.id("searches") },
   returns: v.array(
     v.object({
       hasProfile: v.boolean(),
+      isSaved: v.boolean(),
       opportunity: schema.doc("opportunities"),
       recommendation: v.number(),
       readiness: v.array(readinessStepValidator),
@@ -227,7 +241,7 @@ export const list = query({
       throw new ConvexError({ code: "NOT_FOUND" });
     }
 
-    const [profile, opportunities] = await Promise.all([
+    const [profile, opportunities, applications] = await Promise.all([
       ctx.db
         .query("profiles")
         .withIndex("by_user", (index) => index.eq("userId", userId))
@@ -236,11 +250,20 @@ export const list = query({
         .query("opportunities")
         .withIndex("by_search", (index) => index.eq("searchId", args.searchId))
         .take(100),
+      ctx.db
+        .query("applications")
+        .withIndex("by_user_updatedAt", (index) => index.eq("userId", userId))
+        .order("desc")
+        .take(100),
     ]);
+    const savedOpportunityIds = new Set(
+      applications.map((application) => application.opportunityId)
+    );
 
     return opportunities
       .map((opportunity) => ({
         ...readinessProjection(profile, opportunity),
+        isSaved: savedOpportunityIds.has(opportunity._id),
         recommendation: recommendationScore(
           opportunity.opportunity,
           {

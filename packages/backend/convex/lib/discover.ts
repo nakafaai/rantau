@@ -14,18 +14,28 @@ import { SearchExecutionError, type SearchIntent } from "@repo/domain/search";
 import { gateway, jsonSchema } from "ai";
 import { DateTime, Effect, Schema } from "effect";
 
-export const DISCOVERY_MODEL = "openai/gpt-5.4-mini";
+export const DISCOVERY_MODEL = "google/gemini-3.7-flash";
 
-const SOURCE_LIMIT = 60;
+const SOURCE_LIMIT = 100;
 const SOURCE_BATCH = 10;
 const GLOBAL_MARKETS = [
   "Australia",
   "Brazil",
   "Canada",
+  "France",
   "Germany",
+  "India",
   "Indonesia",
   "Japan",
+  "Mexico",
+  "Netherlands",
+  "New Zealand",
+  "Nigeria",
+  "Poland",
+  "Singapore",
   "South Africa",
+  "South Korea",
+  "Spain",
   "United Arab Emirates",
   "United Kingdom",
   "United States",
@@ -44,10 +54,26 @@ const extractionSchema = jsonSchema<ExtractionResult>(
 
 export type DiscoveryRun = Readonly<{
   inputTokens: number;
-  opportunities: readonly Opportunity[];
   outputTokens: number;
+  resultCount: number;
   threadId: string;
 }>;
+
+export type DiscoveryLane = Readonly<{
+  limit: number;
+  market: string;
+}>;
+
+type OpportunityWriter = (opportunity: Opportunity) => Promise<boolean>;
+
+/** Resolves the bounded regional lanes for one validated search intent. */
+export function discoveryLanes(intent: SearchIntent): readonly DiscoveryLane[] {
+  const markets = intent.country ? [intent.country] : [...GLOBAL_MARKETS];
+  const limit = intent.country
+    ? SOURCE_LIMIT
+    : Math.ceil(SOURCE_LIMIT / markets.length);
+  return markets.map((market) => ({ limit, market }));
+}
 
 /** Builds a first-party web query for one regional search lane. */
 function webQuery(intent: SearchIntent, market: string) {
@@ -80,19 +106,6 @@ function batches(sources: readonly DiscoverySource[]) {
     (_, index) =>
       sources.slice(index * SOURCE_BATCH, (index + 1) * SOURCE_BATCH)
   );
-}
-
-/** Deduplicates opportunities across analysis batches while preserving order. */
-function uniqueOpportunities(opportunities: readonly Opportunity[]) {
-  const fingerprints = new Set<string>();
-  return opportunities.filter((opportunity) => {
-    const fingerprint = `${opportunity.directApplyUrl}#${opportunity.title.toLocaleLowerCase()}`;
-    if (fingerprints.has(fingerprint)) {
-      return false;
-    }
-    fingerprints.add(fingerprint);
-    return true;
-  });
 }
 
 /** Searches one market and decodes only readable source evidence. */
@@ -151,7 +164,6 @@ function analyzeBatch(
           prompt: analysisPrompt(intent, sources),
           providerOptions: {
             gateway: {
-              models: ["google/gemini-3.5-flash-lite"],
               tags: ["feature:opportunity-search"],
               user: userId,
             },
@@ -184,70 +196,76 @@ function analyzeBatch(
   });
 }
 
-/** Runs bounded, global, source-backed opportunity discovery. */
-export const discover = Effect.fn("opportunities.discover")(function* (
+/** Persists analyzed opportunities as independent realtime updates. */
+function persistOpportunities(
+  opportunities: readonly Opportunity[],
+  writeOpportunity: OpportunityWriter
+) {
+  return Effect.forEach(
+    opportunities,
+    (opportunity) =>
+      Effect.tryPromise({
+        catch: () =>
+          new SearchExecutionError({
+            message: "A search result could not be saved.",
+            stage: "storage",
+          }),
+        try: () => writeOpportunity(opportunity),
+      }),
+    { concurrency: 1 }
+  ).pipe(Effect.map((persisted) => persisted.filter(Boolean).length));
+}
+
+/** Runs one durable, source-backed regional discovery lane. */
+export const discoverLane = Effect.fn("opportunities.discoverLane")(function* (
   ctx: ActionCtx,
   intent: SearchIntent,
-  userId: Id<"users">
+  lane: DiscoveryLane,
+  userId: Id<"users">,
+  writeOpportunity: OpportunityWriter
 ) {
-  const markets = intent.country ? [intent.country] : [...GLOBAL_MARKETS];
-  const perMarket = intent.country
-    ? SOURCE_LIMIT
-    : Math.ceil(SOURCE_LIMIT / markets.length);
-  const searched = yield* Effect.forEach(
-    markets,
-    (market) =>
-      searchMarket(ctx, intent, market, perMarket).pipe(
-        Effect.catch(() => Effect.succeed([] as const))
-      ),
-    { concurrency: 3 }
-  );
-  const sourceMap = new Map<string, DiscoverySource>();
-  for (const source of searched.flat()) {
-    sourceMap.set(source.url, source);
-  }
-  const sources = [...sourceMap.values()].slice(0, SOURCE_LIMIT);
+  const now = DateTime.formatIso(yield* DateTime.now);
+  const sources = yield* searchMarket(ctx, intent, lane.market, lane.limit);
   if (sources.length === 0) {
     return yield* Effect.fail(
       new SearchExecutionError({
-        message: "No readable first-party opportunity pages were found.",
+        message: `No readable opportunity pages were found in ${lane.market}.`,
         stage: "search",
       })
     );
   }
-
-  const now = DateTime.formatIso(yield* DateTime.now);
   const analyzed = yield* Effect.forEach(
     batches(sources),
     (sourceBatch) =>
-      analyzeBatch(ctx, intent, sourceBatch, userId, now).pipe(
-        Effect.catch(() => Effect.succeed(null))
-      ),
+      analyzeBatch(ctx, intent, sourceBatch, userId, now).pipe(Effect.result),
     { concurrency: 3 }
   );
-  const completed = analyzed.filter((result) => result !== null);
-  const opportunities = uniqueOpportunities(
-    completed.flatMap((result) => result.opportunities)
+  const completed = analyzed.flatMap((result) =>
+    result._tag === "Success" ? [result.success] : []
   );
-  if (opportunities.length === 0) {
+  if (completed.length === 0) {
     return yield* Effect.fail(
       new SearchExecutionError({
-        message: "No source-backed opportunities were found.",
+        message: `Opportunity pages in ${lane.market} could not be analyzed.`,
         stage: "analysis",
       })
     );
   }
+  const resultCount = yield* persistOpportunities(
+    completed.flatMap((result) => result.opportunities),
+    writeOpportunity
+  );
 
   return {
     inputTokens: completed.reduce(
       (total, result) => total + result.inputTokens,
       0
     ),
-    opportunities,
     outputTokens: completed.reduce(
       (total, result) => total + result.outputTokens,
       0
     ),
+    resultCount,
     threadId: completed.map((result) => result.threadId).join(","),
   } satisfies DiscoveryRun;
 });

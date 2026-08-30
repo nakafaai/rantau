@@ -184,7 +184,7 @@ export function SidebarInset({ className, ...props }: ComponentProps<"main">) {
   return (
     <main
       className={cn(
-        "relative flex w-full min-w-0 flex-1 flex-col overflow-x-clip bg-background",
+        "relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-background",
         "md:peer-data-[variant=inset]:peer-data-[sidebar-state=collapsed]:ml-2 md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-lg md:peer-data-[variant=inset]:border",
         className
       )}

@@ -66,4 +66,25 @@ describe("recommendationScore", () => {
     expect(matched).toBeGreaterThan(unrelated);
     expect(matched).toBeLessThanOrEqual(100);
   });
+
+  it("keeps sparse aggregator results below direct source matches", () => {
+    const sparse = recommendationScore(
+      opportunity({
+        city: undefined,
+        country: undefined,
+        deadline: null,
+        salary: null,
+        source: {
+          kind: "aggregator",
+          name: "Listing index",
+          retrievedAt: "2026-08-30T00:00:00.000Z",
+          url: "https://example.com/apply",
+        },
+      }),
+      { query: "a" },
+      null
+    );
+
+    expect(sparse).toBe(10);
+  });
 });

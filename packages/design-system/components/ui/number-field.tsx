@@ -6,7 +6,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactElement } from "react";
 
-/** Renders the Coss number-field root with shared sizing. */
+/** Renders the Base UI number-field root with shared sizing. */
 function NumberField({
   className,
   size = "default",

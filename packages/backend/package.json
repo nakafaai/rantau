@@ -24,6 +24,7 @@
     "@convex-dev/auth": "2.0.0-alpha.1",
     "@convex-dev/rate-limiter": "0.3.2",
     "@convex-dev/static-hosting": "0.2.1",
+    "@convex-dev/workpool": "0.4.10",
     "@firecrawl/firecrawl-convex": "0.1.1",
     "@repo/domain": "workspace:*",
     "ai": "7.0.84",
@@ -34,6 +35,8 @@
   },
   "devDependencies": {
     "@edge-runtime/vm": "5.0.0",
+    "@effect/vitest": "catalog:",
+    "@vitest/coverage-istanbul": "4.1.11",
     "convex-test": "0.0.56",
     "typescript": "catalog:",
     "vite": "8.2.2",

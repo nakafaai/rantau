@@ -8,25 +8,23 @@ import {
   CheckmarkCircle02Icon,
   MapsLocation01Icon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
+  SheetContent,
   SheetDescription,
   SheetFooter,
   SheetHeader,
-  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { readinessCounts } from "@repo/domain/readiness";
-import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { toast } from "sonner";
 import { CountryFlag } from "@/components/country-flag";
 import { Source, SourceContent, SourceTrigger } from "@/components/source";
+import { useSaveApplication } from "@/hooks/applications";
 import {
   locationLabel,
   mapsUrl,
@@ -64,7 +62,7 @@ type OpportunitySheetProps = Readonly<{
   record: OpportunityRecord | null;
 }>;
 
-/** Shows one opportunity's source-backed detail in a wide Coss Sheet. */
+/** Shows one opportunity's source-backed detail in a wide Shadcn Sheet. */
 export function OpportunitySheet({
   onOpenChange,
   open,
@@ -72,8 +70,7 @@ export function OpportunitySheet({
 }: OpportunitySheetProps) {
   const t = useTranslations("search");
   const common = useTranslations("common");
-  const save = useMutation(api.applications.save);
-  const [savedId, setSavedId] = useState<string | null>(null);
+  const save = useSaveApplication();
 
   if (!record) {
     return null;
@@ -93,7 +90,6 @@ export function OpportunitySheet({
   async function saveOpportunity() {
     try {
       await save({ opportunityId: stored._id });
-      setSavedId(stored._id);
       toast.success(t("saved"));
     } catch {
       toast.error(common("error"));
@@ -102,7 +98,7 @@ export function OpportunitySheet({
 
   return (
     <Sheet onOpenChange={onOpenChange} open={open}>
-      <SheetPopup className="sm:max-w-2xl">
+      <SheetContent className="sm:max-w-2xl">
         <SheetHeader className="border-b pr-12">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <PathwayBadge record={record} />
@@ -240,15 +236,15 @@ export function OpportunitySheet({
             <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
           </Button>
           <Button
-            disabled={savedId === stored._id}
+            disabled={record.isSaved}
             onClick={saveOpportunity}
             variant="outline"
           >
             <HugeIcons className="size-4" icon={Bookmark01Icon} />
-            {savedId === stored._id ? t("saved") : t("save")}
+            {record.isSaved ? t("saved") : t("save")}
           </Button>
         </SheetFooter>
-      </SheetPopup>
+      </SheetContent>
     </Sheet>
   );
 }

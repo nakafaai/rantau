@@ -56,7 +56,7 @@ export const normalizeIdentity = Effect.fn("identity.normalize")(function* (
 
   return {
     email,
-    name: name || email.split("@")[0] || "Rantau member",
+    name: name || email.slice(0, email.indexOf("@")),
   } satisfies IdentityProfile;
 });
 

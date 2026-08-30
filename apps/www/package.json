@@ -32,9 +32,11 @@
     "sonner": "2.0.8"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@tailwindcss/postcss": "4.3.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
+    "@vitest/coverage-istanbul": "4.1.11",
     "babel-plugin-react-compiler": "1.0.0",
     "serve": "14.2.5",
     "tailwindcss": "4.3.3",

@@ -36,16 +36,16 @@ type ResultActions = Readonly<{
 /** Returns responsive widths and visibility for one result column. */
 export function resultColumnClass(columnId: string) {
   if (columnId === "select") {
-    return "w-10 px-2";
+    return "w-9 px-2";
   }
   if (columnId === "recommendation") {
-    return "hidden w-32 lg:table-cell";
+    return "hidden w-20 lg:table-cell";
   }
   if (columnId === "company") {
-    return "hidden w-44 md:table-cell";
+    return "hidden w-36 md:table-cell";
   }
   if (columnId === "location") {
-    return "hidden w-52 lg:table-cell";
+    return "hidden w-44 lg:table-cell";
   }
   if (columnId === "pathway") {
     return "w-28";
@@ -54,13 +54,13 @@ export function resultColumnClass(columnId: string) {
     return "hidden w-24 xl:table-cell";
   }
   if (columnId === "salary") {
-    return "hidden w-40 2xl:table-cell";
+    return "hidden w-36 2xl:table-cell";
   }
   if (columnId === "source") {
-    return "hidden w-40 2xl:table-cell";
+    return "hidden w-36 2xl:table-cell";
   }
   if (columnId === "actions") {
-    return "w-10 px-1";
+    return "w-9 px-1";
   }
   return "min-w-0";
 }
@@ -105,11 +105,8 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
         header: ({ table }) => (
           <Checkbox
             aria-label={t("selectPage")}
-            checked={
-              table.getIsSomePageRowsSelected()
-                ? "indeterminate"
-                : table.getIsAllPageRowsSelected()
-            }
+            checked={table.getIsAllPageRowsSelected()}
+            indeterminate={table.getIsSomePageRowsSelected()}
             onCheckedChange={(value) =>
               table.toggleAllPageRowsSelected(Boolean(value))
             }
@@ -133,16 +130,30 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
       },
       {
         accessorFn: (record) => record.opportunity.opportunity.title,
-        cell: ({ row }) => (
-          <div className="min-w-0">
-            <p className="truncate font-medium">
-              {row.original.opportunity.opportunity.title}
-            </p>
-            <p className="mt-0.5 truncate text-muted-foreground text-xs">
-              {row.original.opportunity.opportunity.employmentType}
-            </p>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const { opportunity } = row.original.opportunity;
+          return (
+            <div className="min-w-0">
+              <p className="truncate font-medium">{opportunity.title}</p>
+              <p className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-muted-foreground text-xs">
+                <span className="shrink-0">{opportunity.employmentType}</span>
+                <span aria-hidden="true" className="md:hidden">
+                  ·
+                </span>
+                <span className="hidden truncate md:hidden min-[420px]:inline">
+                  {opportunity.company}
+                </span>
+                <CountryFlag
+                  className="ml-0.5 md:hidden"
+                  countryCode={opportunity.countryCode}
+                />
+                <span className="hidden truncate md:hidden min-[520px]:inline">
+                  {locationLabel(row.original)}
+                </span>
+              </p>
+            </div>
+          );
+        },
         header: t("role"),
         id: "role",
       },
@@ -249,9 +260,12 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
                 <HugeIcons className="size-4" icon={ViewIcon} />
                 {t("details")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onSave(row.original)}>
+              <DropdownMenuItem
+                disabled={row.original.isSaved}
+                onClick={() => onSave(row.original)}
+              >
                 <HugeIcons className="size-4" icon={Bookmark01Icon} />
-                {t("save")}
+                {row.original.isSaved ? t("saved") : t("save")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 render={

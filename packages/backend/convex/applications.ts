@@ -95,6 +95,7 @@ export const transition = mutation({
   args: {
     applicationId: v.id("applications"),
     notes: v.optional(v.string()),
+    requestedAt: v.number(),
     status: applicationStatusValidator,
   },
   returns: v.null(),

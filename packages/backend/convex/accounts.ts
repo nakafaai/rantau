@@ -40,6 +40,7 @@ export const current = query({
     email: v.string(),
     image: v.union(v.string(), v.null()),
     name: v.string(),
+    userId: v.id("users"),
   }),
   handler: async (ctx) => {
     const userId = await requireUserId(ctx);
@@ -53,6 +54,7 @@ export const current = query({
       email,
       image: user.image ?? null,
       name: user.name ?? email.split("@")[0] ?? "Rantau",
+      userId,
     };
   },
 });

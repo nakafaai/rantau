@@ -102,10 +102,12 @@ export function Cv({ current, disabled }: CvProps) {
           <HugeIcons className="size-4 shrink-0" icon={Upload02Icon} />
         </Button>
       </CardContent>
-      <CardFooter className="justify-end border-t bg-muted/20">
+      <CardFooter className="justify-between gap-4">
+        <p className="text-muted-foreground text-xs">{t("cvSaveHelp")}</p>
         <Button
           disabled={disabled || pending || !current || !file}
           onClick={upload}
+          size="sm"
         >
           <HugeIcons className="size-4" icon={Upload02Icon} />
           {t("upload")}

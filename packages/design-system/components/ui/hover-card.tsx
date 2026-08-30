@@ -3,7 +3,7 @@
 import { PreviewCard as HoverCardPrimitive } from "@base-ui/react/preview-card";
 import { cn } from "@repo/design-system/lib/utils";
 
-/** Renders the shared Coss hover-card root. */
+/** Renders the shared Base UI hover-card root. */
 function HoverCard(props: HoverCardPrimitive.Root.Props) {
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />;
 }

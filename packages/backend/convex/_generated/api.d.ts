@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as legacy from "../legacy.js";
 import type * as lib_discover from "../lib/discover.js";
 import type * as lib_guard from "../lib/guard.js";
+import type * as lib_searchwork from "../lib/searchwork.js";
 import type * as mail from "../mail.js";
 import type * as model from "../model.js";
 import type * as opportunities from "../opportunities.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   legacy: typeof legacy;
   "lib/discover": typeof lib_discover;
   "lib/guard": typeof lib_guard;
+  "lib/searchwork": typeof lib_searchwork;
   mail: typeof mail;
   model: typeof model;
   opportunities: typeof opportunities;
@@ -81,4 +83,5 @@ export declare const components: {
   firecrawl: import("@firecrawl/firecrawl-convex/_generated/component.js").ComponentApi<"firecrawl">;
   staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
   authUsername: import("@convex-dev/auth/username/_generated/component.js").ComponentApi<"authUsername">;
+  searchWorkpool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"searchWorkpool">;
 };

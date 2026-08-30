@@ -21,13 +21,12 @@ export default defineSchema({
     .index("by_user_updatedAt", ["userId", "updatedAt"])
     .index("by_user_opportunity", ["userId", "opportunityId"]),
   opportunities: defineTable({
-    fingerprint: v.string(),
     opportunity: opportunityValidator,
     searchId: v.id("searches"),
     userId: v.id("users"),
   })
     .index("by_search", ["searchId"])
-    .index("by_user_fingerprint", ["userId", "fingerprint"]),
+    .index("by_search_and_url", ["searchId", "opportunity.directApplyUrl"]),
   profiles: defineTable({
     ...profileInputValidator.fields,
     agentMailEmail: v.optional(v.string()),
@@ -72,6 +71,27 @@ export default defineSchema({
       v.union(v.literal("onsite"), v.literal("hybrid"), v.literal("remote"))
     ),
   }).index("by_user_createdAt", ["userId", "createdAt"]),
+  searchLanes: defineTable({
+    completedAt: v.optional(v.number()),
+    error: v.optional(v.string()),
+    inputTokens: v.optional(v.number()),
+    market: v.string(),
+    outputTokens: v.optional(v.number()),
+    resultCount: v.optional(v.number()),
+    searchId: v.id("searches"),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("running"),
+      v.literal("complete"),
+      v.literal("failed")
+    ),
+    threadId: v.optional(v.string()),
+    updatedAt: v.number(),
+    userId: v.id("users"),
+    workId: v.optional(v.string()),
+  })
+    .index("by_search", ["searchId"])
+    .index("by_search_and_market", ["searchId", "market"]),
   users: defineTable({
     email: v.optional(v.string()),
     emailVerificationTime: v.optional(v.number()),

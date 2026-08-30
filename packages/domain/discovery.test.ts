@@ -190,6 +190,55 @@ describe("opportunity discovery", () => {
     })
   );
 
+  it.effect("keeps only support links proven by the source", () =>
+    Effect.gen(function* () {
+      const sourceUrl = "https://employer.example/jobs/nurse";
+      const contactUrl = "https://employer.example/contact";
+      const [opportunity] = yield* bindOpportunities(
+        {
+          opportunities: [
+            {
+              applicationSteps: ["Apply"],
+              company: "Example Health",
+              deadline: null,
+              employmentType: "Full time",
+              location: "Berlin",
+              pathway: "job",
+              publishedAt: null,
+              requirements: [],
+              salary: null,
+              sourceIndex: 0,
+              sourceKind: "employer",
+              sourceName: "Example Health",
+              summary: "Nursing role.",
+              support: [
+                { description: "Apply", name: "Application", url: sourceUrl },
+                { description: "Ask", name: "Recruiter", url: contactUrl },
+                { description: "None", name: "Office", url: null },
+              ],
+              title: "Nurse",
+              workMode: "onsite",
+            },
+          ],
+        },
+        [
+          {
+            content: `Contact: ${contactUrl}`,
+            title: "Nurse",
+            url: sourceUrl,
+          },
+        ],
+        "2026-08-30T00:00:00.000Z"
+      );
+
+      expect(opportunity?.support.map(({ url }) => url)).toEqual([
+        sourceUrl,
+        contactUrl,
+        null,
+      ]);
+    })
+  );
+
   it.effect("deduplicates repeated source-backed opportunities", () =>
     Effect.gen(function* () {
       const candidate = {

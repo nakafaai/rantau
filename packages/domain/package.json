@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
-    "@vitest/coverage-v8": "4.1.11",
+    "@vitest/coverage-istanbul": "4.1.11",
     "typescript": "catalog:",
     "vitest": "4.1.11"
   }

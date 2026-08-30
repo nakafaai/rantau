@@ -4,9 +4,25 @@ import { Effect, Schema } from "effect";
 import ts from "typescript";
 
 const SOURCE_ROOTS = ["apps", "packages", "scripts"] as const;
-const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mjs"]);
-const SKIPPED_PARTS = new Set(["_generated", "coverage", "node_modules"]);
+const SOURCE_EXTENSIONS = new Set([".cjs", ".js", ".mjs", ".ts", ".tsx"]);
+const SKIPPED_PARTS = new Set([
+  ".next",
+  ".turbo",
+  "_generated",
+  "coverage",
+  "dist",
+  "node_modules",
+  "out",
+]);
+const ALLOWED_JAVASCRIPT = new Set(["apps/www/postcss.config.mjs"]);
+const SHADCN_CONFIGS = [
+  "apps/www/components.json",
+  "packages/design-system/components.json",
+] as const;
 const EXTENSION_PATTERN = /\.d\.ts$|\.[^.]+$/u;
+const FINAL_TEST_PATTERN = /\.test\.ts$/u;
+const RUNNABLE_TEST_PATTERN = /\.test\.tsx?$/u;
+const JAVASCRIPT_PATTERN = /\.(?:c|m)?js$/u;
 const WORD_SEPARATOR_PATTERN = /[._-]+/u;
 
 class QualityError extends Schema.TaggedError<QualityError>()("QualityError", {
@@ -16,6 +32,11 @@ class QualityError extends Schema.TaggedError<QualityError>()("QualityError", {
 /** Determines whether a filesystem entry belongs to generated or external code. */
 function isSkipped(filePath: string) {
   return filePath.split(path.sep).some((part) => SKIPPED_PARTS.has(part));
+}
+
+/** Converts an absolute repository file path to a stable policy path. */
+function repositoryPath(filePath: string) {
+  return path.relative(process.cwd(), filePath);
 }
 
 /** Counts capability words in a folder or source filename. */
@@ -127,6 +148,93 @@ function jsDocViolations(filePath: string, source: string) {
   return violations;
 }
 
+/** Returns module specifiers used by static and dynamic imports. */
+function moduleSpecifiers(filePath: string, source: string) {
+  const sourceFile = ts.createSourceFile(
+    filePath,
+    source,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const modules: string[] = [];
+
+  /** Visits imports while preserving their exact string specifier. */
+  function visit(node: ts.Node) {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      modules.push(node.moduleSpecifier.text);
+    }
+    if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments.length === 1 &&
+      ts.isStringLiteral(node.arguments[0])
+    ) {
+      modules.push(node.arguments[0].text);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return modules;
+}
+
+/** Enforces alias imports and approved test and UI dependencies. */
+function moduleViolations(filePath: string, source: string) {
+  if (filePath.endsWith(".d.ts")) {
+    return [];
+  }
+  const modules = moduleSpecifiers(filePath, source);
+  const relative = modules
+    .filter((specifier) => specifier.startsWith("."))
+    .map((specifier) => `${filePath} uses relative import ${specifier}`);
+  const rawVitest =
+    FINAL_TEST_PATTERN.test(filePath) && modules.includes("vitest")
+      ? [`${filePath} must import test APIs from @effect/vitest`]
+      : [];
+  const radix = modules
+    .filter(
+      (specifier) =>
+        specifier === "radix-ui" || specifier.startsWith("@radix-ui/")
+    )
+    .map((specifier) => `${filePath} imports forbidden ${specifier}`);
+  return [...relative, ...rawVitest, ...radix];
+}
+
+/** Enforces TypeScript ownership for tests and framework-only JavaScript. */
+function pathViolations(files: readonly string[]) {
+  const repositoryFiles = new Set(files.map(repositoryPath));
+  return files.flatMap((filePath) => {
+    const relativePath = repositoryPath(filePath);
+    const javascript =
+      JAVASCRIPT_PATTERN.test(relativePath) &&
+      !ALLOWED_JAVASCRIPT.has(relativePath)
+        ? [`${relativePath} is hand-written JavaScript`]
+        : [];
+    const invalidTest =
+      RUNNABLE_TEST_PATTERN.test(relativePath) &&
+      !FINAL_TEST_PATTERN.test(relativePath)
+        ? [`${relativePath} must use the final .test.ts convention`]
+        : [];
+    const owner = relativePath.replace(FINAL_TEST_PATTERN, ".ts");
+    const orphan =
+      FINAL_TEST_PATTERN.test(relativePath) && !repositoryFiles.has(owner)
+        ? [`${relativePath} has no colocated ${owner} owner`]
+        : [];
+    return [...javascript, ...invalidTest, ...orphan];
+  });
+}
+
+/** Verifies that every Shadcn workspace selects Base Nova and Hugeicons. */
+function shadcnConfigViolations(configPath: string, source: string) {
+  return source.includes('"style": "base-nova"') &&
+    source.includes('"iconLibrary": "hugeicons"')
+    ? []
+    : [`${configPath} must use Shadcn base-nova with Hugeicons`];
+}
+
 /** Audits import, naming, and JSDoc conventions owned by the repository. */
 const audit = Effect.fn("quality.audit")(function* () {
   const roots = SOURCE_ROOTS.map((root) => path.resolve(root));
@@ -136,17 +244,39 @@ const audit = Effect.fn("quality.audit")(function* () {
   const naming = files
     .filter((filePath) => wordCount(filePath) > 2)
     .map((filePath) => `${filePath} has more than two filename words`);
-  const docs = (yield* Effect.forEach(
+  const sourceChecks = (yield* Effect.forEach(
     files,
     (filePath) =>
       Effect.tryPromise({
         catch: () =>
           new QualityError({ violations: [`Cannot read ${filePath}`] }),
         try: () => readFile(filePath, "utf8"),
-      }).pipe(Effect.map((source) => jsDocViolations(filePath, source))),
+      }).pipe(
+        Effect.map((source) => [
+          ...jsDocViolations(filePath, source),
+          ...moduleViolations(repositoryPath(filePath), source),
+        ])
+      ),
     { concurrency: "unbounded" }
   )).flat();
-  const violations = [...naming, ...docs];
+  const shadcn = (yield* Effect.forEach(
+    SHADCN_CONFIGS,
+    (configPath) =>
+      Effect.tryPromise({
+        catch: () =>
+          new QualityError({ violations: [`Cannot read ${configPath}`] }),
+        try: () => readFile(path.resolve(configPath), "utf8"),
+      }).pipe(
+        Effect.map((source) => shadcnConfigViolations(configPath, source))
+      ),
+    { concurrency: "unbounded" }
+  )).flat();
+  const violations = [
+    ...naming,
+    ...pathViolations(files),
+    ...sourceChecks,
+    ...shadcn,
+  ];
   if (violations.length > 0) {
     return yield* new QualityError({ violations });
   }
