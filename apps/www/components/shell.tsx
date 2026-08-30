@@ -27,6 +27,7 @@ import {
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar-shell";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
+import { cn } from "@repo/design-system/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -64,9 +65,16 @@ export function Shell({ children }: ShellProps) {
             <p className="truncate font-medium text-sm">{t(route)}</p>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[96rem] px-6 py-10 sm:px-8 sm:py-12">
+        <div
+          className={cn(
+            "w-full min-w-0",
+            route === "search"
+              ? "flex flex-1 flex-col"
+              : "mx-auto max-w-4xl px-6 py-10 sm:px-8 sm:py-12"
+          )}
+        >
           {children}
-        </main>
+        </div>
       </SidebarInset>
       <AppSidebar activeRoute={route} containerClassName="order-first" />
     </SidebarProvider>
