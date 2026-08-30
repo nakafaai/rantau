@@ -21,7 +21,6 @@ export default defineSchema({
     .index("by_user_updatedAt", ["userId", "updatedAt"])
     .index("by_user_opportunity", ["userId", "opportunityId"]),
   opportunities: defineTable({
-    fingerprint: v.optional(v.string()),
     opportunity: opportunityValidator,
     searchId: v.id("searches"),
     userId: v.id("users"),
