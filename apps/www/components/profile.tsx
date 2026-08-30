@@ -68,9 +68,7 @@ export function Profile() {
       workModes: ["onsite", "hybrid", "remote"],
     };
     const decoded = await Effect.runPromise(
-      Schema.decodeUnknownEffect(ProfileInput)(candidate).pipe(
-        Effect.option
-      )
+      Schema.decodeUnknownEffect(ProfileInput)(candidate).pipe(Effect.option)
     );
     try {
       if (decoded._tag === "None") {
@@ -99,7 +97,7 @@ export function Profile() {
   /** Uploads, attaches, and extracts one PDF owned by the current user. */
   async function upload() {
     const file = fileRef.current?.files?.[0];
-    if (!file || file.type !== "application/pdf" || file.size > 5 * 1024 * 1024) {
+    if (file?.type !== "application/pdf" || file.size > 5 * 1024 * 1024) {
       toast.error(t("cvHelp"));
       return;
     }
@@ -152,36 +150,65 @@ export function Profile() {
                 ["documents", t("documents"), current?.documents],
                 ["licenses", t("licenses"), current?.licenses],
               ].map(([name, label, values]) => (
-                <label className="grid gap-2 font-medium text-sm" key={String(name)}>
+                <label
+                  className="grid gap-2 font-medium text-sm"
+                  htmlFor={String(name)}
+                  key={String(name)}
+                >
                   {label}
-                  <Input defaultValue={Array.isArray(values) ? values.join(", ") : ""} name={String(name)} />
+                  <Input
+                    defaultValue={
+                      Array.isArray(values) ? values.join(", ") : ""
+                    }
+                    id={String(name)}
+                    name={String(name)}
+                  />
                 </label>
               ))}
-              <label className="grid gap-2 font-medium text-sm">
+              <label
+                className="grid gap-2 font-medium text-sm"
+                htmlFor="languages"
+              >
                 {t("languages")}
                 <Input
                   defaultValue={current?.languages
                     .map((item) => `${item.language}:${item.level}`)
                     .join(", ")}
+                  id="languages"
                   name="languages"
                   placeholder="German:B1, English:B2"
                 />
               </label>
-              <label className="grid gap-2 font-medium text-sm">
+              <label
+                className="grid gap-2 font-medium text-sm"
+                htmlFor="experience"
+              >
                 {t("experience")}
                 <Input
                   defaultValue={current?.experienceYears ?? 0}
+                  id="experience"
                   min="0"
                   name="experience"
                   step="0.5"
                   type="number"
                 />
               </label>
-              <label className="grid gap-2 font-medium text-sm sm:col-span-2">
+              <label
+                className="grid gap-2 font-medium text-sm sm:col-span-2"
+                htmlFor="visa"
+              >
                 {t("visa")}
-                <Textarea defaultValue={current?.visaNotes ?? ""} name="visa" />
+                <Textarea
+                  defaultValue={current?.visaNotes ?? ""}
+                  id="visa"
+                  name="visa"
+                />
               </label>
-              <Button className="sm:col-span-2 sm:w-fit" disabled={pending} type="submit">
+              <Button
+                className="sm:col-span-2 sm:w-fit"
+                disabled={pending}
+                type="submit"
+              >
                 <Save /> {t("save")}
               </Button>
             </form>
@@ -203,7 +230,11 @@ export function Profile() {
               </p>
             ) : null}
             <Input accept="application/pdf" ref={fileRef} type="file" />
-            <Button className="w-full" disabled={cvPending || !current} onClick={upload}>
+            <Button
+              className="w-full"
+              disabled={cvPending || !current}
+              onClick={upload}
+            >
               <Upload /> {t("upload")}
             </Button>
           </CardContent>

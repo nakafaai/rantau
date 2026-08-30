@@ -2,6 +2,7 @@
 
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
+import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 
@@ -13,14 +14,20 @@ if (!deploymentUrl) {
 
 const convex = new ConvexReactClient(deploymentUrl);
 
-type ProvidersProps = Readonly<{ children: ReactNode }>;
+type ProvidersProps = Readonly<{
+  children: ReactNode;
+  locale: string;
+  messages: Record<string, unknown>;
+}>;
 
 /** Connects browser state to the isolated Rantau Convex deployment. */
-export function Providers({ children }: ProvidersProps) {
+export function Providers({ children, locale, messages }: ProvidersProps) {
   return (
-    <ConvexAuthProvider client={convex}>
-      {children}
-      <Toaster richColors />
-    </ConvexAuthProvider>
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">
+      <ConvexAuthProvider client={convex}>
+        {children}
+        <Toaster richColors />
+      </ConvexAuthProvider>
+    </NextIntlClientProvider>
   );
 }

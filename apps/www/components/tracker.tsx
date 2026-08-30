@@ -71,7 +71,8 @@ export function Tracker() {
                     <div className="space-y-1">
                       <CardTitle>{opportunity.opportunity.title}</CardTitle>
                       <CardDescription>
-                        {opportunity.opportunity.company} · {opportunity.opportunity.location}
+                        {opportunity.opportunity.company} ·{" "}
+                        {opportunity.opportunity.location}
                       </CardDescription>
                     </div>
                     <span className="rounded-full bg-secondary px-3 py-1 font-medium text-primary text-xs">
@@ -80,9 +81,20 @@ export function Tracker() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <form action={update} className="grid gap-3 md:grid-cols-[1fr_12rem_auto]">
-                    <input name="applicationId" type="hidden" value={application._id} />
-                    <Input defaultValue={application.notes} name="notes" placeholder={t("notes")} />
+                  <form
+                    action={update}
+                    className="grid gap-3 md:grid-cols-[1fr_12rem_auto]"
+                  >
+                    <input
+                      name="applicationId"
+                      type="hidden"
+                      value={application._id}
+                    />
+                    <Input
+                      defaultValue={application.notes}
+                      name="notes"
+                      placeholder={t("notes")}
+                    />
                     <select
                       className="h-9 rounded-md border bg-background px-3 text-sm"
                       defaultValue={next[0] ?? application.status}
@@ -96,10 +108,17 @@ export function Tracker() {
                           </option>
                         ))
                       ) : (
-                        <option value={application.status}>{t(application.status)}</option>
+                        <option value={application.status}>
+                          {t(application.status)}
+                        </option>
                       )}
                     </select>
-                    <Button disabled={pending === application._id || next.length === 0} type="submit">
+                    <Button
+                      disabled={
+                        pending === application._id || next.length === 0
+                      }
+                      type="submit"
+                    >
                       {t("update")}
                     </Button>
                   </form>
@@ -109,7 +128,8 @@ export function Tracker() {
                     rel="noreferrer"
                     target="_blank"
                   >
-                    {opportunity.opportunity.source.name} <ArrowUpRight className="size-4" />
+                    {opportunity.opportunity.source.name}{" "}
+                    <ArrowUpRight className="size-4" />
                   </a>
                 </CardContent>
               </Card>

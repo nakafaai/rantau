@@ -1,9 +1,5 @@
 "use client";
 
-import { Costs } from "@/components/costs";
-import { Profile } from "@/components/profile";
-import { Search } from "@/components/search";
-import { Tracker } from "@/components/tracker";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
@@ -17,9 +13,13 @@ import {
   SearchIcon,
   X,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import { Costs } from "@/components/costs";
+import { Profile } from "@/components/profile";
+import { Search } from "@/components/search";
+import { Tracker } from "@/components/tracker";
 
 type View = "costs" | "profile" | "search" | "tracker";
 
@@ -73,7 +73,7 @@ export function Shell() {
           </Button>
         </div>
 
-        <nav className="mt-6 grid gap-1" aria-label="Workspace">
+        <nav aria-label="Workspace" className="mt-6 grid gap-1">
           {views.map(({ icon: Icon, key }) => (
             <button
               className={cn(
@@ -98,7 +98,11 @@ export function Shell() {
               <Globe2 /> {t("language")}
             </Link>
           </Button>
-          <Button className="justify-start" onClick={() => signOut()} variant="ghost">
+          <Button
+            className="justify-start"
+            onClick={() => signOut()}
+            variant="ghost"
+          >
             <LogOut /> {t("signOut")}
           </Button>
         </div>

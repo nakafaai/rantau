@@ -13,8 +13,7 @@ export default function Page() {
           Cari kerja, tanpa ribet.
         </h1>
         <p className="text-muted-foreground">
-          Pilih bahasa untuk mulai mencari kesempatan langsung di seluruh
-          dunia.
+          Pilih bahasa untuk mulai mencari kesempatan langsung di seluruh dunia.
         </p>
         <div className="flex justify-center gap-3">
           <Button asChild size="lg">

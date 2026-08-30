@@ -1,9 +1,9 @@
 "use client";
 
-import { Auth } from "@/components/auth";
-import { Shell } from "@/components/shell";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useTranslations } from "next-intl";
+import { Auth } from "@/components/auth";
+import { Shell } from "@/components/shell";
 
 /** Chooses the authenticated workspace after the Convex Auth handshake. */
 export function Workspace() {

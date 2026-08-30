@@ -1,8 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
-import { validateApplicationTransition } from "@repo/domain/application";
+import {
+  nextApplicationStatuses,
+  validateApplicationTransition,
+} from "@repo/domain/application";
 import { Effect, Exit } from "effect";
 
 describe("validateApplicationTransition", () => {
+  it("lists only domain-approved next statuses", () => {
+    expect(nextApplicationStatuses("saved")).toEqual(["applied", "withdrawn"]);
+    expect(nextApplicationStatuses("accepted")).toEqual([]);
+  });
+
   it.effect("accepts a valid forward transition", () =>
     Effect.gen(function* () {
       expect(yield* validateApplicationTransition("saved", "applied")).toBe(

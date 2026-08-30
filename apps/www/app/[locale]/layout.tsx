@@ -1,10 +1,9 @@
+import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { Providers } from "@/components/providers";
 import { isLocale, locales } from "@/i18n/routing";
 import en from "@/messages/en.json";
 import id from "@/messages/id.json";
-import { NextIntlClientProvider } from "next-intl";
-import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -25,8 +24,8 @@ export default async function Layout({ children, params }: LayoutProps) {
   const messages = locale === "id" ? id : en;
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      <Providers>{children}</Providers>
-    </NextIntlClientProvider>
+    <Providers locale={locale} messages={messages}>
+      {children}
+    </Providers>
   );
 }

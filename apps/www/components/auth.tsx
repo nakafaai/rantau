@@ -11,8 +11,8 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ArrowRight, Globe2 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -80,19 +80,32 @@ export function Auth() {
           <CardContent className="px-0">
             <form action={submit} className="space-y-4">
               {creating ? (
-                <label className="grid gap-2 font-medium text-sm">
+                <label
+                  className="grid gap-2 font-medium text-sm"
+                  htmlFor="name"
+                >
                   {t("name")}
-                  <Input autoComplete="name" name="name" required />
+                  <Input autoComplete="name" id="name" name="name" required />
                 </label>
               ) : null}
-              <label className="grid gap-2 font-medium text-sm">
+              <label className="grid gap-2 font-medium text-sm" htmlFor="email">
                 {t("email")}
-                <Input autoComplete="email" name="email" required type="email" />
+                <Input
+                  autoComplete="email"
+                  id="email"
+                  name="email"
+                  required
+                  type="email"
+                />
               </label>
-              <label className="grid gap-2 font-medium text-sm">
+              <label
+                className="grid gap-2 font-medium text-sm"
+                htmlFor="password"
+              >
                 {t("password")}
                 <Input
                   autoComplete={creating ? "new-password" : "current-password"}
+                  id="password"
                   minLength={12}
                   name="password"
                   required
@@ -104,7 +117,12 @@ export function Auth() {
                   </span>
                 ) : null}
               </label>
-              <Button className="w-full" disabled={pending} size="lg" type="submit">
+              <Button
+                className="w-full"
+                disabled={pending}
+                size="lg"
+                type="submit"
+              >
                 {creating ? t("signUp") : t("signIn")}
                 <ArrowRight />
               </Button>
@@ -114,7 +132,7 @@ export function Auth() {
               onClick={() => setCreating((value) => !value)}
               type="button"
             >
-              {creating ? t("existing") : t("new")} {" "}
+              {creating ? t("existing") : t("new")}{" "}
               <span className="font-medium text-primary">
                 {creating ? t("signIn") : t("signUp")}
               </span>

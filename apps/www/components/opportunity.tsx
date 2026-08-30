@@ -36,7 +36,7 @@ export function Opportunity({ record }: OpportunityProps) {
   const detail = useQuery(api.opportunities.detail, {
     opportunityId: record._id,
   });
-  const opportunity = record.opportunity;
+  const { opportunity } = record;
 
   /** Saves this source-backed opportunity to the application tracker. */
   async function saveOpportunity() {
@@ -94,7 +94,10 @@ export function Opportunity({ record }: OpportunityProps) {
               <h3 className="font-semibold text-sm">{t("requirements")}</h3>
               <ul className="space-y-2 text-sm">
                 {detail?.readiness.map((step) => (
-                  <li className="flex gap-2" key={`${step.category}-${step.description}`}>
+                  <li
+                    className="flex gap-2"
+                    key={`${step.category}-${step.description}`}
+                  >
                     {step.status === "ready" ? (
                       <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
                     ) : (

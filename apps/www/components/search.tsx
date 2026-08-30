@@ -1,6 +1,5 @@
 "use client";
 
-import { Opportunity } from "@/components/opportunity";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -17,6 +16,7 @@ import { SearchIcon, Sparkles } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Opportunity } from "@/components/opportunity";
 
 /** Runs evidence-backed discovery and renders direct-source results. */
 export function Search() {
@@ -62,7 +62,10 @@ export function Search() {
         </p>
       </header>
 
-      <form action={submit} className="flex max-w-4xl flex-col gap-3 sm:flex-row">
+      <form
+        action={submit}
+        className="flex max-w-4xl flex-col gap-3 sm:flex-row"
+      >
         <Input
           className="h-12 flex-1 rounded-xl bg-card px-4 shadow-sm"
           disabled={pending}
@@ -71,7 +74,11 @@ export function Search() {
           placeholder={t("placeholder")}
           required
         />
-        <Button className="h-12 rounded-xl px-6" disabled={pending} type="submit">
+        <Button
+          className="h-12 rounded-xl px-6"
+          disabled={pending}
+          type="submit"
+        >
           {pending ? <Sparkles className="animate-pulse" /> : <SearchIcon />}
           {pending ? t("working") : t("button")}
         </Button>
