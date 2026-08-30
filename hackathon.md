@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth v2 password provider with isolated JWT and JWKS keys
 - **AI models:** `openai/gpt-5.4-mini` through Vercel AI Gateway with `google/gemini-3.5-flash-lite` fallback
 - **Started:** 2026-08-30T04:20:15Z
-- **Last updated:** 2026-08-30T10:59:33Z
+- **Last updated:** 2026-08-30T11:15:37Z
 
 ## Log
 
@@ -39,3 +39,7 @@ Re-audited the core opportunity and CV boundaries before handoff. The opportunit
 Replaced the presentation layer with Nakafa's current themes, typography, button, field, menu, and responsive sidebar primitives while preserving Rantau's bilingual job-search domain. Rebuilt authentication with the same 3-to-4 column Nakafa composition and theme-responsive dithering, while retaining Convex Auth email and password access through a shadcn Field and TanStack Form flow validated by Effect v4 Standard Schema. The password helper and validation error now share one message and are mutually exclusive.
 
 Replaced browser-owned workspace state with clean Next.js routes for search, profile, and applications, and removed the internal provider and cost page from the user interface. Search now starts a durable Convex session, schedules discovery in the background, and renders stable realtime progress before a shadcn and TanStack data table. Added country, pathway, and work-mode filters; direct-apply and preparation Sheets; one-column structured profile controls; localized flags and option labels; and a table-based application tracker. Formatting, Ultracite and Biome checks, all package typechecks, 51 tests, static route generation, and Chrome checks for clean URLs, theme switching, localization, and concise auth validation pass (`apps/www/app`, `apps/www/components`, `packages/backend/convex/opportunities.ts`, `packages/backend/convex/searches.ts`, `packages/domain`).
+
+### 2026-08-30 - canonical production routes
+
+Disabled Static Hosting SPA fallback and registered exact server routes for every generated Next.js workspace page. Production now returns 200 for `/`, `/en/`, `/en/profile/`, `/en/applications/`, and their Indonesian equivalents; redirects extensionless and `index.html` variants to the canonical clean URL with 308; and returns 404 for unknown paths. Deployed backend and static assets from merged commit `983cd407b650c20c0278118f8438cc8ea0f2dde8`, then verified the English auth surface and legacy URL redirect in Chrome.
