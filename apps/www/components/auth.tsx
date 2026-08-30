@@ -1,146 +1,267 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
+import { ArrowRight01Icon, Loading03Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ArrowRight, Globe2 } from "lucide-react";
-import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useForm } from "@tanstack/react-form";
+import { Effect, Schema } from "effect";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { alternatePath } from "@/lib/locale";
+import { BackButton } from "@/components/back";
+import { FeaturesDithering } from "@/components/dithering";
+import { Theme } from "@/components/theme";
 
-/** Renders password sign-in and account creation against Convex Auth. */
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const Email = Schema.Trim.pipe(Schema.check(Schema.isPattern(EMAIL_PATTERN)));
+const Password = Schema.String.check(Schema.isMinLength(12));
+const Name = Schema.Trim.pipe(Schema.check(Schema.isMinLength(1)));
+
+const AuthForm = Schema.Union([
+  Schema.Struct({
+    email: Email,
+    flow: Schema.Literal("signIn"),
+    name: Schema.String,
+    password: Password,
+  }),
+  Schema.Struct({
+    email: Email,
+    flow: Schema.Literal("signUp"),
+    name: Name,
+    password: Password,
+  }),
+]);
+const formSchema = Schema.toStandardSchemaV1(AuthForm);
+type AuthFormValues = Schema.Schema.Type<typeof AuthForm>;
+const defaultValues: AuthFormValues = {
+  email: "",
+  flow: "signIn",
+  name: "",
+  password: "",
+};
+
+/** Renders Nakafa's exact auth composition with Convex email/password access. */
 export function Auth() {
   const t = useTranslations("auth");
   const common = useTranslations("common");
-  const locale = useLocale();
   const { signIn } = useAuthActions();
-  const [creating, setCreating] = useState(false);
-  const [pending, setPending] = useState(false);
-
-  /** Submits credentials at the explicit Convex Auth boundary. */
-  async function submit(formData: FormData) {
-    setPending(true);
-    formData.set("flow", creating ? "signUp" : "signIn");
-    try {
-      await signIn("password", formData);
-    } catch {
-      toast.error(common("error"));
-    } finally {
-      setPending(false);
-    }
-  }
+  const form = useForm({
+    defaultValues,
+    validators: {
+      onChange: formSchema,
+      onSubmit: formSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await Effect.runPromise(
+        Effect.tryPromise(async () => {
+          const formData = new FormData();
+          formData.set("email", value.email);
+          formData.set("flow", value.flow);
+          formData.set("password", value.password);
+          if (value.flow === "signUp") {
+            formData.set("name", value.name);
+          }
+          await signIn("password", formData);
+        }).pipe(
+          Effect.catchTag("UnknownError", () =>
+            Effect.sync(() => {
+              toast.error(common("error"));
+            })
+          )
+        )
+      );
+    },
+  });
 
   return (
-    <main className="grid min-h-dvh lg:grid-cols-[1.2fr_0.8fr]">
-      <section className="relative hidden overflow-hidden bg-foreground p-12 text-background lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,var(--primary),transparent_36%),radial-gradient(circle_at_80%_80%,var(--secondary),transparent_32%)]" />
-        <div className="relative flex items-center gap-2 font-semibold text-lg">
-          <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground">
-            R
-          </span>
-          {common("brand")}
+    <main className="relative grid h-svh lg:grid-cols-7">
+      <div className="col-span-3 flex flex-col gap-4 p-6 sm:p-12">
+        <div className="flex items-center justify-between">
+          <BackButton />
+          <Theme />
         </div>
-        <div className="relative max-w-xl space-y-5">
-          <p className="font-semibold text-primary text-sm uppercase tracking-[0.18em]">
-            {t("eyebrow")}
-          </p>
-          <h1 className="font-semibold text-5xl leading-[1.05] tracking-tight">
-            {t("title")}
-          </h1>
-          <p className="max-w-lg text-background/70 text-lg leading-relaxed">
-            {t("description")}
-          </p>
-        </div>
-      </section>
 
-      <section className="flex min-h-dvh items-center justify-center p-6 sm:p-10">
-        <Card className="w-full max-w-md border-0 bg-transparent shadow-none">
-          <CardHeader className="px-0">
-            <div className="mb-5 flex items-center justify-between lg:hidden">
-              <span className="font-semibold text-xl">{common("brand")}</span>
-              <Button asChild size="sm" variant="ghost">
-                <Link href={alternatePath(locale)}>
-                  <Globe2 /> {common("language")}
-                </Link>
-              </Button>
-            </div>
-            <CardTitle className="text-3xl">
-              {creating ? t("signUp") : t("signIn")}
-            </CardTitle>
-            <CardDescription>{t("description")}</CardDescription>
-          </CardHeader>
-          <CardContent className="px-0">
-            <form action={submit} className="space-y-4">
-              {creating ? (
-                <label
-                  className="grid gap-2 font-medium text-sm"
-                  htmlFor="name"
-                >
-                  {t("name")}
-                  <Input autoComplete="name" id="name" name="name" required />
-                </label>
-              ) : null}
-              <label className="grid gap-2 font-medium text-sm" htmlFor="email">
-                {t("email")}
-                <Input
-                  autoComplete="email"
-                  id="email"
-                  name="email"
-                  required
-                  type="email"
-                />
-              </label>
-              <label
-                className="grid gap-2 font-medium text-sm"
-                htmlFor="password"
-              >
-                {t("password")}
-                <Input
-                  autoComplete={creating ? "new-password" : "current-password"}
-                  id="password"
-                  minLength={12}
-                  name="password"
-                  required
-                  type="password"
-                />
-                {creating ? (
-                  <span className="font-normal text-muted-foreground text-xs">
-                    {t("passwordHelp")}
-                  </span>
-                ) : null}
-              </label>
-              <Button
-                className="w-full"
-                disabled={pending}
-                size="lg"
-                type="submit"
-              >
-                {creating ? t("signUp") : t("signIn")}
-                <ArrowRight />
-              </Button>
-            </form>
-            <button
-              className="mt-5 w-full text-center text-muted-foreground text-sm hover:text-foreground"
-              onClick={() => setCreating((value) => !value)}
-              type="button"
+        <div className="flex flex-1 flex-col items-center justify-center gap-6">
+          <div className="flex flex-col items-center">
+            <h1 className="font-semibold text-2xl">{common("brand")}</h1>
+            <p className="text-muted-foreground">{common("tagline")}</p>
+          </div>
+
+          <div className="w-full max-w-sm">
+            <form
+              action={() => form.handleSubmit()}
+              className="flex flex-col gap-4"
             >
-              {creating ? t("existing") : t("new")}{" "}
-              <span className="font-medium text-primary">
-                {creating ? t("signIn") : t("signUp")}
-              </span>
-            </button>
-          </CardContent>
-        </Card>
-      </section>
+              <FieldGroup>
+                <form.Subscribe selector={(state) => state.values.flow}>
+                  {(flow) =>
+                    flow === "signUp" ? (
+                      <form.Field name="name">
+                        {(field) => {
+                          const isInvalid =
+                            Boolean(field.state.meta.isTouched) &&
+                            Boolean(!field.state.meta.isValid);
+                          return (
+                            <Field data-invalid={isInvalid}>
+                              <FieldLabel htmlFor={field.name}>
+                                {t("name")}
+                              </FieldLabel>
+                              <Input
+                                aria-invalid={isInvalid}
+                                autoComplete="name"
+                                id={field.name}
+                                name={field.name}
+                                onBlur={field.handleBlur}
+                                onChange={(event) =>
+                                  field.handleChange(event.target.value)
+                                }
+                                required
+                                value={field.state.value}
+                              />
+                              {isInvalid ? (
+                                <FieldError>{t("nameInvalid")}</FieldError>
+                              ) : null}
+                            </Field>
+                          );
+                        }}
+                      </form.Field>
+                    ) : null
+                  }
+                </form.Subscribe>
+
+                <form.Field name="email">
+                  {(field) => {
+                    const isInvalid =
+                      Boolean(field.state.meta.isTouched) &&
+                      Boolean(!field.state.meta.isValid);
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          {t("email")}
+                        </FieldLabel>
+                        <Input
+                          aria-invalid={isInvalid}
+                          autoComplete="email"
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(event) =>
+                            field.handleChange(event.target.value)
+                          }
+                          required
+                          type="email"
+                          value={field.state.value}
+                        />
+                        {isInvalid ? (
+                          <FieldError>{t("emailInvalid")}</FieldError>
+                        ) : null}
+                      </Field>
+                    );
+                  }}
+                </form.Field>
+
+                <form.Subscribe selector={(state) => state.values.flow}>
+                  {(flow) => (
+                    <form.Field name="password">
+                      {(field) => {
+                        const isInvalid =
+                          Boolean(field.state.meta.isTouched) &&
+                          Boolean(!field.state.meta.isValid);
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel htmlFor={field.name}>
+                              {t("password")}
+                            </FieldLabel>
+                            <Input
+                              aria-invalid={isInvalid}
+                              autoComplete={
+                                flow === "signUp"
+                                  ? "new-password"
+                                  : "current-password"
+                              }
+                              id={field.name}
+                              minLength={12}
+                              name={field.name}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                              required
+                              type="password"
+                              value={field.state.value}
+                            />
+                            {isInvalid ? (
+                              <FieldError>{t("passwordRule")}</FieldError>
+                            ) : null}
+                            {!isInvalid && flow === "signUp" ? (
+                              <FieldDescription>
+                                {t("passwordRule")}
+                              </FieldDescription>
+                            ) : null}
+                          </Field>
+                        );
+                      }}
+                    </form.Field>
+                  )}
+                </form.Subscribe>
+              </FieldGroup>
+
+              <form.Subscribe
+                selector={(state) => [state.isValid, state.isSubmitting]}
+              >
+                {([isValid, isSubmitting]) => (
+                  <Button
+                    className="w-full"
+                    disabled={!isValid || isSubmitting}
+                    type="submit"
+                  >
+                    <form.Subscribe selector={(state) => state.values.flow}>
+                      {(flow) =>
+                        flow === "signUp" ? t("signUp") : t("signIn")
+                      }
+                    </form.Subscribe>
+                    <HugeIcons
+                      className={isSubmitting ? "animate-spin" : undefined}
+                      icon={isSubmitting ? Loading03Icon : ArrowRight01Icon}
+                    />
+                  </Button>
+                )}
+              </form.Subscribe>
+            </form>
+
+            <form.Subscribe selector={(state) => state.values.flow}>
+              {(flow) => (
+                <Button
+                  className="mt-4 h-auto w-full p-0 text-muted-foreground"
+                  onClick={() =>
+                    form.setFieldValue(
+                      "flow",
+                      flow === "signUp" ? "signIn" : "signUp"
+                    )
+                  }
+                  variant="link"
+                >
+                  {flow === "signUp" ? t("existing") : t("new")}{" "}
+                  {flow === "signUp" ? t("signIn") : t("signUp")}
+                </Button>
+              )}
+            </form.Subscribe>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative col-span-4 hidden lg:block">
+        <FeaturesDithering />
+      </div>
     </main>
   );
 }

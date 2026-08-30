@@ -26,7 +26,7 @@ export function Providers({ children, locale, messages }: ProvidersProps) {
     <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">
       <ConvexAuthProvider client={convex}>
         {children}
-        <Toaster richColors />
+        <Toaster />
       </ConvexAuthProvider>
     </NextIntlClientProvider>
   );
