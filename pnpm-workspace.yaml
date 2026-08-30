@@ -6,10 +6,8 @@ engineStrict: true
 savePrefix: ""
 
 catalog:
-  "@effect/platform": 4.0.0-rc.110
-  "@effect/platform-node": 4.0.0-rc.110
-  "@effect/vitest": 4.0.0-rc.110
-  effect: 4.0.0-rc.110
+  "@effect/vitest": 4.0.0-rc.112
+  effect: 4.0.0-rc.112
   typescript: npm:@typescript/typescript6@6.0.2
 
 allowBuilds:
