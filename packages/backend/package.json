@@ -1,0 +1,36 @@
+{
+  "name": "@repo/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*.ts"
+  },
+  "scripts": {
+    "build": "convex codegen",
+    "clean": "git clean -xdf node_modules .turbo",
+    "deploy": "convex deploy",
+    "deploy:static": "convex deploy --cmd 'pnpm --dir ../../apps/www build' --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL && pnpm exec static-hosting upload --prod --dir ../../apps/www/out",
+    "dev": "convex dev --tail-logs",
+    "setup:static": "static-hosting setup",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@agentmail/convex": "0.1.0",
+    "@ai-sdk/gateway": "4.0.68",
+    "@convex-dev/agent": "0.7.1",
+    "@convex-dev/auth": "0.0.95",
+    "@convex-dev/rate-limiter": "0.3.2",
+    "@convex-dev/static-hosting": "0.2.1",
+    "@firecrawl/firecrawl-convex": "0.1.1",
+    "@repo/domain": "workspace:*",
+    "ai": "7.0.84",
+    "convex": "1.45.0",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "4.1.11"
+  }
+}

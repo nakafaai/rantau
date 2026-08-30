@@ -1,0 +1,67 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": [
+    "ultracite/biome/core",
+    "ultracite/biome/react",
+    "ultracite/biome/next"
+  ],
+  "formatter": {
+    "indentStyle": "space"
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "useSortedKeys": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "jsxQuoteStyle": "double"
+    }
+  },
+  "linter": {
+    "rules": {
+      "a11y": {
+        "noNoninteractiveElementInteractions": "off"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": {
+          "level": "warn",
+          "options": {
+            "maxAllowedComplexity": 32
+          }
+        },
+        "noRedundantDefaultExport": "off",
+        "noUselessReturn": "off"
+      },
+      "correctness": {
+        "noUnresolvedImports": "off",
+        "useImportExtensions": "off"
+      },
+      "performance": {
+        "noBarrelFile": "off",
+        "noNamespaceImport": "off"
+      },
+      "style": {
+        "useFilenamingConvention": "off",
+        "useNamingConvention": "off"
+      },
+      "suspicious": {
+        "noLeakedRender": "off",
+        "noUnknownAtRules": "off",
+        "noUnnecessaryConditions": "off"
+      }
+    }
+  },
+  "files": {
+    "includes": [
+      "**/*",
+      "!packages/backend/convex/_generated/**/*",
+      "!repos/**/*",
+      "!.agents/**/*",
+      "!coverage/**/*"
+    ]
+  }
+}

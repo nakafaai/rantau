@@ -1,0 +1,36 @@
+{
+  "name": "rantau",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "clean": "turbo run clean && git clean -xdf .turbo node_modules coverage",
+    "dev": "turbo run dev --filter=www --filter=@repo/backend",
+    "dev:web": "turbo run dev --filter=www",
+    "effect:source:check": "node scripts/effect-source.mjs check",
+    "format": "ultracite fix",
+    "lint": "pnpm effect:source:check && ultracite check",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.10",
+    "@effect/tsgo": "0.36.5",
+    "@turbo/gen": "2.10.11",
+    "@types/node": "24.13.3",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "turbo": "2.10.11",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "ultracite": "7.10.6"
+  },
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24.0.0 <25.0.0"
+  }
+}
