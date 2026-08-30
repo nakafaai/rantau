@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth v2 password provider with isolated JWT and JWKS keys
 - **AI models:** `openai/gpt-5.4-mini` through Vercel AI Gateway with `google/gemini-3.5-flash-lite` fallback
 - **Started:** 2026-08-30T04:20:15Z
-- **Last updated:** 2026-08-30T11:15:37Z
+- **Last updated:** 2026-08-30T12:12:46Z
 
 ## Log
 
@@ -43,3 +43,9 @@ Replaced browser-owned workspace state with clean Next.js routes for search, pro
 ### 2026-08-30 - canonical production routes
 
 Disabled Static Hosting SPA fallback and registered exact server routes for every generated Next.js workspace page. Production now returns 200 for `/`, `/en/`, `/en/profile/`, `/en/applications/`, and their Indonesian equivalents; redirects extensionless and `index.html` variants to the canonical clean URL with 308; and returns 404 for unknown paths. Deployed backend and static assets from merged commit `983cd407b650c20c0278118f8438cc8ea0f2dde8`, then verified the English auth surface and legacy URL redirect in Chrome.
+
+### 2026-08-30 - working tree
+
+Expanded direct opportunity discovery from one US-biased provider request into a bounded global pipeline across regional search lanes. Firecrawl evidence is analyzed in small isolated Agent batches, bound to verified source URLs, deduplicated, and ranked against explicit filters plus saved profile preferences before one durable Convex search completes (`packages/backend/convex/lib/discover.ts`, `packages/backend/convex/opportunities.ts`, `packages/domain/rank.ts`).
+
+Rebuilt the result experience as a Coss and TanStack table with sorting, pagination, page selection, atomic bulk save, compact row actions, color-coded pathways, source previews, country flags, external company and map links, and a wider detail Sheet. Grouped profile settings into capability-owned Cards, replaced the raw number control with the Coss Number Field, simplified CV intake, and moved application email actions into the page header. The complete verification gate passes 52 tests, all package typechecks, Ultracite and Biome checks, Effect source verification, and the static Next.js production build (`apps/www/components`, `packages/design-system/components/ui`).

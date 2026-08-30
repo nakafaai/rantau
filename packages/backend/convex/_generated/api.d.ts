@@ -14,6 +14,7 @@ import type * as auth from "../auth.js";
 import type * as cv from "../cv.js";
 import type * as hosting from "../hosting.js";
 import type * as http from "../http.js";
+import type * as lib_discover from "../lib/discover.js";
 import type * as lib_guard from "../lib/guard.js";
 import type * as mail from "../mail.js";
 import type * as model from "../model.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   cv: typeof cv;
   hosting: typeof hosting;
   http: typeof http;
+  "lib/discover": typeof lib_discover;
   "lib/guard": typeof lib_guard;
   mail: typeof mail;
   model: typeof model;
