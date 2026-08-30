@@ -13,8 +13,8 @@ import {
 import { Input } from "@repo/design-system/components/ui/input";
 import type { ApplicationStatus } from "@repo/domain/application";
 import { nextApplicationStatuses } from "@repo/domain/application";
-import { useMutation, useQuery } from "convex/react";
-import { ArrowUpRight, BriefcaseBusiness } from "lucide-react";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { ArrowUpRight, BriefcaseBusiness, Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -24,8 +24,29 @@ export function Tracker() {
   const t = useTranslations("tracker");
   const common = useTranslations("common");
   const records = useQuery(api.applications.list);
+  const profile = useQuery(api.profiles.get);
+  const inbox = useQuery(api.mail.inbox);
+  const provision = useAction(api.mail.provision);
+  const sendDigest = useMutation(api.mail.sendDigest);
   const transition = useMutation(api.applications.transition);
+  const [mailPending, setMailPending] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
+
+  /** Provisions a private inbox when needed and sends the latest digest. */
+  async function emailDigest() {
+    setMailPending(true);
+    try {
+      if (!inbox) {
+        await provision({});
+      }
+      await sendDigest({});
+      toast.success(t("mailSent"));
+    } catch {
+      toast.error(common("error"));
+    } finally {
+      setMailPending(false);
+    }
+  }
 
   /** Persists the selected domain-valid status and notes for one record. */
   async function update(formData: FormData) {
@@ -59,6 +80,30 @@ export function Tracker() {
           {t("description")}
         </p>
       </header>
+
+      <Card className="bg-muted/30 shadow-none">
+        <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-primary">
+              <Mail className="size-5" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-semibold">{t("mailTitle")}</p>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {profile ? t("mailBody") : t("mailProfile")}
+              </p>
+            </div>
+          </div>
+          <Button
+            className="shrink-0"
+            disabled={mailPending || !profile || inbox === undefined}
+            onClick={emailDigest}
+            variant="outline"
+          >
+            <Mail /> {t("mailButton")}
+          </Button>
+        </CardContent>
+      </Card>
 
       {records?.length ? (
         <div className="grid gap-4">

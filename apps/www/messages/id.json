@@ -84,7 +84,12 @@
     "accepted": "Diterima",
     "rejected": "Ditolak",
     "withdrawn": "Dibatalkan",
-    "update": "Perbarui status"
+    "update": "Perbarui status",
+    "mailTitle": "Ringkasan lamaran lewat email",
+    "mailBody": "Terima 10 lamaran tersimpan terbaru di email akunmu. Rantau baru membuat inbox AgentMail privat saat kamu memintanya.",
+    "mailProfile": "Simpan profil terlebih dahulu, lalu Rantau dapat membuat inbox privat dan mengirim ringkasanmu.",
+    "mailButton": "Kirim ringkasan",
+    "mailSent": "Ringkasan lamaran terkirim"
   },
   "costs": {
     "eyebrow": "Transparan sejak awal",
@@ -100,7 +105,16 @@
     "growth": "Perkiraan aktif",
     "starterBody": "100 pengguna, masing-masing 4 pencarian per bulan, maksimal 10 halaman per pencarian",
     "growthBody": "1.000 pengguna, masing-masing 8 pencarian per bulan, maksimal 10 halaman per pencarian",
-    "variable": "Pemakaian provider ditambah minimum paket jika ada",
-    "note": "Ini skenario perencanaan, bukan tagihan. Dashboard pemakaian tetap menjadi sumber data utama."
+    "starterCost": "Sekitar €14 + maksimal $10 per bulan",
+    "growthCost": "Sekitar €72 per bulan, ditambah AI dan email sesuai pemakaian",
+    "starterFirecrawl": "Firecrawl Hobby: 5.000 kredit sekitar €14",
+    "starterGateway": "AI Gateway: dibatasi maksimal $10 per bulan",
+    "starterConvex": "Convex: paket $0, lalu biaya pemakaian tambahan",
+    "starterAgentmail": "AgentMail: $0 untuk 3 inbox, atau $200 untuk maksimal 150 inbox",
+    "growthFirecrawl": "Firecrawl Standard: 100.000 kredit sekitar €72",
+    "growthGateway": "AI Gateway: sesuaikan batas $10 saat ini berdasarkan pemakaian token nyata",
+    "growthConvex": "Convex: paket $0 atau $25 per developer ditambah pemakaian",
+    "growthAgentmail": "AgentMail: paket khusus jika setiap pengguna membutuhkan inbox privat",
+    "note": "Harga publik diperiksa pada 30 Agustus 2026. Firecrawl ditampilkan dalam EUR untuk Jerman; provider lain dalam USD. Pajak, kurs, biaya pemakaian tambahan, dan biaya model dapat berubah. Dashboard provider tetap menjadi sumber data utama."
   }
 }
