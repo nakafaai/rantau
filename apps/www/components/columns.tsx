@@ -244,6 +244,7 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
                 {row.original.isSaved ? t("saved") : t("save")}
               </DropdownMenuItem>
               <DropdownMenuLinkItem
+                closeOnClick
                 render={
                   <a
                     aria-label={t("apply")}

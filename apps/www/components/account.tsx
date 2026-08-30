@@ -54,7 +54,12 @@ export function Account() {
   const t = useTranslations("common");
   const locale = useLocale() === "id" ? "id" : "en";
   const { signOut } = useAuthActions();
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  /** Closes the mobile navigation surface before changing routes. */
+  function closeMobile() {
+    setOpenMobile(false);
+  }
 
   if (!account) {
     return (
@@ -125,14 +130,23 @@ export function Account() {
           <DropdownMenuGroup>
             <DropdownMenuLinkItem
               className="cursor-pointer"
-              render={<Link href={workspacePath(locale, "profile")} />}
+              closeOnClick
+              render={
+                <Link
+                  href={workspacePath(locale, "profile")}
+                  onClick={closeMobile}
+                />
+              }
             >
               <HugeIcons className="size-4" icon={UserIcon} />
               {t("profile")}
             </DropdownMenuLinkItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <PreferenceSubmenus side={isMobile ? "top" : "right"} />
+          <PreferenceSubmenus
+            onNavigate={closeMobile}
+            side={isMobile ? "top" : "right"}
+          />
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem
