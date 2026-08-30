@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { alternatePath } from "@/lib/locale";
 
 /** Renders password sign-in and account creation against Convex Auth. */
 export function Auth() {
@@ -67,7 +68,7 @@ export function Auth() {
             <div className="mb-5 flex items-center justify-between lg:hidden">
               <span className="font-semibold text-xl">{common("brand")}</span>
               <Button asChild size="sm" variant="ghost">
-                <Link href={`/${locale === "id" ? "en" : "id"}/`}>
+                <Link href={alternatePath(locale)}>
                   <Globe2 /> {common("language")}
                 </Link>
               </Button>

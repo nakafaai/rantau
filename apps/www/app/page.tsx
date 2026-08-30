@@ -1,5 +1,6 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import Link from "next/link";
+import { localePath } from "@/lib/locale";
 
 /** Offers a deterministic locale choice at the static site root. */
 export default function Page() {
@@ -17,10 +18,10 @@ export default function Page() {
         </p>
         <div className="flex justify-center gap-3">
           <Button asChild size="lg">
-            <Link href="/id/">Bahasa Indonesia</Link>
+            <Link href={localePath("id")}>Bahasa Indonesia</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
-            <Link href="/en/">English</Link>
+            <Link href={localePath("en")}>English</Link>
           </Button>
         </div>
       </section>

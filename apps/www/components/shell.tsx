@@ -20,6 +20,7 @@ import { Costs } from "@/components/costs";
 import { Profile } from "@/components/profile";
 import { Search } from "@/components/search";
 import { Tracker } from "@/components/tracker";
+import { alternatePath } from "@/lib/locale";
 
 type View = "costs" | "profile" | "search" | "tracker";
 
@@ -94,7 +95,7 @@ export function Shell() {
 
         <div className="mt-auto grid gap-1 border-sidebar-border border-t pt-4">
           <Button asChild className="justify-start" variant="ghost">
-            <Link href={`/${locale === "id" ? "en" : "id"}/`}>
+            <Link href={alternatePath(locale)}>
               <Globe2 /> {t("language")}
             </Link>
           </Button>
