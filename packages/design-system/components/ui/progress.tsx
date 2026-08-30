@@ -1,15 +1,15 @@
 "use client";
 
+import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 import { cn } from "@repo/design-system/lib/utils";
-import { Progress as ProgressPrimitive } from "radix-ui";
-import type * as React from "react";
 
 /** Renders the Progress design-system primitive. */
 function Progress({
   className,
+  children,
   value,
   ...props
-}: React.ComponentProps<typeof ProgressPrimitive.Root>) {
+}: ProgressPrimitive.Root.Props) {
   return (
     <ProgressPrimitive.Root
       className={cn(
@@ -17,13 +17,16 @@ function Progress({
         className
       )}
       data-slot="progress"
+      value={value}
       {...props}
     >
-      <ProgressPrimitive.Indicator
-        className="h-full w-full flex-1 bg-primary transition-all"
-        data-slot="progress-indicator"
-        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-      />
+      {children}
+      <ProgressPrimitive.Track className="h-full w-full">
+        <ProgressPrimitive.Indicator
+          className="h-full bg-primary transition-all"
+          data-slot="progress-indicator"
+        />
+      </ProgressPrimitive.Track>
     </ProgressPrimitive.Root>
   );
 }

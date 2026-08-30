@@ -25,6 +25,17 @@ describe("identity policy", () => {
     })
   );
 
+  it.effect("rejects an oversized email", () =>
+    Effect.gen(function* () {
+      const error = yield* normalizeIdentity({
+        email: `${"a".repeat(309)}@example.com`,
+        name: "Person",
+      }).pipe(Effect.flip);
+
+      expect(error.message).toBe("Enter a valid email address.");
+    })
+  );
+
   it.effect("rejects short passwords", () =>
     Effect.gen(function* () {
       const error = yield* validatePassword("short").pipe(Effect.flip);
@@ -38,6 +49,14 @@ describe("identity policy", () => {
       const password = yield* validatePassword("long-enough!");
 
       expect(password).toBe("long-enough!");
+    })
+  );
+
+  it.effect("rejects an oversized password", () =>
+    Effect.gen(function* () {
+      const error = yield* validatePassword("a".repeat(257)).pipe(Effect.flip);
+
+      expect(error.message).toContain("12 to 256 characters");
     })
   );
 

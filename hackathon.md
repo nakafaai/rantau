@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth v2 password provider with isolated JWT and JWKS keys
 - **AI models:** `openai/gpt-5.4-mini` through Vercel AI Gateway with `google/gemini-3.5-flash-lite` fallback
 - **Started:** 2026-08-30T04:20:15Z
-- **Last updated:** 2026-08-30T08:20:12Z
+- **Last updated:** 2026-08-30T09:35:17Z
 
 ## Log
 
@@ -33,3 +33,7 @@ Verified the live application in Chrome from account creation through sign-out a
 ### 2026-08-30 - CV lifecycle hardening
 
 Re-audited the core opportunity and CV boundaries before handoff. The opportunity result path already uses one bounded Convex subscription with one profile read for all cards. Hardened the CV intake action so failed validation, extraction, or final persistence discards only unreferenced uploads. Added a storage ownership index that prevents a CV already attached to one profile from being attached to another profile, while preserving referenced files during cleanup. Added Convex regression coverage for both failure cleanup and referenced-file protection.
+
+### 2026-08-30 - Nakafa interface and auth parity
+
+Replaced the presentation layer with Nakafa's current themes, typography, button, field, menu, and responsive sidebar primitives while preserving Rantau's bilingual job-search domain. Simplified the search entry point to one generic query and one primary action. Rebuilt authentication with the same 3-to-4 column Nakafa composition and theme-responsive dithering, while retaining Convex Auth email and password access through a shadcn Field and TanStack Form flow validated by Effect v4 Standard Schema. The password helper and validation error now share one message and are mutually exclusive. Formatting, Ultracite and Biome checks, all four package typechecks, 40 tests, the static production build, and Chrome runtime checks pass.

@@ -6,7 +6,10 @@
   "common": {
     "brand": "Rantau",
     "tagline": "Cari kerja, tanpa ribet",
+    "back": "Kembali",
+    "theme": "Tema",
     "loading": "Menyiapkan ruang kerjamu...",
+    "workspace": "Ruang kerja",
     "search": "Cari kerja",
     "profile": "Profil & CV",
     "tracker": "Lamaran",
@@ -16,32 +19,28 @@
     "error": "Terjadi kendala. Silakan coba lagi."
   },
   "auth": {
-    "eyebrow": "Jalur kerja yang lebih jelas",
-    "title": "Kesempatan berikutnya bisa dimulai dari mana saja.",
-    "description": "Cari langsung di halaman perusahaan dan program resmi, pahami yang perlu disiapkan, lalu melamar tanpa profil yang rumit.",
     "email": "Email",
+    "emailInvalid": "Masukkan alamat email yang valid.",
     "name": "Nama",
+    "nameInvalid": "Gunakan 1 sampai 120 karakter.",
     "password": "Kata sandi",
+    "passwordRule": "Gunakan 12 sampai 256 karakter.",
     "signIn": "Masuk",
     "signUp": "Buat akun",
     "new": "Baru di Rantau?",
-    "existing": "Sudah punya akun?",
-    "passwordHelp": "Gunakan minimal 12 karakter."
+    "existing": "Sudah punya akun?"
   },
   "search": {
-    "eyebrow": "Pencarian kesempatan langsung",
-    "title": "Kamu sedang mencari pekerjaan seperti apa?",
-    "description": "Pakai bahasa sehari-hari. Tulis pekerjaan, negara, jalur, atau hal lain yang penting untukmu.",
-    "placeholder": "Kerja tukang las di Jepang dengan bantuan visa, atau Ausbildung perawat di Jerman",
-    "button": "Cari kesempatan",
-    "working": "Mencari di halaman resmi dan perusahaan...",
-    "emptyTitle": "Mulai dengan satu pencarian sederhana",
-    "emptyBody": "Rantau mencari di web, memeriksa sumbernya, lalu menjaga agar tautan lamaran langsung tetap melekat pada setiap hasil.",
+    "title": "Cari kerja",
+    "placeholder": "Cari posisi, perusahaan, atau lokasi",
+    "button": "Cari",
+    "working": "Mencari...",
     "results": "hasil",
     "apply": "Lamar di sumber",
     "save": "Simpan",
     "saved": "Tersimpan",
     "requirements": "Yang perlu disiapkan",
+    "hide": "Sembunyikan detail",
     "steps": "Jalur melamar",
     "support": "Bantuan tersedia",
     "source": "Sumber",
@@ -51,9 +50,8 @@
     "noResults": "Belum ada kesempatan langsung yang kuat. Coba pekerjaan atau lokasi yang lebih luas."
   },
   "profile": {
-    "eyebrow": "Personalisasi",
-    "title": "Ceritakan pekerjaan yang cocok untukmu",
-    "description": "Profil singkat membantu menjelaskan kesiapanmu. Kamu tetap bisa mencari sebelum melengkapinya.",
+    "title": "Profil & CV",
+    "description": "Tambahkan preferensi atau unggah CV.",
     "roles": "Pekerjaan yang dicari",
     "locations": "Lokasi",
     "skills": "Keahlian",
@@ -72,9 +70,8 @@
     "uploaded": "CV siap"
   },
   "tracker": {
-    "eyebrow": "Pelacak lamaran",
-    "title": "Semua lamaran dalam satu tampilan tenang",
-    "description": "Simpan kesempatan sebelum melamar, lalu perbarui statusnya selama proses berjalan.",
+    "title": "Lamaran",
+    "description": "Lacak semua lamaran dalam satu tempat.",
     "empty": "Belum ada lamaran tersimpan. Kesempatan yang kamu simpan akan muncul di sini.",
     "notes": "Catatan",
     "saved": "Tersimpan",
@@ -92,9 +89,8 @@
     "mailSent": "Ringkasan lamaran terkirim"
   },
   "costs": {
-    "eyebrow": "Transparan sejak awal",
-    "title": "Teknologi di balik setiap pencarian",
-    "description": "Rantau memakai komponen Convex agar tidak membangun infrastruktur paralel. Biaya nyata bergantung pada pencarian, halaman yang dibaca, email, penyimpanan, dan token AI.",
+    "title": "Cara kerja",
+    "description": "Lihat teknologi Rantau dan biaya berdasarkan pemakaian.",
     "stack": "Kemampuan",
     "usage": "Pemicu biaya",
     "convex": "Database, auth, realtime, file, fungsi, dan static hosting",

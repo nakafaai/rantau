@@ -1,10 +1,22 @@
 import { Effect, Schema } from "effect";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
-const MAXIMUM_EMAIL_LENGTH = 320;
-const MAXIMUM_NAME_LENGTH = 120;
-const MAXIMUM_PASSWORD_LENGTH = 256;
-const MINIMUM_PASSWORD_LENGTH = 12;
+export const MAXIMUM_EMAIL_LENGTH = 320;
+export const MAXIMUM_NAME_LENGTH = 120;
+export const MAXIMUM_PASSWORD_LENGTH = 256;
+export const MINIMUM_PASSWORD_LENGTH = 12;
+
+export const IdentityEmail = Schema.Trim.pipe(
+  Schema.check(Schema.isMaxLength(MAXIMUM_EMAIL_LENGTH)),
+  Schema.check(Schema.isPattern(EMAIL_PATTERN))
+);
+export const IdentityName = Schema.Trim.pipe(
+  Schema.check(Schema.isMaxLength(MAXIMUM_NAME_LENGTH))
+);
+export const IdentityPassword = Schema.String.pipe(
+  Schema.check(Schema.isMinLength(MINIMUM_PASSWORD_LENGTH)),
+  Schema.check(Schema.isMaxLength(MAXIMUM_PASSWORD_LENGTH))
+);
 
 export const IdentityProfile = Schema.Struct({
   email: Schema.String,
@@ -23,23 +35,24 @@ export class IdentityPolicyError extends Schema.TaggedError<IdentityPolicyError>
 export const normalizeIdentity = Effect.fn("identity.normalize")(function* (
   input: Readonly<{ email: unknown; name: unknown }>
 ) {
-  const email = String(input.email ?? "")
-    .trim()
-    .toLocaleLowerCase();
-  const name = String(input.name ?? "").trim();
-
-  if (email.length > MAXIMUM_EMAIL_LENGTH || !EMAIL_PATTERN.test(email)) {
-    return yield* Effect.fail(
-      new IdentityPolicyError({ message: "Enter a valid email address." })
-    );
-  }
-  if (name.length > MAXIMUM_NAME_LENGTH) {
-    return yield* Effect.fail(
-      new IdentityPolicyError({
-        message: "Keep your name under 120 characters.",
-      })
-    );
-  }
+  const email = yield* Schema.decodeUnknownEffect(IdentityEmail)(
+    String(input.email ?? "")
+  ).pipe(
+    Effect.map((value) => value.toLocaleLowerCase()),
+    Effect.mapError(
+      () => new IdentityPolicyError({ message: "Enter a valid email address." })
+    )
+  );
+  const name = yield* Schema.decodeUnknownEffect(IdentityName)(
+    String(input.name ?? "")
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new IdentityPolicyError({
+          message: `Keep your name under ${MAXIMUM_NAME_LENGTH} characters.`,
+        })
+    )
+  );
 
   return {
     email,
@@ -50,17 +63,13 @@ export const normalizeIdentity = Effect.fn("identity.normalize")(function* (
 /** Enforces the Rantau password policy as a typed Effect program. */
 export const validatePassword = Effect.fn("identity.validatePassword")(
   function* (password: string) {
-    if (
-      password.length < MINIMUM_PASSWORD_LENGTH ||
-      password.length > MAXIMUM_PASSWORD_LENGTH
-    ) {
-      return yield* Effect.fail(
-        new IdentityPolicyError({
-          message: `Use ${MINIMUM_PASSWORD_LENGTH} to ${MAXIMUM_PASSWORD_LENGTH} characters for your password.`,
-        })
-      );
-    }
-
-    return password;
+    return yield* Schema.decodeUnknownEffect(IdentityPassword)(password).pipe(
+      Effect.mapError(
+        () =>
+          new IdentityPolicyError({
+            message: `Use ${MINIMUM_PASSWORD_LENGTH} to ${MAXIMUM_PASSWORD_LENGTH} characters for your password.`,
+          })
+      )
+    );
   }
 );

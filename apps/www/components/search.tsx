@@ -1,21 +1,16 @@
 "use client";
 
+import { Loading03Icon, Search02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { useAction, useQuery } from "convex/react";
-import { SearchIcon, Sparkles } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Header } from "@/components/header";
 import { Opportunity } from "@/components/opportunity";
 
 /** Runs evidence-backed discovery and renders direct-source results. */
@@ -50,36 +45,21 @@ export function Search() {
 
   return (
     <section className="space-y-8">
-      <header className="max-w-3xl space-y-3">
-        <p className="font-semibold text-primary text-sm uppercase tracking-[0.16em]">
-          {t("eyebrow")}
-        </p>
-        <h1 className="font-semibold text-3xl tracking-tight sm:text-4xl">
-          {t("title")}
-        </h1>
-        <p className="text-muted-foreground leading-relaxed">
-          {t("description")}
-        </p>
-      </header>
+      <Header title={t("title")} />
 
-      <form
-        action={submit}
-        className="flex max-w-4xl flex-col gap-3 sm:flex-row"
-      >
+      <form action={submit} className="grid gap-2 sm:grid-cols-[1fr_auto]">
         <Input
-          className="h-12 flex-1 rounded-xl bg-card px-4 shadow-sm"
           disabled={pending}
           minLength={3}
           name="query"
           placeholder={t("placeholder")}
           required
         />
-        <Button
-          className="h-12 rounded-xl px-6"
-          disabled={pending}
-          type="submit"
-        >
-          {pending ? <Sparkles className="animate-pulse" /> : <SearchIcon />}
+        <Button disabled={pending} type="submit">
+          <HugeIcons
+            className={pending ? "animate-spin" : undefined}
+            icon={pending ? Loading03Icon : Search02Icon}
+          />
           {pending ? t("working") : t("button")}
         </Button>
       </form>
@@ -94,26 +74,10 @@ export function Search() {
               <Opportunity key={record.opportunity._id} record={record} />
             ))
           ) : (
-            <Card>
-              <CardContent className="text-muted-foreground">
-                {t("noResults")}
-              </CardContent>
-            </Card>
+            <p className="text-muted-foreground text-sm">{t("noResults")}</p>
           )}
         </div>
-      ) : (
-        <Card className="max-w-4xl border-dashed bg-muted/30 shadow-none">
-          <CardHeader>
-            <div className="mb-2 grid size-10 place-items-center rounded-full bg-secondary text-primary">
-              <Sparkles className="size-5" />
-            </div>
-            <CardTitle>{t("emptyTitle")}</CardTitle>
-            <CardDescription className="max-w-2xl leading-relaxed">
-              {t("emptyBody")}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
+      ) : null}
     </section>
   );
 }

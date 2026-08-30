@@ -1,38 +1,45 @@
 "use client";
 
 import {
+  BotIcon,
+  Database01Icon,
+  Mail01Icon,
+  SearchCheckIcon,
+} from "@hugeicons/core-free-icons";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Bot, Database, Mail, SearchCheck } from "lucide-react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
+import { Header } from "@/components/header";
 
 const capabilities = [
   {
     description: "convex",
     href: "https://www.convex.dev/pricing",
-    icon: Database,
+    icon: Database01Icon,
     name: "Convex",
   },
   {
     description: "firecrawl",
     href: "https://www.firecrawl.dev/pricing",
-    icon: SearchCheck,
+    icon: SearchCheckIcon,
     name: "Firecrawl",
   },
   {
     description: "gateway",
     href: "https://vercel.com/ai-gateway/models",
-    icon: Bot,
+    icon: BotIcon,
     name: "Vercel AI Gateway",
   },
   {
     description: "agentmail",
     href: "https://www.agentmail.to/pricing",
-    icon: Mail,
+    icon: Mail01Icon,
     name: "AgentMail",
   },
 ] as const;
@@ -67,26 +74,14 @@ export function Costs() {
 
   return (
     <section className="space-y-8">
-      <header className="max-w-3xl space-y-3">
-        <p className="font-semibold text-primary text-sm uppercase tracking-[0.16em]">
-          {t("eyebrow")}
-        </p>
-        <h1 className="font-semibold text-3xl tracking-tight sm:text-4xl">
-          {t("title")}
-        </h1>
-        <p className="text-muted-foreground leading-relaxed">
-          {t("description")}
-        </p>
-      </header>
+      <Header description={t("description")} title={t("title")} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {capabilities.map(({ description, href, icon: Icon, name }) => (
           <a href={href} key={name} rel="noreferrer" target="_blank">
             <Card className="h-full transition-colors hover:border-primary/50">
               <CardHeader>
-                <div className="mb-2 grid size-10 place-items-center rounded-full bg-secondary text-primary">
-                  <Icon className="size-5" />
-                </div>
+                <HugeIcons className="size-5" icon={Icon} />
                 <CardTitle>{name}</CardTitle>
                 <CardDescription className="leading-relaxed">
                   {t(description)}

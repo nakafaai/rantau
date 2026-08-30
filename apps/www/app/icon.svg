@@ -1,0 +1,8 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <title>Rantau</title>
+  <rect fill="#171717" height="64" rx="16" width="64" />
+  <path
+    d="M21 15h13c9 0 15 5 15 13 0 6-3 10-9 12l11 16H39L29 41h-1v15H21V15Zm7 8v11h6c5 0 7-2 7-6s-2-5-7-5h-6Z"
+    fill="#fafafa"
+  />
+</svg>
