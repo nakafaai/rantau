@@ -19,6 +19,17 @@ type MailReservation =
   | { status: "reserved" }
   | { status: "busy" };
 
+/** Reduces a provider failure to non-sensitive production diagnostics. */
+function describeFailure(error: unknown) {
+  if (error instanceof Error) {
+    return { message: error.message, name: error.name };
+  }
+  if (typeof error === "object" && error !== null && "_tag" in error) {
+    return { tag: String(error._tag) };
+  }
+  return { type: typeof error };
+}
+
 const agentmail = new AgentMail(components.agentmail);
 const rateLimiter = new RateLimiter(components.rateLimiter, {
   applicationDigest: {
@@ -171,6 +182,10 @@ export const provision = action({
       )
     );
     if (!outcome.success) {
+      console.error(
+        "AgentMail inbox provisioning failed",
+        describeFailure(outcome.error)
+      );
       await ctx.runMutation(internal.mail.clear, { userId });
       throw new ConvexError({ code: "INBOX_FAILED" });
     }
