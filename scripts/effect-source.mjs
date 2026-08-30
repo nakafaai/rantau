@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import process from "node:process";
 
-const expected = "4.0.0-rc.110";
+const expected = "4.0.0-rc.112";
 const vendoredPackage = new URL(
   "../repos/effect/packages/effect/package.json",
   import.meta.url
