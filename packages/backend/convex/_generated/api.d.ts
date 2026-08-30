@@ -14,6 +14,7 @@ import type * as auth from "../auth.js";
 import type * as cv from "../cv.js";
 import type * as hosting from "../hosting.js";
 import type * as http from "../http.js";
+import type * as legacy from "../legacy.js";
 import type * as lib_discover from "../lib/discover.js";
 import type * as lib_guard from "../lib/guard.js";
 import type * as mail from "../mail.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   cv: typeof cv;
   hosting: typeof hosting;
   http: typeof http;
+  legacy: typeof legacy;
   "lib/discover": typeof lib_discover;
   "lib/guard": typeof lib_guard;
   mail: typeof mail;
@@ -72,8 +74,11 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
+  auth: import("@convex-dev/auth/core/_generated/component.js").ComponentApi<"auth">;
   agentmail: import("@agentmail/convex/_generated/component.js").ComponentApi<"agentmail">;
+  authPasswordProvider: import("@convex-dev/auth/providers/password/_generated/component.js").ComponentApi<"authPasswordProvider">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   firecrawl: import("@firecrawl/firecrawl-convex/_generated/component.js").ComponentApi<"firecrawl">;
   staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
+  authUsername: import("@convex-dev/auth/username/_generated/component.js").ComponentApi<"authUsername">;
 };

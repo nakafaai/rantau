@@ -34,14 +34,20 @@
     "name": "Name",
     "nameInvalid": "Use 1 to 120 characters.",
     "password": "Password",
-    "passwordRule": "Use 12 to 256 characters.",
+    "passwordRule": "Use 12 to 100 characters.",
+    "newPassword": "New password",
+    "upgrade": "Update password",
+    "upgradeTitle": "Update your password",
+    "upgradeDescription": "Your account is verified. Choose a stronger password to continue.",
     "signIn": "Sign in",
     "signUp": "Create account",
     "new": "New to Rantau?",
     "existing": "Already have an account?",
     "invalid": "Email or password is incorrect.",
     "exists": "An account already uses this email.",
-    "connection": "Connection interrupted. Try again."
+    "connection": "Connection interrupted. Try again.",
+    "common": "Choose a less common password.",
+    "rate": "Too many attempts. Try again shortly."
   },
   "search": {
     "title": "Find work",

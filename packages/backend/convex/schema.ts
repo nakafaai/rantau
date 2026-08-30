@@ -1,4 +1,4 @@
-import { authTables } from "@convex-dev/auth/server";
+import { legacyAuthTables } from "@repo/backend/convex/legacy";
 import {
   applicationStatusValidator,
   localeValidator,
@@ -9,7 +9,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  ...authTables,
+  ...legacyAuthTables,
   applications: defineTable({
     appliedAt: v.optional(v.number()),
     notes: v.string(),
@@ -72,4 +72,15 @@ export default defineSchema({
       v.union(v.literal("onsite"), v.literal("hybrid"), v.literal("remote"))
     ),
   }).index("by_user_createdAt", ["userId", "createdAt"]),
+  users: defineTable({
+    email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    image: v.optional(v.string()),
+    isAnonymous: v.optional(v.boolean()),
+    name: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+  })
+    .index("email", ["email"])
+    .index("phone", ["phone"]),
 });

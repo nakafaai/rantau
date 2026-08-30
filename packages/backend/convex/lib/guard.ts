@@ -1,4 +1,4 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getAuthUserId } from "@convex-dev/auth/core";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type {
   GenericActionCtx,
