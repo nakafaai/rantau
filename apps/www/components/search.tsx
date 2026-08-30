@@ -38,6 +38,14 @@ const skeletonColumns = [
   "actions",
 ];
 const skeletonRows = ["first", "second", "third", "fourth", "fifth"];
+const tableRows = [
+  ...skeletonRows,
+  "sixth",
+  "seventh",
+  "eighth",
+  "ninth",
+  "tenth",
+] as const;
 
 /** Returns a selected form value or removes the neutral any option. */
 function selected(formData: FormData, name: string) {
@@ -162,15 +170,8 @@ export function Search() {
         ) : null}
         {!(hydrating || running) &&
         session?.status === "complete" &&
-        opportunities?.length ? (
+        opportunities ? (
           <Results records={opportunities} />
-        ) : null}
-        {!(hydrating || running) &&
-        session?.status === "complete" &&
-        opportunities?.length === 0 ? (
-          <p className="rounded-md border p-4 text-muted-foreground text-sm">
-            {t("noResults")}
-          </p>
         ) : null}
       </div>
     </section>
@@ -180,32 +181,44 @@ export function Search() {
 /** Mirrors final table geometry while a background search is running. */
 function SearchSkeleton() {
   return (
-    <div aria-hidden className="overflow-hidden rounded-md border">
-      <Table className="table-fixed" containerClassName="overflow-hidden">
-        <TableHeader>
-          <TableRow>
-            {skeletonColumns.map((column) => (
-              <TableHead className={resultColumnClass(column)} key={column}>
-                <Skeleton className="h-4 max-w-full" />
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {skeletonRows.map((row) => (
-            <TableRow key={row}>
+    <div aria-hidden className="space-y-3">
+      <div className="min-h-[37.75rem] overflow-hidden rounded-md border">
+        <Table className="table-fixed" containerClassName="overflow-hidden">
+          <TableHeader>
+            <TableRow>
               {skeletonColumns.map((column) => (
-                <TableCell
-                  className={resultColumnClass(column)}
-                  key={`${row}-${column}`}
-                >
-                  <Skeleton className="h-5 max-w-full" />
-                </TableCell>
+                <TableHead className={resultColumnClass(column)} key={column}>
+                  <Skeleton className="h-4 max-w-full" />
+                </TableHead>
               ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {tableRows.map((row) => (
+              <TableRow className="h-14" key={row}>
+                {skeletonColumns.map((column) => (
+                  <TableCell
+                    className={resultColumnClass(column)}
+                    key={`${row}-${column}`}
+                  >
+                    <Skeleton className="h-5 max-w-full" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex min-h-8 items-center justify-between gap-3">
+        <Skeleton className="h-4 w-28" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="hidden h-4 w-24 sm:block" />
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="size-8" />
+          <Skeleton className="size-8" />
+        </div>
+      </div>
     </div>
   );
 }

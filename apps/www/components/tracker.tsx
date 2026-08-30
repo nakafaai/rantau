@@ -122,7 +122,7 @@ export function Tracker() {
         />
       </div>
 
-      <div className="pt-8">
+      <div className="min-h-72 pt-8">
         {records === undefined ? <ApplicationSkeleton /> : null}
         {records?.length ? <ApplicationTable records={records} /> : null}
         {records?.length === 0 ? (
@@ -332,7 +332,7 @@ function ApplicationSheet({ record }: { record: ApplicationRecord }) {
 /** Preserves the applications table geometry while Convex hydrates. */
 function ApplicationSkeleton() {
   return (
-    <div aria-hidden className="overflow-hidden rounded-md border">
+    <div aria-hidden className="min-h-72 overflow-hidden rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
