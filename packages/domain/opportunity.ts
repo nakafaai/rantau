@@ -1,5 +1,9 @@
 import { Schema } from "effect";
 
+export const HttpUrl = Schema.String.check(
+  Schema.isPattern(/^https?:\/\/[^\s]+$/iu)
+);
+
 export const OpportunityPathway = Schema.Literals([
   "job",
   "ausbildung",
@@ -21,7 +25,7 @@ export const SourceEvidence = Schema.Struct({
   kind: SourceKind,
   name: Schema.String,
   retrievedAt: Schema.String,
-  url: Schema.String,
+  url: HttpUrl,
 });
 
 export const OpportunityRequirement = Schema.Struct({
@@ -42,7 +46,7 @@ export const OpportunityRequirement = Schema.Struct({
 export const SupportResource = Schema.Struct({
   description: Schema.String,
   name: Schema.String,
-  url: Schema.NullOr(Schema.String),
+  url: Schema.NullOr(HttpUrl),
 });
 
 export const Opportunity = Schema.Struct({
@@ -51,7 +55,7 @@ export const Opportunity = Schema.Struct({
   ),
   company: Schema.String,
   deadline: Schema.NullOr(Schema.String),
-  directApplyUrl: Schema.String,
+  directApplyUrl: HttpUrl,
   employmentType: Schema.String,
   location: Schema.String,
   pathway: OpportunityPathway,

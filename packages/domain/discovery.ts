@@ -1,4 +1,5 @@
 import {
+  HttpUrl,
   type Opportunity,
   OpportunityPathway,
   OpportunityRequirement,
@@ -31,7 +32,7 @@ const SearchResponse = Schema.Struct({
 export const DiscoverySource = Schema.Struct({
   content: Schema.String,
   title: Schema.String,
-  url: Schema.String,
+  url: HttpUrl,
 });
 export type DiscoverySource = Schema.Schema.Type<typeof DiscoverySource>;
 
@@ -86,11 +87,11 @@ export const decodeDiscoverySources = Effect.fn("discovery.decodeSources")(
       )
     );
 
-    return (response.web ?? []).flatMap((result) => {
+    return yield* Effect.forEach(response.web ?? [], (result) => {
       const url =
         result.url ?? result.metadata?.sourceURL ?? result.metadata?.url;
       if (!url) {
-        return [];
+        return Effect.succeed<readonly DiscoverySource[]>([]);
       }
 
       const title = result.title ?? result.metadata?.title ?? url;
@@ -98,8 +99,17 @@ export const decodeDiscoverySources = Effect.fn("discovery.decodeSources")(
         0,
         MAX_SOURCE_CONTENT
       );
-      return [{ content, title, url } satisfies DiscoverySource];
-    });
+      return Schema.decodeUnknownEffect(DiscoverySource)({
+        content,
+        title,
+        url,
+      }).pipe(
+        Effect.match({
+          onFailure: () => [] as const,
+          onSuccess: (source) => [source] as const,
+        })
+      );
+    }).pipe(Effect.map((sources) => sources.flat()));
   }
 );
 

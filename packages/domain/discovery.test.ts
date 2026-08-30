@@ -28,7 +28,7 @@ describe("opportunity discovery", () => {
     })
   );
 
-  it.effect("normalizes optional provider fields and drops missing URLs", () =>
+  it.effect("normalizes fields and drops missing or unsafe URLs", () =>
     Effect.gen(function* () {
       const sources = yield* decodeDiscoverySources({
         web: [
@@ -36,6 +36,7 @@ describe("opportunity discovery", () => {
           { metadata: { url: "https://two.example" }, markdown: "Two" },
           { url: "https://three.example" },
           { description: "No URL" },
+          { description: "Unsafe", url: "javascript:alert(1)" },
         ],
       });
       const empty = yield* decodeDiscoverySources({});

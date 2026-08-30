@@ -32,4 +32,31 @@ describe("Opportunity", () => {
     expect(opportunity.pathway).toBe("job");
     expect(opportunity.requirements[0]?.category).toBe("language");
   });
+
+  it("rejects a non-HTTP application URL", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(Opportunity)({
+        applicationSteps: ["Open the employer application"],
+        company: "Example Health",
+        deadline: null,
+        directApplyUrl: "javascript:alert(1)",
+        employmentType: "Full time",
+        location: "Osaka, Japan",
+        pathway: "job",
+        publishedAt: null,
+        requirements: [],
+        salary: null,
+        source: {
+          kind: "employer",
+          name: "Example Health careers",
+          retrievedAt: "2026-08-30T00:00:00.000Z",
+          url: "javascript:alert(1)",
+        },
+        summary: "Care role with relocation support.",
+        support: [],
+        title: "Care worker",
+        workMode: "onsite",
+      })
+    ).toThrow();
+  });
 });
