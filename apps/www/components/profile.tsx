@@ -106,17 +106,19 @@ export function Profile() {
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col">
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <Header title={t("title")} />
-      <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
-        <ProfileForm
-          current={current ?? null}
-          disabled={current === undefined || account === undefined}
-          key={current?._id ?? "new"}
-          onSubmit={submit}
-          pending={pending}
-        />
-        <Cv current={current ?? null} disabled={current === undefined} />
+      <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+        <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+          <ProfileForm
+            current={current ?? null}
+            disabled={current === undefined || account === undefined}
+            key={current?._id ?? "new"}
+            onSubmit={submit}
+            pending={pending}
+          />
+          <Cv current={current ?? null} disabled={current === undefined} />
+        </div>
       </div>
     </section>
   );
