@@ -52,7 +52,24 @@ type ProfileFormProps = Readonly<{
   pending: boolean;
 }>;
 
-/** Composes grouped Coss settings without leaking storage syntax. */
+/** Renders one consistent save footer for a Shadcn settings card. */
+function SettingsFooter({
+  disabled,
+  helper,
+  label,
+}: Readonly<{ disabled: boolean; helper: string; label: string }>) {
+  return (
+    <CardFooter className="justify-between gap-4">
+      <p className="text-muted-foreground text-xs">{helper}</p>
+      <Button disabled={disabled} size="sm" type="submit">
+        <HugeIcons className="size-4" icon={SaveIcon} />
+        {label}
+      </Button>
+    </CardFooter>
+  );
+}
+
+/** Composes grouped Shadcn settings without leaking storage syntax. */
 export function ProfileForm({
   current,
   disabled,
@@ -152,6 +169,11 @@ export function ProfileForm({
             </FieldGroup>
           </FieldSet>
         </CardContent>
+        <SettingsFooter
+          disabled={disabled || pending}
+          helper={t("preferencesSaveHelp")}
+          label={t("save")}
+        />
       </Card>
 
       <Card>
@@ -224,12 +246,16 @@ export function ProfileForm({
                   defaultValue={language?.language ?? ""}
                   name={`language${position}`}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    aria-label={`${t("languages")} ${position}`}
+                    className="w-full"
+                  >
                     <SelectValue placeholder={t("languagePlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
                     {languageOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
+                        <CountryFlag countryCode={option.countryCode} />
                         {t(`languageOptions.${option.key}`)}
                       </SelectItem>
                     ))}
@@ -239,7 +265,10 @@ export function ProfileForm({
                   defaultValue={language?.level ?? ""}
                   name={`level${position}`}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    aria-label={`${t("levelPlaceholder")} ${position}`}
+                    className="w-full"
+                  >
                     <SelectValue placeholder={t("levelPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -254,6 +283,11 @@ export function ProfileForm({
             ))}
           </FieldSet>
         </CardContent>
+        <SettingsFooter
+          disabled={disabled || pending}
+          helper={t("backgroundSaveHelp")}
+          label={t("save")}
+        />
       </Card>
 
       <Card>
@@ -308,12 +342,11 @@ export function ProfileForm({
             </Select>
           </Field>
         </CardContent>
-        <CardFooter className="justify-end border-t bg-muted/20">
-          <Button disabled={disabled || pending} type="submit">
-            <HugeIcons className="size-4" icon={SaveIcon} />
-            {t("save")}
-          </Button>
-        </CardFooter>
+        <SettingsFooter
+          disabled={disabled || pending}
+          helper={t("documentsSaveHelp")}
+          label={t("save")}
+        />
       </Card>
     </form>
   );

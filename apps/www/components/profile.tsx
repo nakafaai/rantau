@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { ProfileInput, WorkAuthorization } from "@repo/domain/profile";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { Effect, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Cv } from "@/components/cv";
 import { ProfileForm } from "@/components/form";
 import { Header } from "@/components/header";
+import { useSaveProfile } from "@/hooks/profile";
 
 /** Reads one trimmed optional text value from a browser form. */
 function optionalText(formData: FormData, name: string) {
@@ -38,8 +39,9 @@ export function Profile() {
   const t = useTranslations("profile");
   const common = useTranslations("common");
   const locale = useLocale() === "id" ? "id" : "en";
+  const account = useQuery(api.accounts.current);
   const current = useQuery(api.profiles.get);
-  const saveProfile = useMutation(api.profiles.upsert);
+  const saveProfile = useSaveProfile(account?.userId);
   const [pending, setPending] = useState(false);
 
   /** Validates one structured profile and persists it through Convex. */
@@ -104,16 +106,18 @@ export function Profile() {
   }
 
   return (
-    <section className="space-y-8">
+    <section className="flex min-h-0 flex-1 flex-col">
       <Header title={t("title")} />
-      <ProfileForm
-        current={current ?? null}
-        disabled={current === undefined}
-        key={current?.updatedAt ?? "new"}
-        onSubmit={submit}
-        pending={pending}
-      />
-      <Cv current={current ?? null} disabled={current === undefined} />
+      <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+        <ProfileForm
+          current={current ?? null}
+          disabled={current === undefined || account === undefined}
+          key={current?._id ?? "new"}
+          onSubmit={submit}
+          pending={pending}
+        />
+        <Cv current={current ?? null} disabled={current === undefined} />
+      </div>
     </section>
   );
 }

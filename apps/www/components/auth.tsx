@@ -158,12 +158,16 @@ export function Auth() {
                             const isInvalid =
                               Boolean(field.state.meta.isTouched) &&
                               Boolean(!field.state.meta.isValid);
+                            const errorId = `${field.name}-error`;
                             return (
                               <Field data-invalid={isInvalid}>
                                 <FieldLabel htmlFor={field.name}>
                                   {t("name")}
                                 </FieldLabel>
                                 <Input
+                                  aria-describedby={
+                                    isInvalid ? errorId : undefined
+                                  }
                                   aria-invalid={isInvalid}
                                   autoComplete="name"
                                   id={field.name}
@@ -177,7 +181,9 @@ export function Auth() {
                                   value={field.state.value}
                                 />
                                 {isInvalid ? (
-                                  <FieldError>{t("nameInvalid")}</FieldError>
+                                  <FieldError id={errorId}>
+                                    {t("nameInvalid")}
+                                  </FieldError>
                                 ) : null}
                               </Field>
                             );
@@ -192,12 +198,14 @@ export function Auth() {
                       const isInvalid =
                         Boolean(field.state.meta.isTouched) &&
                         Boolean(!field.state.meta.isValid);
+                      const errorId = `${field.name}-error`;
                       return (
                         <Field data-invalid={isInvalid}>
                           <FieldLabel htmlFor={field.name}>
                             {t("email")}
                           </FieldLabel>
                           <Input
+                            aria-describedby={isInvalid ? errorId : undefined}
                             aria-invalid={isInvalid}
                             autoComplete="email"
                             id={field.name}
@@ -212,7 +220,9 @@ export function Auth() {
                             value={field.state.value}
                           />
                           {isInvalid ? (
-                            <FieldError>{t("emailInvalid")}</FieldError>
+                            <FieldError id={errorId}>
+                              {t("emailInvalid")}
+                            </FieldError>
                           ) : null}
                         </Field>
                       );
@@ -226,12 +236,21 @@ export function Auth() {
                           const isInvalid =
                             Boolean(field.state.meta.isTouched) &&
                             Boolean(!field.state.meta.isValid);
+                          const errorId = `${field.name}-error`;
+                          const helpId = `${field.name}-help`;
+                          let describedBy: string | undefined;
+                          if (isInvalid) {
+                            describedBy = errorId;
+                          } else if (flow === "signUp") {
+                            describedBy = helpId;
+                          }
                           return (
                             <Field data-invalid={isInvalid}>
                               <FieldLabel htmlFor={field.name}>
                                 {t("password")}
                               </FieldLabel>
                               <Input
+                                aria-describedby={describedBy}
                                 aria-invalid={isInvalid}
                                 autoComplete={
                                   flow === "signUp"
@@ -251,10 +270,12 @@ export function Auth() {
                                 value={field.state.value}
                               />
                               {isInvalid ? (
-                                <FieldError>{t("passwordRule")}</FieldError>
+                                <FieldError id={errorId}>
+                                  {t("passwordRule")}
+                                </FieldError>
                               ) : null}
                               {!isInvalid && flow === "signUp" ? (
-                                <FieldDescription>
+                                <FieldDescription id={helpId}>
                                   {t("passwordRule")}
                                 </FieldDescription>
                               ) : null}

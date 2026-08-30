@@ -64,9 +64,20 @@ describe("identity policy", () => {
     Effect.gen(function* () {
       const fromEmail = yield* normalizeIdentity({
         email: "person@example.com",
-        name: "",
+        name: null,
       });
       expect(fromEmail.name).toBe("person");
+    })
+  );
+
+  it.effect("rejects an absent email", () =>
+    Effect.gen(function* () {
+      const error = yield* normalizeIdentity({
+        email: null,
+        name: "Person",
+      }).pipe(Effect.flip);
+
+      expect(error.message).toBe("Enter a valid email address.");
     })
   );
 

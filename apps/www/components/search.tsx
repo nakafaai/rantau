@@ -6,46 +6,14 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { OpportunityPathway, WorkMode } from "@repo/domain/opportunity";
-import { useAction, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
-import { resultColumnClass } from "@/components/columns";
 import { Filters } from "@/components/filters";
 import { Results } from "@/components/results";
-
-const skeletonColumns = [
-  "select",
-  "recommendation",
-  "role",
-  "company",
-  "location",
-  "pathway",
-  "mode",
-  "salary",
-  "source",
-  "actions",
-];
-const skeletonRows = ["first", "second", "third", "fourth", "fifth"];
-const tableRows = [
-  ...skeletonRows,
-  "sixth",
-  "seventh",
-  "eighth",
-  "ninth",
-  "tenth",
-] as const;
 
 /** Returns a selected form value or removes the neutral any option. */
 function selected(formData: FormData, name: string) {
@@ -58,7 +26,7 @@ export function Search() {
   const t = useTranslations("search");
   const common = useTranslations("common");
   const locale = useLocale() === "id" ? "id" : "en";
-  const startSearch = useAction(api.opportunities.start);
+  const startSearch = useMutation(api.opportunities.start);
   const profile = useQuery(api.profiles.get);
   const latest = useQuery(api.searches.latest);
   const [activeSearchId, setActiveSearchId] = useState<Id<"searches"> | null>(
@@ -68,7 +36,7 @@ export function Search() {
   const session = useQuery(api.searches.get, searchId ? { searchId } : "skip");
   const opportunities = useQuery(
     api.opportunities.list,
-    session?.status === "complete" ? { searchId: session._id } : "skip"
+    searchId ? { searchId } : "skip"
   );
   const [submitting, setSubmitting] = useState(false);
   const running = submitting || session?.status === "running";
@@ -117,7 +85,7 @@ export function Search() {
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="sticky top-16 z-10 shrink-0 border-b bg-background lg:top-0">
+      <header className="z-10 shrink-0 border-b bg-background">
         <div className="mx-auto w-full max-w-[90rem] px-4 py-3 sm:px-6">
           <h1 className="sr-only">{t("title")}</h1>
           <form
@@ -156,69 +124,16 @@ export function Search() {
 
       <div
         aria-live="polite"
-        className="mx-auto min-h-56 w-full min-w-0 max-w-[90rem] flex-1 px-4 py-4 sm:px-6"
+        className="mx-auto flex min-h-0 w-full min-w-0 max-w-[90rem] flex-1 px-4 py-4 sm:px-6"
       >
-        {hydrating ||
-        running ||
-        (session?.status === "complete" && !opportunities) ? (
-          <SearchSkeleton />
-        ) : null}
-        {!(hydrating || running) && session?.status === "failed" ? (
-          <p className="rounded-md border p-4 text-muted-foreground text-sm">
-            {t("failed")}
-          </p>
-        ) : null}
-        {!(hydrating || running) &&
-        session?.status === "complete" &&
-        opportunities ? (
-          <Results records={opportunities} />
-        ) : null}
+        <Results
+          failed={session?.status === "failed"}
+          key={searchId ?? "latest"}
+          loading={hydrating || (Boolean(searchId) && !opportunities)}
+          records={opportunities ?? []}
+          running={running}
+        />
       </div>
     </section>
-  );
-}
-
-/** Mirrors final table geometry while a background search is running. */
-function SearchSkeleton() {
-  return (
-    <div aria-hidden className="space-y-3">
-      <div className="min-h-[37.75rem] overflow-hidden rounded-md border">
-        <Table className="table-fixed" containerClassName="overflow-hidden">
-          <TableHeader>
-            <TableRow>
-              {skeletonColumns.map((column) => (
-                <TableHead className={resultColumnClass(column)} key={column}>
-                  <Skeleton className="h-4 max-w-full" />
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tableRows.map((row) => (
-              <TableRow className="h-14" key={row}>
-                {skeletonColumns.map((column) => (
-                  <TableCell
-                    className={resultColumnClass(column)}
-                    key={`${row}-${column}`}
-                  >
-                    <Skeleton className="h-5 max-w-full" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex min-h-8 items-center justify-between gap-3">
-        <Skeleton className="h-4 w-28" />
-        <div className="flex items-center gap-2">
-          <Skeleton className="hidden h-4 w-24 sm:block" />
-          <Skeleton className="h-8 w-20" />
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="size-8" />
-          <Skeleton className="size-8" />
-        </div>
-      </div>
-    </div>
   );
 }

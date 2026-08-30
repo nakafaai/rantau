@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { Opportunity } from "@repo/domain/opportunity";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("Opportunity", () => {
   it("decodes a source-backed direct application", () => {

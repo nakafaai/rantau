@@ -102,10 +102,7 @@ export const saveCv = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const metadata = await ctx.db.system.get("_storage", args.fileId);
-    if (
-      metadata?.contentType !== "application/pdf" ||
-      metadata.size > MAX_CV_BYTES
-    ) {
+    if (!metadata || metadata.size > MAX_CV_BYTES) {
       throw new ConvexError({ code: "INVALID_CV" });
     }
 

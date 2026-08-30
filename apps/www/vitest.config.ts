@@ -10,4 +10,16 @@ export default defineConfig({
       "@": root,
     },
   },
+  test: {
+    coverage: {
+      enabled: true,
+      include: ["lib/auth.ts", "lib/locale.ts"],
+      provider: "istanbul",
+      reporter: ["text", "json-summary"],
+      thresholds: {
+        100: true,
+        perFile: true,
+      },
+    },
+  },
 });

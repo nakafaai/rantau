@@ -5,6 +5,7 @@ import password from "@convex-dev/auth/providers/password/convex.config";
 import username from "@convex-dev/auth/username/convex.config";
 import rateLimiter from "@convex-dev/rate-limiter/convex.config";
 import staticHosting from "@convex-dev/static-hosting/convex.config";
+import workpool from "@convex-dev/workpool/convex.config";
 import firecrawl from "@firecrawl/firecrawl-convex/convex.config";
 import { defineApp } from "convex/server";
 import { v } from "convex/values";
@@ -47,5 +48,6 @@ app.use(firecrawl, {
 });
 app.use(staticHosting);
 app.use(username);
+app.use(workpool, { name: "searchWorkpool" });
 
 export default app;

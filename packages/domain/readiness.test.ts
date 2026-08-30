@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { buildReadinessPlan, readinessCounts } from "@repo/domain/readiness";
-import { describe, expect, it } from "vitest";
 
 const requirements = [
   { category: "language" as const, description: "German B1", required: true },
@@ -106,6 +106,44 @@ describe("readiness plan", () => {
       },
       [{ category: "language", description: "Japanese", required: true }]
     );
+    expect(step?.status).toBe("ready");
+  });
+
+  it("does not trust an unrecognized candidate language level", () => {
+    const [step] = buildReadinessPlan(
+      {
+        documents: [],
+        education: [],
+        experienceYears: 0,
+        languages: [{ language: "German", level: "Beginner" }],
+        licenses: [],
+        skills: [],
+      },
+      [{ category: "language", description: "German B1", required: true }]
+    );
+
+    expect(step?.status).toBe("prepare");
+  });
+
+  it("matches a broad profile value around a specific requirement", () => {
+    const [step] = buildReadinessPlan(
+      {
+        documents: ["valid passport document"],
+        education: [],
+        experienceYears: 0,
+        languages: [],
+        licenses: [],
+        skills: [],
+      },
+      [
+        {
+          category: "document",
+          description: "Passport",
+          required: true,
+        },
+      ]
+    );
+
     expect(step?.status).toBe("ready");
   });
 

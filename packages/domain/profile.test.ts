@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ProfileInput } from "@repo/domain/profile";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("candidate profile", () => {
   it("accepts a bounded personalization profile", () => {

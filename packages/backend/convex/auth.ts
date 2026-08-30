@@ -142,6 +142,12 @@ export const signUpWithPassword = passwordProvider.authMutation({
     if (existing) {
       return { error: "EMAIL_TAKEN", success: false } as const;
     }
+    const legacy = await ctx.runQuery(legacyPasswordQuery, {
+      email: normalized.profile.email,
+    });
+    if (legacy) {
+      return { error: "EMAIL_TAKEN", success: false } as const;
+    }
 
     const tokens = await ctx.convexAuth.completeSignUp({
       profile: {
@@ -182,6 +188,14 @@ export const signInWithPassword = passwordProvider.authMutation({
     );
     if (!userId) {
       return { error: "USER_NOT_FOUND", success: false } as const;
+    }
+
+    const accountUserId = await ctx.convexAuth.resolveUserId(userId);
+    if (!accountUserId) {
+      return { error: "USER_NOT_FOUND", success: false } as const;
+    }
+    if (accountUserId !== userId) {
+      throw new Error("The password account belongs to another user.");
     }
 
     const verified = await ctx.runMutation(
@@ -245,33 +259,55 @@ export const migratePassword = passwordProvider.authAction({
       return { error: policyError, success: false } as const;
     }
 
-    const username = await ctx.runMutation(
-      components.authUsername.public.setUsername,
-      { userId: legacy.userId, username: normalized.profile.email }
-    );
+    let accountUserId = await ctx.convexAuth.resolveUserId(legacy.userId);
+    if (!accountUserId) {
+      try {
+        const created = await ctx.convexAuth.signUpWithoutSession({
+          profile: {
+            email: normalized.profile.email,
+            legacyUserId: legacy.userId as Id<"users">,
+            name: legacy.name,
+          },
+          providerAccountId: legacy.userId,
+        });
+        accountUserId = created.userId;
+      } catch (error) {
+        accountUserId = await ctx.convexAuth.resolveUserId(legacy.userId);
+        if (!accountUserId) {
+          throw error;
+        }
+      }
+    }
+    if (accountUserId !== legacy.userId) {
+      throw new Error("The migrated password account belongs to another user.");
+    }
+
     const password = await ctx.runMutation(
       components.authPasswordProvider.public.setPassword,
       { password: nextPassword, userId: legacy.userId }
     );
-    if (!(username.success && password.success)) {
+    if (!password.success) {
       return {
-        error: password.success ? "INVALID_INPUT" : "PASSWORD_TOO_COMMON",
+        error:
+          password.userError.error === "PASSWORD_TOO_COMMON"
+            ? "PASSWORD_TOO_COMMON"
+            : "INVALID_INPUT",
         success: false,
       } as const;
     }
 
-    const existing = await ctx.convexAuth.resolveUserId(legacy.userId);
-    if (!existing) {
-      await ctx.convexAuth.signUpWithoutSession({
-        profile: {
-          email: normalized.profile.email,
-          legacyUserId: legacy.userId as Id<"users">,
-          name: legacy.name,
-        },
-        providerAccountId: legacy.userId,
-      });
-    } else if (existing !== legacy.userId) {
-      throw new Error("The migrated password account belongs to another user.");
+    const username = await ctx.runMutation(
+      components.authUsername.public.setUsername,
+      { userId: legacy.userId, username: normalized.profile.email }
+    );
+    if (!username.success) {
+      return {
+        error:
+          username.userError.error === "USERNAME_TAKEN"
+            ? "EMAIL_TAKEN"
+            : "INVALID_INPUT",
+        success: false,
+      } as const;
     }
 
     await ctx.runMutation(consumePasswordMutation, {

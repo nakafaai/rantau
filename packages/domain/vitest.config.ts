@@ -5,13 +5,11 @@ export default defineConfig({
     coverage: {
       enabled: true,
       include: ["*.ts", "!*.test.ts", "!vitest.config.ts"],
-      provider: "v8",
+      provider: "istanbul",
       reporter: ["text", "json-summary"],
       thresholds: {
-        branches: 90,
-        functions: 100,
-        lines: 100,
-        statements: 100,
+        100: true,
+        perFile: true,
       },
     },
   },
