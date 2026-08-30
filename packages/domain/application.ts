@@ -29,6 +29,11 @@ const allowedTransitions = {
   withdrawn: ["saved"],
 } as const satisfies Record<ApplicationStatus, readonly ApplicationStatus[]>;
 
+/** Returns the domain-approved next statuses for an application. */
+export function nextApplicationStatuses(status: ApplicationStatus) {
+  return allowedTransitions[status] as readonly ApplicationStatus[];
+}
+
 /** Validates an application status change against the domain state machine. */
 export const validateApplicationTransition = Effect.fn(
   "application.validateTransition"
