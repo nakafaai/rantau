@@ -1,4 +1,17 @@
-export type AuthErrorKey = "connection" | "error" | "exists" | "invalid";
+export type AuthErrorKey =
+  | "common"
+  | "connection"
+  | "error"
+  | "exists"
+  | "invalid"
+  | "rate";
+export type AuthResultError =
+  | "EMAIL_TAKEN"
+  | "INVALID_CREDENTIALS"
+  | "INVALID_INPUT"
+  | "PASSWORD_TOO_COMMON"
+  | "RATE_LIMITED"
+  | "USER_NOT_FOUND";
 
 /** Reads the client failure and its immediate vendor cause. */
 function authErrorText(error: unknown): string {
@@ -32,4 +45,18 @@ export function authErrorKey(error: unknown): AuthErrorKey {
     return "connection";
   }
   return "error";
+}
+
+/** Maps a typed Convex Auth v2 result to concise localized copy. */
+export function authResultKey(error: AuthResultError): AuthErrorKey {
+  if (error === "EMAIL_TAKEN") {
+    return "exists";
+  }
+  if (error === "PASSWORD_TOO_COMMON") {
+    return "common";
+  }
+  if (error === "RATE_LIMITED") {
+    return "rate";
+  }
+  return "invalid";
 }

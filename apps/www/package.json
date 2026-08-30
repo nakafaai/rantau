@@ -13,7 +13,7 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@convex-dev/auth": "0.0.95",
+    "@convex-dev/auth": "2.0.0-alpha.1",
     "@hugeicons/core-free-icons": "4.3.0",
     "@paper-design/shaders-react": "0.0.80",
     "@repo/backend": "workspace:*",

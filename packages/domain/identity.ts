@@ -3,7 +3,7 @@ import { Effect, Schema } from "effect";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 export const MAXIMUM_EMAIL_LENGTH = 320;
 export const MAXIMUM_NAME_LENGTH = 120;
-export const MAXIMUM_PASSWORD_LENGTH = 256;
+export const MAXIMUM_PASSWORD_LENGTH = 100;
 export const MINIMUM_PASSWORD_LENGTH = 12;
 
 export const IdentityEmail = Schema.Trim.pipe(

@@ -34,14 +34,20 @@
     "name": "Nama",
     "nameInvalid": "Gunakan 1 sampai 120 karakter.",
     "password": "Kata sandi",
-    "passwordRule": "Gunakan 12 sampai 256 karakter.",
+    "passwordRule": "Gunakan 12 sampai 100 karakter.",
+    "newPassword": "Kata sandi baru",
+    "upgrade": "Perbarui kata sandi",
+    "upgradeTitle": "Perbarui kata sandimu",
+    "upgradeDescription": "Akunmu sudah terverifikasi. Pilih kata sandi yang lebih kuat untuk melanjutkan.",
     "signIn": "Masuk",
     "signUp": "Buat akun",
     "new": "Baru di Rantau?",
     "existing": "Sudah punya akun?",
     "invalid": "Email atau kata sandi salah.",
     "exists": "Email ini sudah digunakan.",
-    "connection": "Koneksi terputus. Coba lagi."
+    "connection": "Koneksi terputus. Coba lagi.",
+    "common": "Pilih kata sandi yang tidak umum.",
+    "rate": "Terlalu banyak percobaan. Coba lagi sebentar."
   },
   "search": {
     "title": "Cari kerja",

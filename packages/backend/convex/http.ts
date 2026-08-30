@@ -5,7 +5,6 @@ import {
   type ActionCtx,
   httpAction,
 } from "@repo/backend/convex/_generated/server";
-import { auth } from "@repo/backend/convex/auth";
 import { registerPageRoutes } from "@repo/backend/convex/hosting";
 import { httpRouter } from "convex/server";
 
@@ -20,8 +19,6 @@ function webhookContext(
     runMutation: (mutation, ...args) => ctx.runMutation(mutation, args[0]),
   };
 }
-
-auth.addHttpRoutes(http);
 
 http.route({
   handler: httpAction((ctx, request) =>
