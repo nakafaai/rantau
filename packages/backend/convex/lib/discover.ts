@@ -13,12 +13,26 @@ import type { DiscoveryLane } from "@repo/domain/discoveryplan";
 import type { Opportunity } from "@repo/domain/opportunity";
 import { SearchExecutionError, type SearchIntent } from "@repo/domain/search";
 import { gateway, jsonSchema } from "ai";
-import { DateTime, Effect, Array as EffectArray, Schema } from "effect";
+import {
+  DateTime,
+  Effect,
+  Array as EffectArray,
+  Schedule,
+  Schema,
+} from "effect";
 
 export const DISCOVERY_MODEL = "google/gemini-3.7-flash";
 
-const SOURCE_BATCH = 10;
-const FIRST_SOURCE_BATCH = 5;
+const SOURCE_BATCH = 6;
+const FIRST_SOURCE_BATCH = 3;
+const SEARCH_RETRY_POLICY = {
+  schedule: Schedule.exponential("10 seconds").pipe(Schedule.jittered),
+  times: 3,
+} as const;
+const ANALYSIS_RETRY_POLICY = {
+  schedule: Schedule.exponential("1 second").pipe(Schedule.jittered),
+  times: 1,
+} as const;
 
 const firecrawl = new FirecrawlClient(components.firecrawl);
 const analyst = new Agent(components.agent, {
@@ -87,7 +101,10 @@ function searchMarket(ctx: ActionCtx, lane: DiscoveryLane) {
         },
         sources: ["web"],
       }),
-  }).pipe(Effect.flatMap(decodeDiscoverySources));
+  }).pipe(
+    Effect.retry(SEARCH_RETRY_POLICY),
+    Effect.flatMap(decodeDiscoverySources)
+  );
 }
 
 /** Analyzes one evidence batch with an isolated Convex Agent thread. */
@@ -193,6 +210,7 @@ export const discoverLane = Effect.fn("opportunities.discoverLane")(function* (
     batches(sources),
     (sourceBatch) =>
       analyzeBatch(ctx, intent, lane.market, sourceBatch, userId, now).pipe(
+        Effect.retry(ANALYSIS_RETRY_POLICY),
         Effect.flatMap((analysis) =>
           persistOpportunities(analysis.opportunities, writeOpportunity).pipe(
             Effect.map((resultCount) => ({ ...analysis, resultCount }))
