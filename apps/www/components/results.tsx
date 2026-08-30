@@ -8,7 +8,6 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -27,7 +26,6 @@ import {
 import {
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   type PaginationState,
@@ -39,7 +37,7 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { useResultColumns } from "@/components/columns";
+import { resultColumnClass, useResultColumns } from "@/components/columns";
 import {
   type OpportunityRecord,
   OpportunitySheet,
@@ -54,7 +52,6 @@ export function Results({ records }: ResultsProps) {
   const save = useMutation(api.applications.save);
   const saveMany = useMutation(api.applications.saveMany);
   const [active, setActive] = useState<OpportunityRecord | null>(null);
-  const [filter, setFilter] = useState("");
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -81,23 +78,27 @@ export function Results({ records }: ResultsProps) {
     data: [...records],
     enableRowSelection: true,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getRowId: (record) => record.opportunity._id,
     getSortedRowModel: getSortedRowModel(),
-    globalFilterFn: "includesString",
-    onGlobalFilterChange: setFilter,
     onPaginationChange: setPagination,
     onRowSelectionChange: setSelection,
     onSortingChange: setSorting,
     state: {
-      globalFilter: filter,
       pagination,
       rowSelection: selection,
       sorting,
     },
   });
   const selected = table.getSelectedRowModel().rows;
+  const pageStart =
+    table.getState().pagination.pageIndex *
+      table.getState().pagination.pageSize +
+    1;
+  const pageEnd = Math.min(
+    pageStart + table.getRowModel().rows.length - 1,
+    records.length
+  );
 
   /** Saves every selected page row through one atomic Convex mutation. */
   async function saveSelected() {
@@ -113,34 +114,17 @@ export function Results({ records }: ResultsProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <p className="text-muted-foreground text-sm">
-            {records.length} {t("results")}
-          </p>
-          {selected.length ? (
-            <Button onClick={saveSelected} size="sm" variant="outline">
-              <HugeIcons className="size-4" icon={Bookmark01Icon} />
-              {t("saveSelected", { count: selected.length })}
-            </Button>
-          ) : null}
-        </div>
-        <Input
-          className="sm:max-w-72"
-          onChange={(event) => setFilter(event.target.value)}
-          placeholder={t("filterResults")}
-          value={filter}
-        />
-      </div>
-
+    <div className="min-w-0 space-y-3">
       <div className="overflow-hidden rounded-md border">
-        <Table className="min-w-[1180px]">
+        <Table className="table-fixed" containerClassName="overflow-hidden">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    className={resultColumnClass(header.column.id)}
+                    key={header.id}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -156,11 +140,16 @@ export function Results({ records }: ResultsProps) {
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
+                  aria-selected={row.getIsSelected()}
+                  className="h-14"
                   data-state={row.getIsSelected() ? "selected" : undefined}
                   key={row.id}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      className={resultColumnClass(cell.column.id)}
+                      key={cell.id}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -175,7 +164,7 @@ export function Results({ records }: ResultsProps) {
                   className="h-24 text-center"
                   colSpan={columns.length}
                 >
-                  {t("noFilteredResults")}
+                  {t("noResults")}
                 </TableCell>
               </TableRow>
             )}
@@ -183,9 +172,26 @@ export function Results({ records }: ResultsProps) {
         </Table>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <span>{t("rowsPerPage")}</span>
+      <footer className="flex flex-wrap items-center justify-between gap-3 text-muted-foreground text-sm">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="whitespace-nowrap">
+            {t("resultRange", {
+              from: pageStart,
+              to: pageEnd,
+              total: records.length,
+            })}
+          </span>
+          {selected.length ? (
+            <Button onClick={saveSelected} size="sm" variant="outline">
+              <HugeIcons className="size-4" icon={Bookmark01Icon} />
+              {t("saveSelected", { count: selected.length })}
+            </Button>
+          ) : null}
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="hidden whitespace-nowrap sm:inline">
+            {t("rowsPerPage")}
+          </span>
           <Select
             onValueChange={(value) => table.setPageSize(Number(value))}
             value={String(table.getState().pagination.pageSize)}
@@ -201,9 +207,7 @@ export function Results({ records }: ResultsProps) {
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-sm">
+          <span className="whitespace-nowrap">
             {t("page", {
               current: table.getState().pagination.pageIndex + 1,
               total: Math.max(table.getPageCount(), 1),
@@ -228,7 +232,7 @@ export function Results({ records }: ResultsProps) {
             <HugeIcons className="size-4" icon={ArrowRight01Icon} />
           </Button>
         </div>
-      </div>
+      </footer>
 
       <OpportunitySheet
         onOpenChange={(open) => {

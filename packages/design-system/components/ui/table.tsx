@@ -1,13 +1,18 @@
-"use client";
-
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 
-/** Renders a horizontally scrollable semantic data table. */
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+/** Renders the responsive Nakafa table container. */
+function Table({
+  containerClassName,
+  className,
+  ...props
+}: React.ComponentProps<"table"> & { containerClassName?: string }) {
   return (
     <div
-      className="relative w-full overflow-x-auto"
+      className={cn(
+        "relative grid w-full grid-cols-1 overflow-x-auto",
+        containerClassName
+      )}
       data-slot="table-container"
     >
       <table
@@ -60,7 +65,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       className={cn(
-        "border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
+        "border-b transition-colors hover:bg-accent hover:text-accent-foreground aria-selected:bg-accent aria-selected:text-accent-foreground data-[state=selected]:bg-accent data-[state=selected]:text-accent-foreground",
         className
       )}
       data-slot="table-row"
@@ -74,7 +79,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
       className={cn(
-        "h-10 whitespace-nowrap px-2 text-left align-middle font-medium text-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "h-10 whitespace-nowrap px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5",
         className
       )}
       data-slot="table-head"
@@ -88,7 +93,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
       className={cn(
-        "whitespace-nowrap p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "px-4 py-2 align-middle [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5",
         className
       )}
       data-slot="table-cell"

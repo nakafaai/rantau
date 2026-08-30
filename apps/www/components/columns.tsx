@@ -33,14 +33,51 @@ type ResultActions = Readonly<{
   onSave: (record: OpportunityRecord) => void;
 }>;
 
+/** Returns responsive widths and visibility for one result column. */
+export function resultColumnClass(columnId: string) {
+  if (columnId === "select") {
+    return "w-10 px-2";
+  }
+  if (columnId === "recommendation") {
+    return "hidden w-32 lg:table-cell";
+  }
+  if (columnId === "company") {
+    return "hidden w-44 md:table-cell";
+  }
+  if (columnId === "location") {
+    return "hidden w-52 lg:table-cell";
+  }
+  if (columnId === "pathway") {
+    return "w-28";
+  }
+  if (columnId === "mode") {
+    return "hidden w-24 xl:table-cell";
+  }
+  if (columnId === "salary") {
+    return "hidden w-40 2xl:table-cell";
+  }
+  if (columnId === "source") {
+    return "hidden w-40 2xl:table-cell";
+  }
+  if (columnId === "actions") {
+    return "w-10 px-1";
+  }
+  return "min-w-0";
+}
+
 /** Renders a sortable table heading. */
 function SortButton({
   label,
   onClick,
 }: Readonly<{ label: string; onClick: () => void }>) {
   return (
-    <Button className="-ml-2" onClick={onClick} size="sm" variant="ghost">
-      {label}
+    <Button
+      className="-ml-2 w-full min-w-0 justify-start overflow-hidden"
+      onClick={onClick}
+      size="sm"
+      variant="ghost"
+    >
+      <span className="truncate">{label}</span>
       <HugeIcons className="size-4" icon={ArrowUpDownIcon} />
     </Button>
   );
@@ -93,11 +130,11 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
       {
         accessorFn: (record) => record.opportunity.opportunity.title,
         cell: ({ row }) => (
-          <div className="min-w-56 max-w-80 whitespace-normal">
-            <p className="font-medium leading-snug">
+          <div className="min-w-0">
+            <p className="truncate font-medium">
               {row.original.opportunity.opportunity.title}
             </p>
-            <p className="mt-1 text-muted-foreground text-xs">
+            <p className="mt-0.5 truncate text-muted-foreground text-xs">
               {row.original.opportunity.opportunity.employmentType}
             </p>
           </div>
@@ -109,12 +146,14 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
         accessorFn: (record) => record.opportunity.opportunity.company,
         cell: ({ row }) => (
           <a
-            className="inline-flex max-w-48 items-center gap-1.5 whitespace-normal font-medium hover:underline"
+            className="flex w-full min-w-0 items-center gap-1.5 font-medium hover:underline"
             href={row.original.opportunity.opportunity.source.url}
             rel="noreferrer"
             target="_blank"
           >
-            {row.original.opportunity.opportunity.company}
+            <span className="truncate">
+              {row.original.opportunity.opportunity.company}
+            </span>
             <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
           </a>
         ),
@@ -125,7 +164,7 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
         accessorFn: locationLabel,
         cell: ({ row }) => (
           <a
-            className="inline-flex max-w-52 items-center gap-1.5 whitespace-normal hover:underline"
+            className="flex w-full min-w-0 items-center gap-1.5 hover:underline"
             href={mapsUrl(row.original)}
             rel="noreferrer"
             target="_blank"
@@ -133,7 +172,7 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
             <CountryFlag
               countryCode={row.original.opportunity.opportunity.countryCode}
             />
-            {locationLabel(row.original)}
+            <span className="truncate">{locationLabel(row.original)}</span>
             <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
           </a>
         ),
@@ -148,14 +187,21 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
       },
       {
         accessorFn: (record) => record.opportunity.opportunity.workMode,
-        cell: ({ row }) => t(row.original.opportunity.opportunity.workMode),
+        cell: ({ row }) => (
+          <span className="block truncate">
+            {t(row.original.opportunity.opportunity.workMode)}
+          </span>
+        ),
         header: t("workMode"),
         id: "mode",
       },
       {
         accessorFn: (record) => record.opportunity.opportunity.salary ?? "",
-        cell: ({ row }) =>
-          row.original.opportunity.opportunity.salary ?? t("notListed"),
+        cell: ({ row }) => (
+          <span className="block truncate">
+            {row.original.opportunity.opportunity.salary ?? t("notListed")}
+          </span>
+        ),
         header: t("salary"),
         id: "salary",
       },
@@ -164,7 +210,10 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
           const { opportunity } = row.original.opportunity;
           return (
             <Source href={opportunity.source.url}>
-              <SourceTrigger label={opportunity.source.name} />
+              <SourceTrigger
+                className="max-w-full"
+                label={opportunity.source.name}
+              />
               <SourceContent
                 description={opportunity.summary}
                 kind={opportunity.source.kind}
