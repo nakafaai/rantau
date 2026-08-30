@@ -1,5 +1,8 @@
 import type { OpportunityRequirement } from "@repo/domain/opportunity";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
+
+const EXPERIENCE_PATTERN = /(\d+(?:\.\d+)?)\s*(?:years?|yrs?|tahun)/iu;
+const LANGUAGE_LEVEL_PATTERN = /\b[ABC][12]\b/u;
 
 export const CandidateProfile = Schema.Struct({
   documents: Schema.Array(Schema.String).check(Schema.isLengthBetween(0, 30)),
@@ -19,6 +22,7 @@ export type CandidateProfile = Schema.Schema.Type<typeof CandidateProfile>;
 export const ReadinessStep = Schema.Struct({
   category: Schema.String,
   description: Schema.String,
+  required: Schema.Boolean,
   status: Schema.Literals(["ready", "prepare", "verify"]),
 });
 export type ReadinessStep = Schema.Schema.Type<typeof ReadinessStep>;
@@ -35,13 +39,6 @@ function profileValues(profile: CandidateProfile, category: string) {
       return normalized(profile.documents);
     case "education":
       return normalized(profile.education);
-    case "language":
-      return normalized(
-        profile.languages.flatMap(({ language, level }) => [
-          language,
-          `${language} ${level}`,
-        ])
-      );
     case "license":
       return normalized(profile.licenses);
     case "skill":
@@ -51,12 +48,63 @@ function profileValues(profile: CandidateProfile, category: string) {
   }
 }
 
+const languageLevels = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
+type LanguageLevel = (typeof languageLevels)[number];
+const languageRanks = {
+  A1: 1,
+  A2: 2,
+  B1: 3,
+  B2: 4,
+  C1: 5,
+  C2: 6,
+} as const satisfies Record<LanguageLevel, number>;
+const LanguageLevel = Schema.Literals(languageLevels);
+
+/** Compares an explicit language and level without accepting lower levels. */
+function matchesLanguage(profile: CandidateProfile, description: string) {
+  const normalizedDescription = description.toLocaleLowerCase();
+  const requiredLevel = Option.getOrUndefined(
+    Schema.decodeUnknownOption(LanguageLevel)(
+      description.toUpperCase().match(LANGUAGE_LEVEL_PATTERN)?.[0]
+    )
+  );
+
+  return profile.languages.some(({ language, level }) => {
+    if (!normalizedDescription.includes(language.toLocaleLowerCase().trim())) {
+      return false;
+    }
+    if (!requiredLevel) {
+      return true;
+    }
+    const candidateLevel = Option.getOrUndefined(
+      Schema.decodeUnknownOption(LanguageLevel)(level.toUpperCase())
+    );
+    return candidateLevel
+      ? languageRanks[candidateLevel] >= languageRanks[requiredLevel]
+      : false;
+  });
+}
+
+/** Compares a stated years requirement when the source exposes one. */
+function matchesExperience(profile: CandidateProfile, description: string) {
+  const requiredYears = description.match(EXPERIENCE_PATTERN)?.[1];
+  return requiredYears
+    ? profile.experienceYears >= Number(requiredYears)
+    : false;
+}
+
 /** Checks whether one requirement is represented by candidate evidence. */
 function matchesProfile(
   profile: CandidateProfile,
   requirement: OpportunityRequirement
 ) {
   const description = requirement.description.toLocaleLowerCase();
+  if (requirement.category === "language") {
+    return matchesLanguage(profile, requirement.description);
+  }
+  if (requirement.category === "experience") {
+    return matchesExperience(profile, requirement.description);
+  }
   return profileValues(profile, requirement.category).some(
     (value) => description.includes(value) || value.includes(description)
   );
@@ -72,6 +120,7 @@ export function buildReadinessPlan(
       return {
         category: requirement.category,
         description: requirement.description,
+        required: requirement.required,
         status: "verify" as const,
       };
     }
@@ -79,6 +128,7 @@ export function buildReadinessPlan(
     return {
       category: requirement.category,
       description: requirement.description,
+      required: requirement.required,
       status: matchesProfile(profile, requirement)
         ? ("ready" as const)
         : ("prepare" as const),
@@ -86,12 +136,11 @@ export function buildReadinessPlan(
   });
 }
 
-/** Calculates the share of readiness steps already satisfied. */
-export function readinessPercent(steps: readonly ReadinessStep[]) {
-  if (steps.length === 0) {
-    return 100;
-  }
-
-  const ready = steps.filter(({ status }) => status === "ready").length;
-  return Math.round((ready / steps.length) * 100);
+/** Counts only required preparation facts without inventing a percentage. */
+export function readinessCounts(steps: readonly ReadinessStep[]) {
+  const required = steps.filter((step) => step.required);
+  return {
+    ready: required.filter(({ status }) => status === "ready").length,
+    total: required.length,
+  };
 }

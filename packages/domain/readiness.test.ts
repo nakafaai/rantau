@@ -1,4 +1,4 @@
-import { buildReadinessPlan, readinessPercent } from "@repo/domain/readiness";
+import { buildReadinessPlan, readinessCounts } from "@repo/domain/readiness";
 import { describe, expect, it } from "vitest";
 
 const requirements = [
@@ -10,7 +10,7 @@ describe("readiness plan", () => {
   it("marks unknown requirements for verification", () => {
     const plan = buildReadinessPlan(null, requirements);
     expect(plan.map(({ status }) => status)).toEqual(["verify", "verify"]);
-    expect(readinessPercent(plan)).toBe(0);
+    expect(readinessCounts(plan)).toEqual({ ready: 0, total: 2 });
   });
 
   it("compares requirements with the candidate profile", () => {
@@ -26,11 +26,11 @@ describe("readiness plan", () => {
       requirements
     );
     expect(plan.map(({ status }) => status)).toEqual(["ready", "ready"]);
-    expect(readinessPercent(plan)).toBe(100);
+    expect(readinessCounts(plan)).toEqual({ ready: 2, total: 2 });
   });
 
-  it("returns full readiness when no requirements exist", () => {
-    expect(readinessPercent([])).toBe(100);
+  it("does not invent readiness when requirements are absent", () => {
+    expect(readinessCounts([])).toEqual({ ready: 0, total: 0 });
   });
 
   it("checks every profile-owned requirement category", () => {
@@ -61,6 +61,96 @@ describe("readiness plan", () => {
       "ready",
       "prepare",
     ]);
-    expect(readinessPercent(plan)).toBe(83);
+    expect(readinessCounts(plan)).toEqual({ ready: 5, total: 6 });
+  });
+
+  it("does not satisfy a higher CEFR requirement with a lower level", () => {
+    const [step] = buildReadinessPlan(
+      {
+        documents: [],
+        education: [],
+        experienceYears: 0,
+        languages: [{ language: "German", level: "A1" }],
+        licenses: [],
+        skills: [],
+      },
+      [{ category: "language", description: "German B2", required: true }]
+    );
+    expect(step?.status).toBe("prepare");
+  });
+
+  it("requires the stated language even when another level matches", () => {
+    const [step] = buildReadinessPlan(
+      {
+        documents: [],
+        education: [],
+        experienceYears: 0,
+        languages: [{ language: "English", level: "B2" }],
+        licenses: [],
+        skills: [],
+      },
+      [{ category: "language", description: "German B2", required: true }]
+    );
+    expect(step?.status).toBe("prepare");
+  });
+
+  it("accepts a named language when no comparable level is stated", () => {
+    const [step] = buildReadinessPlan(
+      {
+        documents: [],
+        education: [],
+        experienceYears: 0,
+        languages: [{ language: "Japanese", level: "N4" }],
+        licenses: [],
+        skills: [],
+      },
+      [{ category: "language", description: "Japanese", required: true }]
+    );
+    expect(step?.status).toBe("ready");
+  });
+
+  it("compares numeric experience requirements", () => {
+    const plan = buildReadinessPlan(
+      {
+        documents: [],
+        education: [],
+        experienceYears: 3,
+        languages: [],
+        licenses: [],
+        skills: [],
+      },
+      [
+        {
+          category: "experience",
+          description: "At least 2 years",
+          required: true,
+        },
+        {
+          category: "experience",
+          description: "At least 4 years",
+          required: true,
+        },
+      ]
+    );
+    expect(plan.map(({ status }) => status)).toEqual(["ready", "prepare"]);
+  });
+
+  it("leaves unstructured requirements for preparation", () => {
+    const plan = buildReadinessPlan(
+      {
+        documents: [],
+        education: [],
+        experienceYears: 0,
+        languages: [],
+        licenses: [],
+        skills: [],
+      },
+      [
+        { category: "visa", description: "Work visa", required: true },
+        { category: "other", description: "Interview", required: false },
+      ]
+    );
+    expect(plan.map(({ status }) => status)).toEqual(["prepare", "prepare"]);
+    expect(readinessCounts(plan)).toEqual({ ready: 0, total: 1 });
   });
 });

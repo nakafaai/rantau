@@ -6,12 +6,36 @@ describe("makeSearchIntent", () => {
   it.effect("normalizes useful queries", () =>
     Effect.gen(function* () {
       const intent = yield* makeSearchIntent({
+        country: "Japan",
         locale: "id",
+        pathway: "job",
         query: "  kerja   perawat di Jepang  ",
+        workMode: "onsite",
       });
       expect(intent).toEqual({
+        country: "Japan",
         locale: "id",
+        pathway: "job",
         query: "kerja perawat di Jepang",
+        workMode: "onsite",
+      });
+    })
+  );
+
+  it.effect("accepts structured filters without a free-form query", () =>
+    Effect.gen(function* () {
+      const intent = yield* makeSearchIntent({
+        country: "Germany",
+        locale: "en",
+        pathway: "ausbildung",
+        query: "",
+      });
+      expect(intent).toEqual({
+        country: "Germany",
+        locale: "en",
+        pathway: "ausbildung",
+        query: "work opportunities",
+        workMode: undefined,
       });
     })
   );

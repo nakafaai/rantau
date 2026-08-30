@@ -41,6 +41,11 @@ export const ExtractedOpportunity = Schema.Struct({
     Schema.isLengthBetween(1, 8)
   ),
   company: Schema.String,
+  city: Schema.optional(Schema.String),
+  country: Schema.optional(Schema.String),
+  countryCode: Schema.optional(
+    Schema.String.check(Schema.isLengthBetween(2, 2))
+  ),
   deadline: Schema.NullOr(Schema.String),
   employmentType: Schema.String,
   location: Schema.String,
@@ -121,6 +126,7 @@ export const bindOpportunities = Effect.fn("discovery.bindOpportunities")(
     retrievedAt: string
   ) {
     const opportunities: Opportunity[] = [];
+    const fingerprints = new Set<string>();
 
     for (const candidate of extraction.opportunities) {
       const source = sources[candidate.sourceIndex];
@@ -128,9 +134,18 @@ export const bindOpportunities = Effect.fn("discovery.bindOpportunities")(
         continue;
       }
 
+      const fingerprint = `${source.url}#${candidate.title.trim().toLocaleLowerCase()}`;
+      if (fingerprints.has(fingerprint)) {
+        continue;
+      }
+      fingerprints.add(fingerprint);
+
       opportunities.push({
         applicationSteps: candidate.applicationSteps,
+        city: candidate.city,
         company: candidate.company,
+        country: candidate.country,
+        countryCode: candidate.countryCode,
         deadline: candidate.deadline,
         directApplyUrl: source.url,
         employmentType: candidate.employmentType,
