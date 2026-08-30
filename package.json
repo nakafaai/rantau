@@ -13,6 +13,7 @@
     "deploy": "pnpm --filter @repo/backend deploy:static",
     "dev": "turbo run dev --filter=www --filter=@repo/backend",
     "dev:web": "turbo run dev --filter=www",
+    "doctor": "pnpm --filter www run doctor",
     "effect:source:check": "node scripts/effect-source.mjs check",
     "format": "ultracite fix apps packages scripts package.json turbo.json tsconfig.base.json biome.jsonc",
     "lint": "pnpm effect:source:check && pnpm quality && ultracite check apps packages scripts package.json turbo.json tsconfig.base.json biome.jsonc",
