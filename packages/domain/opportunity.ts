@@ -58,6 +58,11 @@ export const Opportunity = Schema.Struct({
     Schema.isLengthBetween(1, 8)
   ),
   company: Schema.String,
+  city: Schema.optional(Schema.String),
+  country: Schema.optional(Schema.String),
+  countryCode: Schema.optional(
+    Schema.String.check(Schema.isLengthBetween(2, 2))
+  ),
   deadline: Schema.NullOr(Schema.String),
   directApplyUrl: HttpUrl,
   employmentType: Schema.String,

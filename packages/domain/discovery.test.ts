@@ -182,4 +182,34 @@ describe("opportunity discovery", () => {
       expect(opportunity?.source.name).toBe("Employer");
     })
   );
+
+  it.effect("deduplicates repeated source-backed opportunities", () =>
+    Effect.gen(function* () {
+      const candidate = {
+        applicationSteps: ["Apply"],
+        company: "Example",
+        deadline: null,
+        employmentType: "Full time",
+        location: "Berlin",
+        pathway: "job" as const,
+        publishedAt: null,
+        requirements: [],
+        salary: null,
+        sourceIndex: 0,
+        sourceKind: "employer" as const,
+        sourceName: "Employer",
+        summary: "Example",
+        support: [],
+        title: "Role",
+        workMode: "onsite" as const,
+      };
+      const opportunities = yield* bindOpportunities(
+        { opportunities: [candidate, candidate] },
+        [{ content: "", title: "Employer", url: "https://employer.example" }],
+        "2026-08-30T00:00:00.000Z"
+      );
+
+      expect(opportunities).toHaveLength(1);
+    })
+  );
 });

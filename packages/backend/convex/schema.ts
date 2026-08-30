@@ -43,12 +43,22 @@ export default defineSchema({
     .index("by_user", ["userId"]),
   searches: defineTable({
     completedAt: v.optional(v.number()),
+    country: v.optional(v.string()),
     createdAt: v.number(),
     error: v.optional(v.string()),
     inputTokens: v.optional(v.number()),
     locale: localeValidator,
     model: v.optional(v.string()),
     outputTokens: v.optional(v.number()),
+    pathway: v.optional(
+      v.union(
+        v.literal("job"),
+        v.literal("ausbildung"),
+        v.literal("apprenticeship"),
+        v.literal("internship"),
+        v.literal("vocational")
+      )
+    ),
     query: v.string(),
     resultCount: v.optional(v.number()),
     status: v.union(
@@ -58,5 +68,8 @@ export default defineSchema({
     ),
     threadId: v.optional(v.string()),
     userId: v.id("users"),
+    workMode: v.optional(
+      v.union(v.literal("onsite"), v.literal("hybrid"), v.literal("remote"))
+    ),
   }).index("by_user_createdAt", ["userId", "createdAt"]),
 });

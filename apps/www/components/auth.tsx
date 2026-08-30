@@ -25,9 +25,8 @@ import { useForm } from "@tanstack/react-form";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { BackButton } from "@/components/back";
 import { FeaturesDithering } from "@/components/dithering";
-import { Theme } from "@/components/theme";
+import { AuthPreferences } from "@/components/preferences";
 
 const RequiredName = IdentityName.pipe(Schema.check(Schema.isMinLength(1)));
 
@@ -90,9 +89,8 @@ export function Auth() {
   return (
     <main className="relative grid h-svh lg:grid-cols-7">
       <div className="col-span-3 flex flex-col gap-4 p-6 sm:p-12">
-        <div className="flex items-center justify-between">
-          <BackButton />
-          <Theme />
+        <div className="flex justify-end">
+          <AuthPreferences />
         </div>
 
         <div className="flex flex-1 flex-col items-center justify-center gap-6">

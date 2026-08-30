@@ -1,12 +1,8 @@
 "use client";
 
-import { useAuthActions } from "@convex-dev/auth/react";
 import {
   BriefcaseBusinessIcon,
   FileUserIcon,
-  InformationCircleIcon,
-  LanguageSquareIcon,
-  Logout01Icon,
   Search02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -32,26 +28,32 @@ import {
 } from "@repo/design-system/components/ui/sidebar-shell";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
-import { Costs } from "@/components/costs";
-import { Profile } from "@/components/profile";
-import { Search } from "@/components/search";
-import { Tracker } from "@/components/tracker";
-import { alternatePath } from "@/lib/locale";
+import type { ReactNode } from "react";
+import { Account } from "@/components/account";
+import {
+  type WorkspaceRoute,
+  workspacePath,
+  workspaceRoute,
+} from "@/lib/locale";
 
-type View = "costs" | "profile" | "search" | "tracker";
+const destinations = [
+  { icon: Search02Icon, route: "search" },
+  { icon: FileUserIcon, route: "profile" },
+  { icon: BriefcaseBusinessIcon, route: "applications" },
+] as const satisfies ReadonlyArray<{
+  icon: typeof Search02Icon;
+  route: WorkspaceRoute;
+}>;
 
-const views = [
-  { icon: FileUserIcon, key: "profile" },
-  { icon: BriefcaseBusinessIcon, key: "tracker" },
-  { icon: InformationCircleIcon, key: "costs" },
-] as const;
+type ShellProps = Readonly<{ children: ReactNode }>;
 
-/** Renders the exact Nakafa sidebar composition around the Rantau workspace. */
-export function Shell() {
+/** Renders the persistent Nakafa workspace around a route-owned page. */
+export function Shell({ children }: ShellProps) {
   const t = useTranslations("common");
-  const [view, setView] = useState<View>("search");
+  const pathname = usePathname();
+  const route = workspaceRoute(pathname);
 
   return (
     <SidebarProvider>
@@ -59,47 +61,31 @@ export function Shell() {
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center border-b bg-background lg:hidden">
           <div className="flex w-full items-center gap-3 px-6">
             <SidebarTrigger className="size-9" variant="outline" />
-            <p className="truncate font-medium text-sm">{t(view)}</p>
+            <p className="truncate font-medium text-sm">{t(route)}</p>
           </div>
         </header>
-        <div className="relative">
-          <div className="mx-auto w-full max-w-3xl px-6 py-12 sm:py-16">
-            {view === "search" ? <Search /> : null}
-            {view === "profile" ? <Profile /> : null}
-            {view === "tracker" ? <Tracker /> : null}
-            {view === "costs" ? <Costs /> : null}
-          </div>
-        </div>
+        <main className="mx-auto w-full max-w-3xl px-6 py-10 sm:py-12">
+          {children}
+        </main>
       </SidebarInset>
-      <AppSidebar
-        containerClassName="order-first"
-        onViewChange={setView}
-        view={view}
-      />
+      <AppSidebar activeRoute={route} containerClassName="order-first" />
     </SidebarProvider>
   );
 }
 
 type AppSidebarProps = Readonly<{
+  activeRoute: WorkspaceRoute;
   containerClassName?: string;
-  onViewChange: (view: View) => void;
-  view: View;
 }>;
 
-/** Renders Rantau navigation with Nakafa's header, groups, and footer. */
-function AppSidebar({
-  containerClassName,
-  onViewChange,
-  view,
-}: AppSidebarProps) {
+/** Renders clean route navigation and the consolidated account footer. */
+function AppSidebar({ activeRoute, containerClassName }: AppSidebarProps) {
   const t = useTranslations("common");
-  const locale = useLocale();
-  const { signOut } = useAuthActions();
+  const locale = useLocale() === "id" ? "id" : "en";
   const { setOpenMobile } = useSidebar();
 
-  /** Selects a workspace view and closes the mobile sheet. */
-  function choose(next: View) {
-    onViewChange(next);
+  /** Closes the mobile sheet after a destination is selected. */
+  function closeMobile() {
     setOpenMobile(false);
   }
 
@@ -108,27 +94,20 @@ function AppSidebar({
       <SidebarHeader className="border-b">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => choose("search")} size="lg">
-              <div className="grid aspect-square size-8 place-items-center rounded-sm border bg-background">
-                <HugeIcons icon={BriefcaseBusinessIcon} />
-              </div>
+            <SidebarMenuButton
+              render={
+                <Link
+                  href={workspacePath(locale, "search")}
+                  onClick={closeMobile}
+                />
+              }
+              size="lg"
+            >
+              <HugeIcons className="size-4" icon={BriefcaseBusinessIcon} />
               <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                 <p className="truncate font-medium">{t("brand")}</p>
                 <SidebarMenuDescription>{t("tagline")}</SidebarMenuDescription>
               </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              className="justify-start text-muted-foreground"
-              isActive={view === "search"}
-              onClick={() => choose("search")}
-              variant="outline"
-            >
-              <HugeIcons icon={Search02Icon} />
-              <span>{t("search")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -138,15 +117,20 @@ function AppSidebar({
           <SidebarGroupLabel>{t("workspace")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {views.map((item) => (
-                <SidebarMenuItem key={item.key}>
+              {destinations.map(({ icon, route }) => (
+                <SidebarMenuItem key={route}>
                   <SidebarMenuButton
-                    isActive={view === item.key}
-                    onClick={() => choose(item.key)}
-                    tooltip={t(item.key)}
+                    isActive={activeRoute === route}
+                    render={
+                      <Link
+                        href={workspacePath(locale, route)}
+                        onClick={closeMobile}
+                      />
+                    }
+                    tooltip={t(route)}
                   >
-                    <HugeIcons icon={item.icon} />
-                    <span>{t(item.key)}</span>
+                    <HugeIcons className="size-4" icon={icon} />
+                    <span>{t(route)}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -156,21 +140,7 @@ function AppSidebar({
       </SidebarContent>
       <SidebarFooter className="border-t">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link href={alternatePath(locale)} />}
-              tooltip={t("language")}
-            >
-              <HugeIcons icon={LanguageSquareIcon} />
-              <span>{t("language")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => signOut()} tooltip={t("signOut")}>
-              <HugeIcons icon={Logout01Icon} />
-              <span>{t("signOut")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <Account />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

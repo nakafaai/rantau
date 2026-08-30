@@ -33,6 +33,13 @@ export const profileInputValidator = v.object({
   pathways: v.array(pathwayValidator),
   skills: v.array(v.string()),
   visaNotes: v.optional(v.string()),
+  workAuthorization: v.optional(
+    v.union(
+      v.literal("authorized"),
+      v.literal("sponsorship"),
+      v.literal("unsure")
+    )
+  ),
   workModes: v.array(workModeValidator),
 });
 
@@ -73,7 +80,10 @@ export const supportValidator = v.object({
 
 export const opportunityValidator = v.object({
   applicationSteps: v.array(v.string()),
+  city: v.optional(v.string()),
   company: v.string(),
+  country: v.optional(v.string()),
+  countryCode: v.optional(v.string()),
   deadline: v.union(v.string(), v.null()),
   directApplyUrl: v.string(),
   employmentType: v.string(),
@@ -102,6 +112,7 @@ export const applicationStatusValidator = v.union(
 export const readinessStepValidator = v.object({
   category: v.string(),
   description: v.string(),
+  required: v.boolean(),
   status: v.union(
     v.literal("ready"),
     v.literal("prepare"),

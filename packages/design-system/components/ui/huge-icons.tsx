@@ -10,7 +10,7 @@ export function HugeIcons({
 }: ComponentProps<typeof HugeiconsIcon>) {
   return (
     <HugeiconsIcon
-      className={cn("shrink-0", className)}
+      className={cn("size-4 shrink-0", className)}
       strokeWidth={strokeWidth}
       {...props}
     />

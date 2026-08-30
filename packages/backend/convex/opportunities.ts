@@ -3,9 +3,17 @@ import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { FirecrawlClient } from "@firecrawl/firecrawl-convex";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import { action, query } from "@repo/backend/convex/_generated/server";
+import {
+  action,
+  internalAction,
+  query,
+} from "@repo/backend/convex/_generated/server";
 import { requireUserId } from "@repo/backend/convex/lib/guard";
-import { readinessStepValidator } from "@repo/backend/convex/model";
+import {
+  pathwayValidator,
+  readinessStepValidator,
+  workModeValidator,
+} from "@repo/backend/convex/model";
 import schema from "@repo/backend/convex/schema";
 import {
   bindOpportunities,
@@ -14,8 +22,13 @@ import {
   ExtractionResult,
 } from "@repo/domain/discovery";
 import type { Opportunity } from "@repo/domain/opportunity";
-import { buildReadinessPlan, readinessPercent } from "@repo/domain/readiness";
-import { makeSearchIntent, SearchExecutionError } from "@repo/domain/search";
+import { buildReadinessPlan } from "@repo/domain/readiness";
+import {
+  makeSearchIntent,
+  SearchExecutionError,
+  SearchIntent,
+  SearchQuery,
+} from "@repo/domain/search";
 import { gateway, jsonSchema } from "ai";
 import { ConvexError, v } from "convex/values";
 import { Effect, Schema } from "effect";
@@ -42,9 +55,7 @@ const extractionSchema = jsonSchema<ExtractionResult>(
   Schema.toJsonSchemaDocument(ExtractionResult).schema
 );
 
-type SearchOutcome =
-  | { count: number; success: true }
-  | { error: unknown; success: false };
+type SearchOutcome = { success: true } | { error: unknown; success: false };
 
 /** Projects one opportunity against the current candidate profile. */
 function readinessProjection(
@@ -68,9 +79,9 @@ function readinessProjection(
   ];
 
   return {
+    hasProfile: profile !== null,
     opportunity,
     readiness,
-    readinessPercent: readinessPercent(readiness),
   };
 }
 
@@ -87,15 +98,17 @@ function storedOpportunity(opportunity: Opportunity) {
   };
 }
 
-/** Builds a web query biased toward first-party application pages. */
-function buildWebQuery(searchText: string) {
-  return `${searchText} (apply OR careers OR ausbildung OR apprenticeship) -site:linkedin.com -site:indeed.com -site:glassdoor.com`;
+/** Builds a filtered web query biased toward first-party application pages. */
+function buildWebQuery(intent: SearchIntent) {
+  const filters = [intent.country, intent.pathway, intent.workMode]
+    .filter(Boolean)
+    .join(" ");
+  return `${intent.query} ${filters} (apply OR careers OR ausbildung OR apprenticeship) -site:linkedin.com -site:indeed.com -site:glassdoor.com`;
 }
 
 /** Builds the evidence-only extraction prompt for the Convex Agent component. */
 function buildAnalysisPrompt(
-  searchText: string,
-  locale: "en" | "id",
+  intent: SearchIntent,
   sources: readonly DiscoverySource[]
 ) {
   const evidence = sources
@@ -104,9 +117,16 @@ function buildAnalysisPrompt(
         `SOURCE ${index}\nTitle: ${source.title}\nURL: ${source.url}\nContent:\n${source.content}`
     )
     .join("\n\n");
-  const language = locale === "id" ? "Bahasa Indonesia" : "English";
+  const language = intent.locale === "id" ? "Bahasa Indonesia" : "English";
+  const filters = [
+    intent.country ? `Country: ${intent.country}` : null,
+    intent.pathway ? `Pathway: ${intent.pathway}` : null,
+    intent.workMode ? `Work mode: ${intent.workMode}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
-  return `User search: ${searchText}\nOutput language: ${language}\n\nReturn at most 10 current opportunities. sourceIndex must point to the exact supplied source used for that item. The applicationSteps must explain the shortest truthful route to apply. Requirements and support resources must be explicitly supported by the source. If a support resource URL is absent in evidence, use null. Exclude stale, unclear, duplicate, aggregator-only, or non-application pages.\n\n${evidence}`;
+  return `User search: ${intent.query}\n${filters}\nOutput language: ${language}\n\nReturn at most 10 current opportunities. When the source supports them, include city, country, and the 2-letter ISO countryCode. sourceIndex must point to the exact supplied source used for that item. The applicationSteps must explain the shortest truthful route to apply. Requirements and support resources must be explicitly supported by the source. If a support resource URL is absent in evidence, use null. Exclude stale, unclear, duplicate, aggregator-only, or non-application pages.\n\n${evidence}`;
 }
 
 /** Converts an unknown execution failure into safe user-facing text. */
@@ -117,25 +137,20 @@ function errorMessage(error: unknown) {
   return "Opportunity search could not be completed.";
 }
 
-export const search = action({
+/** Starts a durable search session and schedules vendor work in the background. */
+export const start = action({
   args: {
+    country: v.optional(v.string()),
     locale: v.union(v.literal("en"), v.literal("id")),
+    pathway: v.optional(pathwayValidator),
     query: v.string(),
+    workMode: v.optional(workModeValidator),
   },
   returns: v.object({
-    count: v.number(),
     searchId: v.id("searches"),
   }),
-  handler: async (
-    ctx,
-    args
-  ): Promise<{ count: number; searchId: Id<"searches"> }> => {
+  handler: async (ctx, args): Promise<{ searchId: Id<"searches"> }> => {
     const userId = await requireUserId(ctx);
-    await rateLimiter.limit(ctx, "opportunitySearch", {
-      key: userId,
-      throws: true,
-    });
-
     const intentOutcome = await Effect.runPromise(
       makeSearchIntent(args).pipe(
         Effect.match({
@@ -151,14 +166,57 @@ export const search = action({
       });
     }
 
+    await rateLimiter.limit(ctx, "opportunitySearch", {
+      key: userId,
+      throws: true,
+    });
+
     const searchId: Id<"searches"> = await ctx.runMutation(
       internal.searches.start,
       {
+        country: intentOutcome.intent.country,
         locale: intentOutcome.intent.locale,
+        pathway: intentOutcome.intent.pathway,
         query: intentOutcome.intent.query,
         userId,
+        workMode: intentOutcome.intent.workMode,
       }
     );
+
+    await ctx.scheduler.runAfter(0, internal.opportunities.execute, {
+      country: intentOutcome.intent.country,
+      locale: intentOutcome.intent.locale,
+      pathway: intentOutcome.intent.pathway,
+      query: intentOutcome.intent.query,
+      searchId,
+      userId,
+      workMode: intentOutcome.intent.workMode,
+    });
+
+    return { searchId };
+  },
+});
+
+/** Executes one authenticated search session outside the browser request. */
+export const execute = internalAction({
+  args: {
+    country: v.optional(v.string()),
+    locale: v.union(v.literal("en"), v.literal("id")),
+    pathway: v.optional(pathwayValidator),
+    query: v.string(),
+    searchId: v.id("searches"),
+    userId: v.id("users"),
+    workMode: v.optional(workModeValidator),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const intent = SearchIntent.make({
+      country: args.country,
+      locale: args.locale,
+      pathway: args.pathway,
+      query: SearchQuery.make(args.query),
+      workMode: args.workMode,
+    });
 
     const program: Effect.Effect<SearchOutcome> = Effect.gen(function* () {
       const response = yield* Effect.tryPromise({
@@ -168,7 +226,7 @@ export const search = action({
             stage: "search",
           }),
         try: () =>
-          firecrawl.search(ctx, buildWebQuery(intentOutcome.intent.query), {
+          firecrawl.search(ctx, buildWebQuery(intent), {
             excludeDomains: ["linkedin.com", "indeed.com", "glassdoor.com"],
             limit: 10,
             scrapeOptions: {
@@ -197,8 +255,8 @@ export const search = action({
           }),
         try: () =>
           analyst.createThread(ctx, {
-            title: intentOutcome.intent.query,
-            userId,
+            title: intent.query,
+            userId: args.userId,
           }),
       });
       const generated = yield* Effect.tryPromise({
@@ -209,16 +267,12 @@ export const search = action({
           }),
         try: () =>
           thread.thread.generateObject({
-            prompt: buildAnalysisPrompt(
-              intentOutcome.intent.query,
-              intentOutcome.intent.locale,
-              sources
-            ),
+            prompt: buildAnalysisPrompt(intent, sources),
             providerOptions: {
               gateway: {
                 models: ["google/gemini-3.5-flash-lite"],
                 tags: ["feature:opportunity-search"],
-                user: userId,
+                user: args.userId,
               },
             },
             schema: extractionSchema,
@@ -254,17 +308,17 @@ export const search = action({
             model: MODEL,
             opportunities,
             outputTokens: generated.usage.outputTokens,
-            searchId,
+            searchId: args.searchId,
             threadId: thread.threadId,
-            userId,
+            userId: args.userId,
           }),
       });
 
-      return opportunities.length;
+      return null;
     }).pipe(
       Effect.match({
         onFailure: (error) => ({ error, success: false }) as const,
-        onSuccess: (count) => ({ count, success: true }) as const,
+        onSuccess: () => ({ success: true }) as const,
       })
     );
 
@@ -273,12 +327,12 @@ export const search = action({
       const message = errorMessage(outcome.error);
       await ctx.runMutation(internal.searches.fail, {
         error: message,
-        searchId,
+        searchId: args.searchId,
+        userId: args.userId,
       });
-      throw new ConvexError({ code: "SEARCH_FAILED", message });
     }
 
-    return { count: outcome.count, searchId };
+    return null;
   },
 });
 
@@ -286,9 +340,9 @@ export const list = query({
   args: { searchId: v.id("searches") },
   returns: v.array(
     v.object({
+      hasProfile: v.boolean(),
       opportunity: schema.doc("opportunities"),
       readiness: v.array(readinessStepValidator),
-      readinessPercent: v.number(),
     })
   ),
   handler: async (ctx, args) => {
