@@ -40,7 +40,7 @@ describe("identity policy", () => {
     Effect.gen(function* () {
       const error = yield* validatePassword("short").pipe(Effect.flip);
 
-      expect(error.message).toContain("12 to 256 characters");
+      expect(error.message).toContain("12 to 100 characters");
     })
   );
 
@@ -54,9 +54,9 @@ describe("identity policy", () => {
 
   it.effect("rejects an oversized password", () =>
     Effect.gen(function* () {
-      const error = yield* validatePassword("a".repeat(257)).pipe(Effect.flip);
+      const error = yield* validatePassword("a".repeat(101)).pipe(Effect.flip);
 
-      expect(error.message).toContain("12 to 256 characters");
+      expect(error.message).toContain("12 to 100 characters");
     })
   );
 
