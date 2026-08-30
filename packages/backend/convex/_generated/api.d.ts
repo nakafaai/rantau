@@ -19,6 +19,7 @@ import type * as lib_discover from "../lib/discover.js";
 import type * as lib_guard from "../lib/guard.js";
 import type * as lib_searchwork from "../lib/searchwork.js";
 import type * as mail from "../mail.js";
+import type * as migrations from "../migrations.js";
 import type * as model from "../model.js";
 import type * as opportunities from "../opportunities.js";
 import type * as profiles from "../profiles.js";
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   "lib/guard": typeof lib_guard;
   "lib/searchwork": typeof lib_searchwork;
   mail: typeof mail;
+  migrations: typeof migrations;
   model: typeof model;
   opportunities: typeof opportunities;
   profiles: typeof profiles;
