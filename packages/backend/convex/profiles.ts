@@ -1,6 +1,5 @@
 import {
   internalMutation,
-  internalQuery,
   mutation,
   query,
 } from "@repo/backend/convex/_generated/server";
@@ -89,22 +88,26 @@ export const uploadUrl = mutation({
   },
 });
 
-export const attachCv = mutation({
+export const saveCv = internalMutation({
   args: {
     fileId: v.id("_storage"),
     fileName: v.string(),
+    text: v.string(),
+    userId: v.id("users"),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const userId = await requireUserId(ctx);
     const metadata = await ctx.db.system.get("_storage", args.fileId);
-    if (!metadata || metadata.size > MAX_CV_BYTES) {
+    if (
+      metadata?.contentType !== "application/pdf" ||
+      metadata.size > MAX_CV_BYTES
+    ) {
       throw new ConvexError({ code: "INVALID_CV" });
     }
 
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_user", (index) => index.eq("userId", userId))
+      .withIndex("by_user", (index) => index.eq("userId", args.userId))
       .unique();
     if (!profile) {
       throw new ConvexError({ code: "PROFILE_REQUIRED" });
@@ -113,48 +116,12 @@ export const attachCv = mutation({
     await ctx.db.patch("profiles", profile._id, {
       cvFileName: args.fileName.slice(0, 160),
       cvStorageId: args.fileId,
-      cvText: undefined,
-      updatedAt: Date.now(),
-    });
-    return null;
-  },
-});
-
-export const ownedCv = internalQuery({
-  args: {
-    fileId: v.id("_storage"),
-    userId: v.id("users"),
-  },
-  returns: v.boolean(),
-  handler: async (ctx, args) => {
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user", (index) => index.eq("userId", args.userId))
-      .unique();
-    return profile?.cvStorageId === args.fileId;
-  },
-});
-
-export const saveCvText = internalMutation({
-  args: {
-    fileId: v.id("_storage"),
-    text: v.string(),
-    userId: v.id("users"),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user", (index) => index.eq("userId", args.userId))
-      .unique();
-    if (!profile || profile.cvStorageId !== args.fileId) {
-      throw new ConvexError({ code: "CV_NOT_OWNED" });
-    }
-
-    await ctx.db.patch("profiles", profile._id, {
       cvText: args.text,
       updatedAt: Date.now(),
     });
+    if (profile.cvStorageId && profile.cvStorageId !== args.fileId) {
+      await ctx.storage.delete(profile.cvStorageId);
+    }
     return null;
   },
 });

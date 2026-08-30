@@ -259,22 +259,3 @@ export const inbox = query({
       : null;
   },
 });
-
-export const messages = query({
-  args: {},
-  returns: v.array(v.any()),
-  handler: async (ctx) => {
-    const userId = await requireUserId(ctx);
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user", (index) => index.eq("userId", userId))
-      .unique();
-    if (!profile?.agentMailInboxId) {
-      return [];
-    }
-
-    return ctx.runQuery(components.agentmail.lib.listInboundMessages, {
-      inboxId: profile.agentMailInboxId,
-    });
-  },
-});

@@ -44,7 +44,6 @@ export function Profile() {
   const current = useQuery(api.profiles.get);
   const saveProfile = useMutation(api.profiles.upsert);
   const createUpload = useMutation(api.profiles.uploadUrl);
-  const attachCv = useMutation(api.profiles.attachCv);
   const extractCv = useAction(api.cv.extract);
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
@@ -110,8 +109,7 @@ export function Profile() {
         method: "POST",
       });
       const payload = (await response.json()) as { storageId: Id<"_storage"> };
-      await attachCv({ fileId: payload.storageId, fileName: file.name });
-      await extractCv({ fileId: payload.storageId });
+      await extractCv({ fileId: payload.storageId, fileName: file.name });
       toast.success(t("uploaded"));
     } catch {
       toast.error(common("error"));

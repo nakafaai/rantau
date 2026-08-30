@@ -84,7 +84,12 @@
     "accepted": "Accepted",
     "rejected": "Rejected",
     "withdrawn": "Withdrawn",
-    "update": "Update status"
+    "update": "Update status",
+    "mailTitle": "Application digest by email",
+    "mailBody": "Get the latest 10 saved applications at your account email. Rantau creates your private AgentMail inbox only when you ask.",
+    "mailProfile": "Save your profile first, then Rantau can create a private inbox and email your digest.",
+    "mailButton": "Email my digest",
+    "mailSent": "Application digest sent"
   },
   "costs": {
     "eyebrow": "Transparent by design",
@@ -100,7 +105,16 @@
     "growth": "Active estimate",
     "starterBody": "100 users, 4 searches each month, up to 10 pages per search",
     "growthBody": "1,000 users, 8 searches each month, up to 10 pages per search",
-    "variable": "Provider usage plus any plan minimums",
-    "note": "These are planning scenarios, not a bill. The live usage dashboard remains the source of truth."
+    "starterCost": "About €14 + up to $10 per month",
+    "growthCost": "About €72 per month, plus measured AI and email",
+    "starterFirecrawl": "Firecrawl Hobby: 5,000 credits for about €14",
+    "starterGateway": "AI Gateway: hard-capped at $10 per month",
+    "starterConvex": "Convex: $0 tier, then usage overages",
+    "starterAgentmail": "AgentMail: $0 for 3 inboxes, or $200 for up to 150 inboxes",
+    "growthFirecrawl": "Firecrawl Standard: 100,000 credits for about €72",
+    "growthGateway": "AI Gateway: resize the current $10 cap from measured token usage",
+    "growthConvex": "Convex: $0 tier or $25 per developer plus usage",
+    "growthAgentmail": "AgentMail: custom plan if every user needs a private inbox",
+    "note": "Public list prices checked on 30 August 2026. Firecrawl is shown in EUR for Germany; other providers are shown in USD. Taxes, exchange rates, overages, and model usage can change. The live provider dashboards remain the source of truth."
   }
 }
