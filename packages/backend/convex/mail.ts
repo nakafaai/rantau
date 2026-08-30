@@ -8,7 +8,7 @@ import {
   query,
 } from "@repo/backend/convex/_generated/server";
 import { requireUserId } from "@repo/backend/convex/lib/guard";
-import { decodeInbox } from "@repo/domain/mail";
+import { decodeInbox, makeInboxClientId } from "@repo/domain/mail";
 import { ConvexError, v } from "convex/values";
 import { Effect } from "effect";
 
@@ -154,12 +154,15 @@ export const provision = action({
     }
 
     const outcome = await Effect.runPromise(
-      Effect.tryPromise(() =>
-        agentmail.createInbox(ctx, {
-          clientId: `rantau:${userId}`,
-          displayName: "Rantau applications",
-        })
-      ).pipe(
+      makeInboxClientId(userId).pipe(
+        Effect.flatMap((clientId) =>
+          Effect.tryPromise(() =>
+            agentmail.createInbox(ctx, {
+              clientId,
+              displayName: "Rantau applications",
+            })
+          )
+        ),
         Effect.flatMap(decodeInbox),
         Effect.match({
           onFailure: (error) => ({ error, success: false }) as const,
