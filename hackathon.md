@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth v2 password provider with isolated JWT and JWKS keys
 - **AI models:** `openai/gpt-5.4-mini` through Vercel AI Gateway with `google/gemini-3.5-flash-lite` fallback
 - **Started:** 2026-08-30T04:20:15Z
-- **Last updated:** 2026-08-30T12:24:00Z
+- **Last updated:** 2026-08-30T13:04:49Z
 
 ## Log
 
@@ -55,3 +55,15 @@ Rebuilt the result experience as a Coss and TanStack table with sorting, paginat
 Merged the global ranked discovery and workspace revision through PR #22 after the exact head `3a402ce914e1b8e126210b5491d41751c89d0433` passed CI. Deployed the resulting `main` merge commit `65ee819f7057de2d312d168b9f1c91d9b772e9cb` to the isolated Rantau production backend `dusty-toad-573`, then atomically published 84 Next.js static assets with SPA fallback disabled.
 
 Verified the live release in Chrome at `https://dusty-toad-573.convex.site`: English and Indonesian locale switching, system and explicit themes, concise form validation, and a clean browser console. HTTP probes confirmed 200 responses for every canonical workspace route, 308 redirects from legacy `index.html` paths to clean URLs, and a real 404 for unknown routes.
+
+### 2026-08-30 - 76350f0
+
+Removed page and table horizontal overflow and rebuilt search around one compact Nakafa-style header. Query and Vercel-style filter chips now sit above a fixed responsive table whose rows stay one line, hide lower-priority columns by breakpoint, and keep result counts only in the pagination footer.
+
+The complete local gate passes 52 tests, all package typechecks, Ultracite and Biome checks, Effect source verification, repository quality contracts, and the static Next.js production build (`apps/www/components/search.tsx`, `apps/www/components/results.tsx`, `apps/www/components/filters.tsx`, `packages/design-system/components/ui/table.tsx`).
+
+### 2026-08-30 - responsive table production release
+
+Merged PR #24 after exact head `76350f00737e8a10903bf0cedf02f0e23ce15247` passed CI, then deployed merge commit `1b92676d3c475695802f288c3245875310975a8c` to the isolated Rantau production backend and published 84 static assets with SPA fallback disabled.
+
+Production probes return 200 for the locale root, profile, and applications routes, redirect the legacy `index.html` URL to the clean locale URL with 308, and return 404 for an unknown route. Local Chrome geometry checks at 1920 px and 1280 px confirmed that page and table scroll widths equal their client widths and rows remain 56 px tall.
