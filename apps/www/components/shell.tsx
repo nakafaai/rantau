@@ -64,7 +64,7 @@ export function Shell({ children }: ShellProps) {
             <p className="truncate font-medium text-sm">{t(route)}</p>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-3xl px-6 py-10 sm:py-12">
+        <main className="mx-auto w-full max-w-[96rem] px-6 py-10 sm:px-8 sm:py-12">
           {children}
         </main>
       </SidebarInset>
@@ -103,7 +103,9 @@ function AppSidebar({ activeRoute, containerClassName }: AppSidebarProps) {
               }
               size="lg"
             >
-              <HugeIcons className="size-4" icon={BriefcaseBusinessIcon} />
+              <div className="grid size-8 shrink-0 place-items-center rounded-md border bg-background shadow-xs">
+                <HugeIcons className="size-4" icon={BriefcaseBusinessIcon} />
+              </div>
               <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                 <p className="truncate font-medium">{t("brand")}</p>
                 <SidebarMenuDescription>{t("tagline")}</SidebarMenuDescription>

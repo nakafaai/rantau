@@ -1,0 +1,33 @@
+export const skillOptions = [
+  { key: "customerService", value: "Customer service" },
+  { key: "healthcare", value: "Healthcare" },
+  { key: "hospitality", value: "Hospitality" },
+  { key: "logistics", value: "Logistics" },
+  { key: "software", value: "Software" },
+  { key: "welding", value: "Welding" },
+] as const;
+
+export const documentOptions = [
+  { key: "passport", value: "Passport" },
+  { key: "diploma", value: "Diploma" },
+  { key: "driverLicense", value: "Driver license" },
+  { key: "languageCertificate", value: "Language certificate" },
+] as const;
+
+export const languageOptions = [
+  { key: "english", value: "English" },
+  { key: "german", value: "German" },
+  { key: "indonesian", value: "Indonesian" },
+  { key: "japanese", value: "Japanese" },
+  { key: "french", value: "French" },
+] as const;
+
+export const levelOptions = [
+  "A1",
+  "A2",
+  "B1",
+  "B2",
+  "C1",
+  "C2",
+  "Native",
+] as const;

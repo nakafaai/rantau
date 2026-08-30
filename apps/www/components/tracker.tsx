@@ -3,12 +3,13 @@
 import {
   ArrowUpRight01Icon,
   BriefcaseBusinessIcon,
+  Building02Icon,
   Mail01Icon,
+  MapsLocation01Icon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Card, CardContent } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
@@ -68,6 +69,11 @@ function locationLabel(record: ApplicationRecord) {
   return [city, country].filter(Boolean).join(", ") || location;
 }
 
+/** Builds a Google Maps search link for an application location. */
+function mapsUrl(record: ApplicationRecord) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationLabel(record))}`;
+}
+
 /** Renders realtime applications as one scan-friendly shadcn table. */
 export function Tracker() {
   const t = useTranslations("tracker");
@@ -96,40 +102,35 @@ export function Tracker() {
   }
 
   return (
-    <section className="space-y-8">
-      <Header description={t("description")} title={t("title")} />
+    <section>
+      <div className="border-b pb-8">
+        <Header
+          actions={
+            <Button
+              className="shrink-0"
+              disabled={mailPending || !profile || inbox === undefined}
+              onClick={emailDigest}
+              variant="outline"
+            >
+              <HugeIcons className="size-4" icon={Mail01Icon} />
+              {t("mailButton")}
+            </Button>
+          }
+          description={t("description")}
+          title={t("title")}
+        />
+      </div>
 
-      <Card className="bg-muted/30 shadow-none">
-        <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <HugeIcons className="mt-0.5 size-4" icon={Mail01Icon} />
-            <div className="space-y-1">
-              <p className="font-semibold">{t("mailTitle")}</p>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                {profile ? t("mailBody") : t("mailProfile")}
-              </p>
-            </div>
+      <div className="pt-8">
+        {records === undefined ? <ApplicationSkeleton /> : null}
+        {records?.length ? <ApplicationTable records={records} /> : null}
+        {records?.length === 0 ? (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <HugeIcons className="size-4" icon={BriefcaseBusinessIcon} />
+            <p>{t("empty")}</p>
           </div>
-          <Button
-            className="shrink-0"
-            disabled={mailPending || !profile || inbox === undefined}
-            onClick={emailDigest}
-            variant="outline"
-          >
-            <HugeIcons className="size-4" icon={Mail01Icon} />
-            {t("mailButton")}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {records === undefined ? <ApplicationSkeleton /> : null}
-      {records?.length ? <ApplicationTable records={records} /> : null}
-      {records?.length === 0 ? (
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <HugeIcons className="size-4" icon={BriefcaseBusinessIcon} />
-          <p>{t("empty")}</p>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </section>
   );
 }
@@ -164,15 +165,33 @@ function ApplicationTable({
                 {record.opportunity.opportunity.title}
               </TableCell>
               <TableCell className="min-w-36 whitespace-normal">
-                {record.opportunity.opportunity.company}
+                <a
+                  className="inline-flex items-center gap-1.5 font-medium hover:underline"
+                  href={record.opportunity.opportunity.source.url}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <HugeIcons className="size-4" icon={Building02Icon} />
+                  {record.opportunity.opportunity.company}
+                  <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
+                </a>
               </TableCell>
               <TableCell>
-                <span className="inline-flex max-w-44 items-center gap-2 whitespace-normal">
+                <a
+                  className="inline-flex max-w-52 items-center gap-1.5 whitespace-normal hover:underline"
+                  href={mapsUrl(record)}
+                  rel="noreferrer"
+                  target="_blank"
+                >
                   <CountryFlag
                     countryCode={record.opportunity.opportunity.countryCode}
+                    fallback={
+                      <HugeIcons className="size-4" icon={MapsLocation01Icon} />
+                    }
                   />
                   {locationLabel(record)}
-                </span>
+                  <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
+                </a>
               </TableCell>
               <TableCell>
                 <Badge variant="secondary">

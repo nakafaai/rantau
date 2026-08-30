@@ -33,7 +33,18 @@ import { Header } from "@/components/header";
 import { Results } from "@/components/results";
 import { countries, pathways, workModes } from "@/lib/options";
 
-const skeletonColumns = ["role", "company", "location", "pathway", "actions"];
+const skeletonColumns = [
+  "select",
+  "match",
+  "role",
+  "company",
+  "location",
+  "pathway",
+  "mode",
+  "salary",
+  "source",
+  "actions",
+];
 const skeletonRows = ["first", "second", "third", "fourth", "fifth"];
 
 /** Returns a selected form value or removes the neutral any option. */
@@ -103,79 +114,84 @@ export function Search() {
   }
 
   return (
-    <section className="space-y-8">
-      <Header title={t("title")} />
+    <section>
+      <div className="space-y-6 border-b pb-8">
+        <Header title={t("title")} />
 
-      <form
-        action={submit}
-        className="space-y-3"
-        key={profile?._id ?? "search"}
-      >
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Input
-            className="flex-1"
-            defaultValue={profile?.desiredRoles[0] ?? ""}
-            disabled={disabled}
-            maxLength={400}
-            name="query"
-            placeholder={t("placeholder")}
-          />
-          <Button className="shrink-0" disabled={disabled} type="submit">
-            <HugeIcons
-              className={running ? "size-4 animate-spin" : "size-4"}
-              icon={running ? Loading03Icon : Search02Icon}
+        <form
+          action={submit}
+          className="space-y-3"
+          key={profile?.updatedAt ?? "search"}
+        >
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              className="flex-1"
+              defaultValue={profile?.desiredRoles[0] ?? ""}
+              disabled={disabled}
+              maxLength={400}
+              name="query"
+              placeholder={t("placeholder")}
             />
-            {running ? t("working") : t("button")}
-          </Button>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-3">
-          <Select
-            defaultValue={profile?.desiredLocations[0] ?? "any"}
-            name="country"
-          >
-            <SelectTrigger className="w-full" disabled={disabled}>
-              <SelectValue placeholder={t("country")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="any">{t("anyCountry")}</SelectItem>
-              {countries.map((country) => (
-                <SelectItem key={country.code} value={country.value}>
-                  <CountryFlag countryCode={country.code} />
-                  {common(`countries.${country.code}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select defaultValue={profile?.pathways[0] ?? "any"} name="pathway">
-            <SelectTrigger className="w-full" disabled={disabled}>
-              <SelectValue placeholder={t("pathway")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="any">{t("anyPathway")}</SelectItem>
-              {pathways.map((pathway) => (
-                <SelectItem key={pathway} value={pathway}>
-                  {t(pathway)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select defaultValue={profile?.workModes[0] ?? "any"} name="workMode">
-            <SelectTrigger className="w-full" disabled={disabled}>
-              <SelectValue placeholder={t("workMode")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="any">{t("anyWorkMode")}</SelectItem>
-              {workModes.map((workMode) => (
-                <SelectItem key={workMode} value={workMode}>
-                  {t(workMode)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </form>
+            <Button className="shrink-0" disabled={disabled} type="submit">
+              <HugeIcons
+                className={running ? "size-4 animate-spin" : "size-4"}
+                icon={running ? Loading03Icon : Search02Icon}
+              />
+              {running ? t("working") : t("button")}
+            </Button>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <Select
+              defaultValue={profile?.desiredLocations[0] ?? "any"}
+              name="country"
+            >
+              <SelectTrigger className="w-full" disabled={disabled}>
+                <SelectValue placeholder={t("country")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">{t("anyCountry")}</SelectItem>
+                {countries.map((country) => (
+                  <SelectItem key={country.code} value={country.value}>
+                    <CountryFlag countryCode={country.code} />
+                    {common(`countries.${country.code}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select defaultValue={profile?.pathways[0] ?? "any"} name="pathway">
+              <SelectTrigger className="w-full" disabled={disabled}>
+                <SelectValue placeholder={t("pathway")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">{t("anyPathway")}</SelectItem>
+                {pathways.map((pathway) => (
+                  <SelectItem key={pathway} value={pathway}>
+                    {t(pathway)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              defaultValue={profile?.workModes[0] ?? "any"}
+              name="workMode"
+            >
+              <SelectTrigger className="w-full" disabled={disabled}>
+                <SelectValue placeholder={t("workMode")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">{t("anyWorkMode")}</SelectItem>
+                {workModes.map((workMode) => (
+                  <SelectItem key={workMode} value={workMode}>
+                    {t(workMode)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </form>
+      </div>
 
-      <div aria-live="polite" className="min-h-56">
+      <div aria-live="polite" className="min-h-56 pt-8">
         {hydrating ||
         running ||
         (session?.status === "complete" && !opportunities) ? (
