@@ -38,7 +38,10 @@
     "signIn": "Masuk",
     "signUp": "Buat akun",
     "new": "Baru di Rantau?",
-    "existing": "Sudah punya akun?"
+    "existing": "Sudah punya akun?",
+    "invalid": "Email atau kata sandi salah.",
+    "exists": "Email ini sudah digunakan.",
+    "connection": "Koneksi terputus. Coba lagi."
   },
   "search": {
     "title": "Cari kerja",
