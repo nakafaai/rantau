@@ -6,26 +6,69 @@ import {
   Mail01Icon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { Card, CardContent } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import type { ApplicationStatus } from "@repo/domain/application";
-import { nextApplicationStatuses } from "@repo/domain/application";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/design-system/components/ui/select";
+import {
+  Sheet,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetPopup,
+  SheetTitle,
+  SheetTrigger,
+} from "@repo/design-system/components/ui/sheet";
+import { Skeleton } from "@repo/design-system/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@repo/design-system/components/ui/table";
+import {
+  ApplicationStatus,
+  nextApplicationStatuses,
+} from "@repo/domain/application";
 import { useAction, useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CountryFlag } from "@/components/country-flag";
 import { Header } from "@/components/header";
 
-/** Renders realtime application records and domain-valid status changes. */
+type ApplicationRecord = FunctionReturnType<
+  typeof api.applications.list
+>[number];
+
+const applicationColumns = [
+  "role",
+  "company",
+  "location",
+  "status",
+  "actions",
+] as const;
+const applicationRows = ["first", "second", "third", "fourth"] as const;
+
+/** Builds the most specific supported application location label. */
+function locationLabel(record: ApplicationRecord) {
+  const { city, country, location } = record.opportunity.opportunity;
+  return [city, country].filter(Boolean).join(", ") || location;
+}
+
+/** Renders realtime applications as one scan-friendly shadcn table. */
 export function Tracker() {
   const t = useTranslations("tracker");
   const common = useTranslations("common");
@@ -34,9 +77,7 @@ export function Tracker() {
   const inbox = useQuery(api.mail.inbox);
   const provision = useAction(api.mail.provision);
   const sendDigest = useMutation(api.mail.sendDigest);
-  const transition = useMutation(api.applications.transition);
   const [mailPending, setMailPending] = useState(false);
-  const [pending, setPending] = useState<string | null>(null);
 
   /** Provisions a private inbox when needed and sends the latest digest. */
   async function emailDigest() {
@@ -54,25 +95,6 @@ export function Tracker() {
     }
   }
 
-  /** Persists the selected domain-valid status and notes for one record. */
-  async function update(formData: FormData) {
-    const applicationId = String(formData.get("applicationId"));
-    const status = String(formData.get("status")) as ApplicationStatus;
-    const notes = String(formData.get("notes") ?? "");
-    setPending(applicationId);
-    try {
-      await transition({
-        applicationId: applicationId as Id<"applications">,
-        notes,
-        status,
-      });
-    } catch {
-      toast.error(common("error"));
-    } finally {
-      setPending(null);
-    }
-  }
-
   return (
     <section className="space-y-8">
       <Header description={t("description")} title={t("title")} />
@@ -80,7 +102,7 @@ export function Tracker() {
       <Card className="bg-muted/30 shadow-none">
         <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <HugeIcons className="mt-0.5 size-5" icon={Mail01Icon} />
+            <HugeIcons className="mt-0.5 size-4" icon={Mail01Icon} />
             <div className="space-y-1">
               <p className="font-semibold">{t("mailTitle")}</p>
               <p className="text-muted-foreground text-sm leading-relaxed">
@@ -94,93 +116,221 @@ export function Tracker() {
             onClick={emailDigest}
             variant="outline"
           >
-            <HugeIcons icon={Mail01Icon} /> {t("mailButton")}
+            <HugeIcons className="size-4" icon={Mail01Icon} />
+            {t("mailButton")}
           </Button>
         </CardContent>
       </Card>
 
-      {records?.length ? (
-        <div className="grid gap-4">
-          {records.map(({ application, opportunity }) => {
-            const next = nextApplicationStatuses(application.status);
-            return (
-              <Card key={application._id}>
-                <CardHeader>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <CardTitle>{opportunity.opportunity.title}</CardTitle>
-                      <CardDescription>
-                        {opportunity.opportunity.company} ·{" "}
-                        {opportunity.opportunity.location}
-                      </CardDescription>
-                    </div>
-                    <span className="rounded-full bg-secondary px-3 py-1 font-medium text-primary text-xs">
-                      {t(application.status)}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <form
-                    action={update}
-                    className="grid gap-3 md:grid-cols-[1fr_12rem_auto]"
-                  >
-                    <input
-                      name="applicationId"
-                      type="hidden"
-                      value={application._id}
-                    />
-                    <Input
-                      defaultValue={application.notes}
-                      name="notes"
-                      placeholder={t("notes")}
-                    />
-                    <select
-                      className="h-9 rounded-md border bg-background px-3 text-sm"
-                      defaultValue={next[0] ?? application.status}
-                      disabled={next.length === 0}
-                      name="status"
-                    >
-                      {next.length ? (
-                        next.map((status) => (
-                          <option key={status} value={status}>
-                            {t(status)}
-                          </option>
-                        ))
-                      ) : (
-                        <option value={application.status}>
-                          {t(application.status)}
-                        </option>
-                      )}
-                    </select>
-                    <Button
-                      disabled={
-                        pending === application._id || next.length === 0
-                      }
-                      type="submit"
-                    >
-                      {t("update")}
-                    </Button>
-                  </form>
-                  <a
-                    className="mt-4 inline-flex items-center gap-1 font-medium text-primary text-sm hover:underline"
-                    href={opportunity.opportunity.directApplyUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    {opportunity.opportunity.source.name}{" "}
-                    <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
-                  </a>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
+      {records === undefined ? <ApplicationSkeleton /> : null}
+      {records?.length ? <ApplicationTable records={records} /> : null}
+      {records?.length === 0 ? (
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <HugeIcons icon={BriefcaseBusinessIcon} />
+          <HugeIcons className="size-4" icon={BriefcaseBusinessIcon} />
           <p>{t("empty")}</p>
         </div>
-      )}
+      ) : null}
     </section>
+  );
+}
+
+/** Renders application records with stable columns and row actions. */
+function ApplicationTable({
+  records,
+}: {
+  records: readonly ApplicationRecord[];
+}) {
+  const t = useTranslations("tracker");
+  const search = useTranslations("search");
+
+  return (
+    <div className="overflow-hidden rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{search("role")}</TableHead>
+            <TableHead>{search("company")}</TableHead>
+            <TableHead>{search("location")}</TableHead>
+            <TableHead>{t("status")}</TableHead>
+            <TableHead>
+              <span className="sr-only">{search("actions")}</span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {records.map((record) => (
+            <TableRow key={record.application._id}>
+              <TableCell className="min-w-52 whitespace-normal font-medium">
+                {record.opportunity.opportunity.title}
+              </TableCell>
+              <TableCell className="min-w-36 whitespace-normal">
+                {record.opportunity.opportunity.company}
+              </TableCell>
+              <TableCell>
+                <span className="inline-flex max-w-44 items-center gap-2 whitespace-normal">
+                  <CountryFlag
+                    countryCode={record.opportunity.opportunity.countryCode}
+                  />
+                  {locationLabel(record)}
+                </span>
+              </TableCell>
+              <TableCell>
+                <Badge variant="secondary">
+                  {t(record.application.status)}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <ApplicationSheet record={record} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+/** Shows one application's next valid transition in a shadcn Sheet. */
+function ApplicationSheet({ record }: { record: ApplicationRecord }) {
+  const t = useTranslations("tracker");
+  const search = useTranslations("search");
+  const common = useTranslations("common");
+  const transition = useMutation(api.applications.transition);
+  const [pending, setPending] = useState(false);
+  const next = nextApplicationStatuses(record.application.status);
+  const statusId = `status-${record.application._id}`;
+  const notesId = `notes-${record.application._id}`;
+
+  /** Saves one domain-valid status transition and its private notes. */
+  async function update(formData: FormData) {
+    setPending(true);
+    try {
+      const status = Option.getOrUndefined(
+        Schema.decodeUnknownOption(ApplicationStatus)(formData.get("status"))
+      );
+      if (!status) {
+        throw new Error("Invalid application status");
+      }
+      await transition({
+        applicationId: record.application._id,
+        notes: String(formData.get("notes") ?? ""),
+        status,
+      });
+      toast.success(t("updated"));
+    } catch {
+      toast.error(common("error"));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Sheet>
+      <SheetTrigger
+        render={
+          <Button className="ml-auto" size="sm" variant="outline">
+            {search("details")}
+          </Button>
+        }
+      />
+      <SheetPopup className="sm:max-w-lg">
+        <SheetHeader className="border-b pr-12">
+          <Badge className="mb-2 w-fit" variant="secondary">
+            {t(record.application.status)}
+          </Badge>
+          <SheetTitle>{record.opportunity.opportunity.title}</SheetTitle>
+          <SheetDescription>
+            {record.opportunity.opportunity.company} · {locationLabel(record)}
+          </SheetDescription>
+        </SheetHeader>
+        <form action={update} className="flex flex-1 flex-col">
+          <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-4">
+            <div className="space-y-2">
+              <label className="font-medium text-sm" htmlFor={statusId}>
+                {t("status")}
+              </label>
+              <Select
+                defaultValue={next[0] ?? record.application.status}
+                disabled={next.length === 0}
+                name="status"
+              >
+                <SelectTrigger className="w-full" id={statusId}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(next.length ? next : [record.application.status]).map(
+                    (status) => (
+                      <SelectItem key={status} value={status}>
+                        {t(status)}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="font-medium text-sm" htmlFor={notesId}>
+                {t("notes")}
+              </label>
+              <Input
+                defaultValue={record.application.notes}
+                id={notesId}
+                maxLength={2000}
+                name="notes"
+              />
+            </div>
+          </div>
+          <SheetFooter className="border-t sm:flex-row">
+            <Button disabled={pending || next.length === 0} type="submit">
+              {t("update")}
+            </Button>
+            <Button
+              nativeButton={false}
+              render={
+                <a
+                  href={record.opportunity.opportunity.directApplyUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                />
+              }
+              variant="outline"
+            >
+              {search("apply")}
+              <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
+            </Button>
+          </SheetFooter>
+        </form>
+      </SheetPopup>
+    </Sheet>
+  );
+}
+
+/** Preserves the applications table geometry while Convex hydrates. */
+function ApplicationSkeleton() {
+  return (
+    <div aria-hidden className="overflow-hidden rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {applicationColumns.map((column) => (
+              <TableHead key={column}>
+                <Skeleton className="h-4 w-20" />
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {applicationRows.map((row) => (
+            <TableRow key={row}>
+              {applicationColumns.map((column) => (
+                <TableCell key={`${row}-${column}`}>
+                  <Skeleton className="h-5 w-24" />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
