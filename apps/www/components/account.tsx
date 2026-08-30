@@ -18,6 +18,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuLinkItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -122,13 +123,13 @@ export function Account() {
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem
+            <DropdownMenuLinkItem
               className="cursor-pointer"
               render={<Link href={workspacePath(locale, "profile")} />}
             >
               <HugeIcons className="size-4" icon={UserIcon} />
               {t("profile")}
-            </DropdownMenuItem>
+            </DropdownMenuLinkItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <PreferenceSubmenus side={isMobile ? "top" : "right"} />

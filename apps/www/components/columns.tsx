@@ -13,6 +13,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLinkItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -242,7 +243,7 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
                 <HugeIcons className="size-4" icon={Bookmark01Icon} />
                 {row.original.isSaved ? t("saved") : t("save")}
               </DropdownMenuItem>
-              <DropdownMenuItem
+              <DropdownMenuLinkItem
                 render={
                   <a
                     aria-label={t("apply")}
@@ -254,7 +255,7 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
               >
                 <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
                 {t("apply")}
-              </DropdownMenuItem>
+              </DropdownMenuLinkItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ),

@@ -7,6 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLinkItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -49,7 +50,7 @@ function LanguageItems() {
   const pathname = usePathname();
 
   return languages.map((language) => (
-    <DropdownMenuItem
+    <DropdownMenuLinkItem
       className="cursor-pointer"
       key={language.value}
       render={
@@ -59,7 +60,7 @@ function LanguageItems() {
       <CountryFlag countryCode={language.countryCode} />
       <span className="truncate">{language.label}</span>
       <ActiveBadge active={currentLocale === language.value} />
-    </DropdownMenuItem>
+    </DropdownMenuLinkItem>
   ));
 }
 

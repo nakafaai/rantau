@@ -6,6 +6,9 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 
+const dropdownMenuItemClassName =
+  "group/dropdown-menu-item relative flex cursor-default select-none items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-inset:pl-7 data-[variant=destructive]:text-destructive data-disabled:opacity-50 data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0 data-[variant=destructive]:*:[svg]:text-destructive";
+
 /** Renders the DropdownMenu design-system primitive. */
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
@@ -94,13 +97,28 @@ function DropdownMenuItem({
 }) {
   return (
     <MenuPrimitive.Item
-      className={cn(
-        "group/dropdown-menu-item relative flex cursor-default select-none items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-inset:pl-7 data-[variant=destructive]:text-destructive data-disabled:opacity-50 data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0 data-[variant=destructive]:*:[svg]:text-destructive",
-        className
-      )}
+      className={cn(dropdownMenuItemClassName, className)}
       data-inset={inset}
       data-slot="dropdown-menu-item"
       data-variant={variant}
+      {...props}
+    />
+  );
+}
+
+/** Renders a native menu link without button semantics intercepting navigation. */
+function DropdownMenuLinkItem({
+  className,
+  inset,
+  ...props
+}: MenuPrimitive.LinkItem.Props & {
+  inset?: boolean;
+}) {
+  return (
+    <MenuPrimitive.LinkItem
+      className={cn(dropdownMenuItemClassName, className)}
+      data-inset={inset}
+      data-slot="dropdown-menu-link-item"
       {...props}
     />
   );
@@ -275,6 +293,7 @@ export {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuLinkItem,
   DropdownMenuPortal,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
