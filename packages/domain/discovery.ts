@@ -161,7 +161,15 @@ export const bindOpportunities = Effect.fn("discovery.bindOpportunities")(
           url: source.url,
         },
         summary: candidate.summary,
-        support: candidate.support,
+        support: candidate.support.map((resource) => ({
+          ...resource,
+          url:
+            resource.url &&
+            (resource.url === source.url ||
+              source.content.includes(resource.url))
+              ? resource.url
+              : null,
+        })),
         title: candidate.title,
         workMode: candidate.workMode,
       });

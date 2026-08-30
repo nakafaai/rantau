@@ -95,7 +95,13 @@ describe("opportunity discovery", () => {
               sourceKind: "employer",
               sourceName: "Example Works",
               summary: "Entry-level welding role.",
-              support: [],
+              support: [
+                {
+                  description: "Unverified support",
+                  name: "Support office",
+                  url: "https://unsupported.example",
+                },
+              ],
               title: "Welder",
               workMode: "onsite",
             },
@@ -114,6 +120,7 @@ describe("opportunity discovery", () => {
       expect(opportunities[0]?.directApplyUrl).toBe(
         "https://employer.example/jobs/welder"
       );
+      expect(opportunities[0]?.support[0]?.url).toBeNull();
     })
   );
 

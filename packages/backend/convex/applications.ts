@@ -43,6 +43,54 @@ export const save = mutation({
   },
 });
 
+/** Saves a bounded selection of owned opportunities in one atomic mutation. */
+export const saveMany = mutation({
+  args: {
+    opportunityIds: v.array(v.id("opportunities")),
+  },
+  returns: v.number(),
+  handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const opportunityIds = [...new Set(args.opportunityIds)].slice(0, 50);
+    const opportunities = await Promise.all(
+      opportunityIds.map((opportunityId) => ctx.db.get(opportunityId))
+    );
+    if (
+      opportunities.some(
+        (opportunity) => !opportunity || opportunity.userId !== userId
+      )
+    ) {
+      throw new ConvexError({ code: "NOT_FOUND" });
+    }
+
+    const existing = await Promise.all(
+      opportunityIds.map((opportunityId) =>
+        ctx.db
+          .query("applications")
+          .withIndex("by_user_opportunity", (index) =>
+            index.eq("userId", userId).eq("opportunityId", opportunityId)
+          )
+          .unique()
+      )
+    );
+    const unsaved = opportunityIds.filter((_, index) => !existing[index]);
+    const updatedAt = Date.now();
+    await Promise.all(
+      unsaved.map((opportunityId) =>
+        ctx.db.insert("applications", {
+          notes: "",
+          opportunityId,
+          status: "saved",
+          updatedAt,
+          userId,
+        })
+      )
+    );
+
+    return unsaved.length;
+  },
+});
+
 export const transition = mutation({
   args: {
     applicationId: v.id("applications"),
