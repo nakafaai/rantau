@@ -301,25 +301,3 @@ export const list = query({
     );
   },
 });
-
-export const detail = query({
-  args: { opportunityId: v.id("opportunities") },
-  returns: v.object({
-    opportunity: schema.doc("opportunities"),
-    readiness: v.array(readinessStepValidator),
-    readinessPercent: v.number(),
-  }),
-  handler: async (ctx, args) => {
-    const userId = await requireUserId(ctx);
-    const opportunity = await ctx.db.get("opportunities", args.opportunityId);
-    if (!opportunity || opportunity.userId !== userId) {
-      throw new ConvexError({ code: "NOT_FOUND" });
-    }
-
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user", (index) => index.eq("userId", userId))
-      .unique();
-    return readinessProjection(profile, opportunity);
-  },
-});
