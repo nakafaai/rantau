@@ -6,7 +6,10 @@
   "common": {
     "brand": "Rantau",
     "tagline": "Work, without the maze",
+    "back": "Back",
+    "theme": "Theme",
     "loading": "Preparing your workspace...",
+    "workspace": "Workspace",
     "search": "Find work",
     "profile": "Profile & CV",
     "tracker": "Applications",
@@ -16,32 +19,28 @@
     "error": "Something went wrong. Please try again."
   },
   "auth": {
-    "eyebrow": "A clearer route to work",
-    "title": "Your next opportunity can start anywhere.",
-    "description": "Search direct employer and official program pages, see what to prepare, then apply without another complicated profile.",
     "email": "Email",
+    "emailInvalid": "Enter a valid email address.",
     "name": "Name",
+    "nameInvalid": "Use 1 to 120 characters.",
     "password": "Password",
+    "passwordRule": "Use 12 to 256 characters.",
     "signIn": "Sign in",
     "signUp": "Create account",
     "new": "New to Rantau?",
-    "existing": "Already have an account?",
-    "passwordHelp": "Use at least 12 characters."
+    "existing": "Already have an account?"
   },
   "search": {
-    "eyebrow": "Direct opportunity search",
-    "title": "What kind of work are you looking for?",
-    "description": "Use plain language. Include a role, country, pathway, or anything important to you.",
-    "placeholder": "Welder jobs in Japan with visa support, or nursing Ausbildung in Germany",
-    "button": "Search opportunities",
-    "working": "Searching official and employer pages...",
-    "emptyTitle": "Start with one honest query",
-    "emptyBody": "Rantau searches the web, verifies source pages, and keeps the direct application link attached to each result.",
+    "title": "Find work",
+    "placeholder": "Search roles, companies, or locations",
+    "button": "Search",
+    "working": "Searching...",
     "results": "results",
     "apply": "Apply on source",
     "save": "Save",
     "saved": "Saved",
     "requirements": "What to prepare",
+    "hide": "Hide details",
     "steps": "Application route",
     "support": "Support available",
     "source": "Source",
@@ -51,9 +50,8 @@
     "noResults": "No strong direct opportunities were found. Try a broader role or location."
   },
   "profile": {
-    "eyebrow": "Personalization",
-    "title": "Tell Rantau what fits you",
-    "description": "A lightweight profile helps explain readiness. You stay in control and can search before completing it.",
+    "title": "Profile & CV",
+    "description": "Add your preferences or upload a CV.",
     "roles": "Desired roles",
     "locations": "Locations",
     "skills": "Skills",
@@ -72,9 +70,8 @@
     "uploaded": "CV ready"
   },
   "tracker": {
-    "eyebrow": "Application tracker",
-    "title": "Every application, one calm view",
-    "description": "Save an opportunity before applying, then update its status as you move forward.",
+    "title": "Applications",
+    "description": "Track every application in one place.",
     "empty": "No saved applications yet. Your saved opportunities will appear here.",
     "notes": "Notes",
     "saved": "Saved",
@@ -92,9 +89,8 @@
     "mailSent": "Application digest sent"
   },
   "costs": {
-    "eyebrow": "Transparent by design",
-    "title": "What powers each search",
-    "description": "Rantau uses Convex components instead of parallel infrastructure. Actual cost depends on searches, pages read, emails, storage, and AI tokens.",
+    "title": "How it works",
+    "description": "See what powers Rantau and how usage affects cost.",
     "stack": "Capability",
     "usage": "What drives cost",
     "convex": "Database, auth, realtime, files, functions, and static hosting",

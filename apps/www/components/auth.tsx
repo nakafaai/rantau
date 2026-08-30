@@ -12,6 +12,15 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
+import {
+  IdentityEmail,
+  IdentityName,
+  IdentityPassword,
+  MAXIMUM_EMAIL_LENGTH,
+  MAXIMUM_NAME_LENGTH,
+  MAXIMUM_PASSWORD_LENGTH,
+  MINIMUM_PASSWORD_LENGTH,
+} from "@repo/domain/identity";
 import { useForm } from "@tanstack/react-form";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
@@ -20,24 +29,20 @@ import { BackButton } from "@/components/back";
 import { FeaturesDithering } from "@/components/dithering";
 import { Theme } from "@/components/theme";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const Email = Schema.Trim.pipe(Schema.check(Schema.isPattern(EMAIL_PATTERN)));
-const Password = Schema.String.check(Schema.isMinLength(12));
-const Name = Schema.Trim.pipe(Schema.check(Schema.isMinLength(1)));
+const RequiredName = IdentityName.pipe(Schema.check(Schema.isMinLength(1)));
 
 const AuthForm = Schema.Union([
   Schema.Struct({
-    email: Email,
+    email: IdentityEmail,
     flow: Schema.Literal("signIn"),
     name: Schema.String,
-    password: Password,
+    password: IdentityPassword,
   }),
   Schema.Struct({
-    email: Email,
+    email: IdentityEmail,
     flow: Schema.Literal("signUp"),
-    name: Name,
-    password: Password,
+    name: RequiredName,
+    password: IdentityPassword,
   }),
 ]);
 const formSchema = Schema.toStandardSchemaV1(AuthForm);
@@ -119,6 +124,7 @@ export function Auth() {
                                 aria-invalid={isInvalid}
                                 autoComplete="name"
                                 id={field.name}
+                                maxLength={MAXIMUM_NAME_LENGTH}
                                 name={field.name}
                                 onBlur={field.handleBlur}
                                 onChange={(event) =>
@@ -152,6 +158,7 @@ export function Auth() {
                           aria-invalid={isInvalid}
                           autoComplete="email"
                           id={field.name}
+                          maxLength={MAXIMUM_EMAIL_LENGTH}
                           name={field.name}
                           onBlur={field.handleBlur}
                           onChange={(event) =>
@@ -189,7 +196,8 @@ export function Auth() {
                                   : "current-password"
                               }
                               id={field.name}
-                              minLength={12}
+                              maxLength={MAXIMUM_PASSWORD_LENGTH}
+                              minLength={MINIMUM_PASSWORD_LENGTH}
                               name={field.name}
                               onBlur={field.handleBlur}
                               onChange={(event) =>
