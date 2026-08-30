@@ -19,10 +19,13 @@ import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
-type CvProps = Readonly<{ current: Doc<"profiles"> | null }>;
+type CvProps = Readonly<{
+  current: Doc<"profiles"> | null;
+  disabled: boolean;
+}>;
 
 /** Owns private PDF selection, upload, and CV extraction. */
-export function Cv({ current }: CvProps) {
+export function Cv({ current, disabled }: CvProps) {
   const t = useTranslations("profile");
   const common = useTranslations("common");
   const createUpload = useMutation(api.profiles.uploadUrl);
@@ -68,7 +71,7 @@ export function Cv({ current }: CvProps) {
   }
 
   return (
-    <Card>
+    <Card aria-busy={disabled} inert={disabled}>
       <CardHeader className="border-b">
         <CardTitle>{t("cv")}</CardTitle>
         <CardDescription>{t("cvHelp")}</CardDescription>
@@ -100,7 +103,10 @@ export function Cv({ current }: CvProps) {
         </Button>
       </CardContent>
       <CardFooter className="justify-end border-t bg-muted/20">
-        <Button disabled={pending || !current || !file} onClick={upload}>
+        <Button
+          disabled={disabled || pending || !current || !file}
+          onClick={upload}
+        >
           <HugeIcons className="size-4" icon={Upload02Icon} />
           {t("upload")}
         </Button>

@@ -1,12 +1,6 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@repo/design-system/components/ui/card";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { ProfileInput, WorkAuthorization } from "@repo/domain/profile";
 import { useMutation, useQuery } from "convex/react";
 import { Effect, Option, Schema } from "effect";
@@ -16,15 +10,6 @@ import { toast } from "sonner";
 import { Cv } from "@/components/cv";
 import { ProfileForm } from "@/components/form";
 import { Header } from "@/components/header";
-
-const profileSkeletonFields = [
-  "identity",
-  "destination",
-  "pathway",
-  "experience",
-  "skills",
-  "languages",
-] as const;
 
 /** Reads one trimmed optional text value from a browser form. */
 function optionalText(formData: FormData, name: string) {
@@ -121,34 +106,14 @@ export function Profile() {
   return (
     <section className="space-y-8">
       <Header title={t("title")} />
-      {current === undefined ? (
-        <ProfileSkeleton />
-      ) : (
-        <ProfileForm
-          current={current}
-          key={current?.updatedAt ?? "new"}
-          onSubmit={submit}
-          pending={pending}
-        />
-      )}
-      {current === undefined ? null : <Cv current={current} />}
+      <ProfileForm
+        current={current ?? null}
+        disabled={current === undefined}
+        key={current?.updatedAt ?? "new"}
+        onSubmit={submit}
+        pending={pending}
+      />
+      <Cv current={current ?? null} disabled={current === undefined} />
     </section>
-  );
-}
-
-/** Preserves the vertical profile layout until Convex hydration completes. */
-function ProfileSkeleton() {
-  return (
-    <Card aria-hidden>
-      <CardHeader>
-        <Skeleton className="h-5 w-40" />
-        <Skeleton className="h-4 w-64" />
-      </CardHeader>
-      <CardContent className="space-y-5">
-        {profileSkeletonFields.map((field) => (
-          <Skeleton className="h-9 w-full" key={field} />
-        ))}
-      </CardContent>
-    </Card>
   );
 }

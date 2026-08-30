@@ -47,12 +47,18 @@ import {
 
 type ProfileFormProps = Readonly<{
   current: Doc<"profiles"> | null;
+  disabled: boolean;
   onSubmit: (formData: FormData) => Promise<void>;
   pending: boolean;
 }>;
 
 /** Composes grouped Coss settings without leaking storage syntax. */
-export function ProfileForm({ current, onSubmit, pending }: ProfileFormProps) {
+export function ProfileForm({
+  current,
+  disabled,
+  onSubmit,
+  pending,
+}: ProfileFormProps) {
   const t = useTranslations("profile");
   const common = useTranslations("common");
   const languages = [
@@ -65,7 +71,12 @@ export function ProfileForm({ current, onSubmit, pending }: ProfileFormProps) {
   const selectedSkills = new Set(current?.skills ?? []);
 
   return (
-    <form action={onSubmit} className="space-y-6">
+    <form
+      action={onSubmit}
+      aria-busy={disabled}
+      className="space-y-6"
+      inert={disabled}
+    >
       <Card>
         <CardHeader className="border-b">
           <CardTitle>{t("preferences")}</CardTitle>
@@ -298,7 +309,7 @@ export function ProfileForm({ current, onSubmit, pending }: ProfileFormProps) {
           </Field>
         </CardContent>
         <CardFooter className="justify-end border-t bg-muted/20">
-          <Button disabled={pending} type="submit">
+          <Button disabled={disabled || pending} type="submit">
             <HugeIcons className="size-4" icon={SaveIcon} />
             {t("save")}
           </Button>

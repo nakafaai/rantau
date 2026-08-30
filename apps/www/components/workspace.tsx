@@ -15,9 +15,12 @@ export function Workspace({ children }: WorkspaceProps) {
   return (
     <>
       <AuthLoading>
-        <main className="grid min-h-dvh place-items-center text-muted-foreground text-sm">
-          {t("loading")}
-        </main>
+        <div
+          aria-busy="true"
+          aria-label={t("loading")}
+          className="fixed inset-0 bg-background"
+          role="status"
+        />
       </AuthLoading>
       <Unauthenticated>
         <Auth />

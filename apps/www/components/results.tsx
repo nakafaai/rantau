@@ -94,10 +94,11 @@ export function Results({ records }: ResultsProps) {
     },
   });
   const selected = table.getSelectedRowModel().rows;
-  const pageStart =
-    table.getState().pagination.pageIndex *
-      table.getState().pagination.pageSize +
-    1;
+  const pageStart = records.length
+    ? table.getState().pagination.pageIndex *
+        table.getState().pagination.pageSize +
+      1
+    : 0;
   const pageEnd = Math.min(
     pageStart + table.getRowModel().rows.length - 1,
     records.length
@@ -118,7 +119,7 @@ export function Results({ records }: ResultsProps) {
 
   return (
     <div className="min-w-0 space-y-3">
-      <div className="overflow-hidden rounded-md border">
+      <div className="min-h-[37.75rem] overflow-hidden rounded-md border">
         <Table className="table-fixed" containerClassName="overflow-hidden">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -175,7 +176,7 @@ export function Results({ records }: ResultsProps) {
         </Table>
       </div>
 
-      <footer className="flex flex-wrap items-center justify-between gap-3 text-muted-foreground text-sm">
+      <footer className="flex min-h-8 flex-wrap items-center justify-between gap-3 text-muted-foreground text-sm">
         <div className="flex min-w-0 items-center gap-2">
           <span className="whitespace-nowrap">
             {t("resultRange", {
