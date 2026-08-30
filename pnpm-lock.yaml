@@ -17,7 +17,7 @@ catalogs:
       version: 6.0.2
 
 patchedDependencies:
-  '@agentmail/convex@0.1.0': bf44566fa10d800ffef0c372921d31bef2a0d4ed36881b176ac21009dcb90609
+  '@agentmail/convex@0.1.0': cdea0105e00b2d485fbadc992aba39ce52e7c1496a05555eb62513920ca76f2a
 
 importers:
 
@@ -116,7 +116,7 @@ importers:
     dependencies:
       '@agentmail/convex':
         specifier: 0.1.0
-        version: 0.1.0(patch_hash=bf44566fa10d800ffef0c372921d31bef2a0d4ed36881b176ac21009dcb90609)(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(@typescript/typescript6@6.0.2)(convex@1.45.0(react@19.2.8))(react@19.2.8)(zod@4.5.2))(convex@1.45.0(react@19.2.8))
+        version: 0.1.0(patch_hash=cdea0105e00b2d485fbadc992aba39ce52e7c1496a05555eb62513920ca76f2a)(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(@typescript/typescript6@6.0.2)(convex@1.45.0(react@19.2.8))(react@19.2.8)(zod@4.5.2))(convex@1.45.0(react@19.2.8))
       '@ai-sdk/gateway':
         specifier: 4.0.68
         version: 4.0.68(zod@4.5.2)
@@ -4385,7 +4385,7 @@ packages:
 
 snapshots:
 
-  '@agentmail/convex@0.1.0(patch_hash=bf44566fa10d800ffef0c372921d31bef2a0d4ed36881b176ac21009dcb90609)(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(@typescript/typescript6@6.0.2)(convex@1.45.0(react@19.2.8))(react@19.2.8)(zod@4.5.2))(convex@1.45.0(react@19.2.8))':
+  '@agentmail/convex@0.1.0(patch_hash=cdea0105e00b2d485fbadc992aba39ce52e7c1496a05555eb62513920ca76f2a)(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(@typescript/typescript6@6.0.2)(convex@1.45.0(react@19.2.8))(react@19.2.8)(zod@4.5.2))(convex@1.45.0(react@19.2.8))':
     dependencies:
       '@convex-dev/workpool': 0.3.2(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(@typescript/typescript6@6.0.2)(convex@1.45.0(react@19.2.8))(react@19.2.8)(zod@4.5.2))(convex@1.45.0(react@19.2.8))
       convex: 1.45.0(react@19.2.8)
