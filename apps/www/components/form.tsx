@@ -59,6 +59,10 @@ export function ProfileForm({ current, onSubmit, pending }: ProfileFormProps) {
     { key: "primary", language: current?.languages[0], position: 1 },
     { key: "secondary", language: current?.languages[1], position: 2 },
   ] as const;
+  const selectedDocuments = new Set(current?.documents ?? []);
+  const selectedModes = new Set(current?.workModes ?? []);
+  const selectedPathways = new Set(current?.pathways ?? []);
+  const selectedSkills = new Set(current?.skills ?? []);
 
   return (
     <form action={onSubmit} className="space-y-6">
@@ -106,7 +110,7 @@ export function ProfileForm({ current, onSubmit, pending }: ProfileFormProps) {
                   <Checkbox
                     defaultChecked={
                       current
-                        ? current.pathways.includes(pathway)
+                        ? selectedPathways.has(pathway)
                         : pathway === "job"
                     }
                     id={`pathway-${pathway}`}
@@ -126,7 +130,7 @@ export function ProfileForm({ current, onSubmit, pending }: ProfileFormProps) {
               {workModes.map((mode) => (
                 <Field key={mode} orientation="horizontal">
                   <Checkbox
-                    defaultChecked={current?.workModes.includes(mode) ?? true}
+                    defaultChecked={current ? selectedModes.has(mode) : true}
                     id={`mode-${mode}`}
                     name="workModes"
                     value={mode}
@@ -181,7 +185,7 @@ export function ProfileForm({ current, onSubmit, pending }: ProfileFormProps) {
               {skillOptions.map((skill) => (
                 <Field key={skill.value} orientation="horizontal">
                   <Checkbox
-                    defaultChecked={current?.skills.includes(skill.value)}
+                    defaultChecked={selectedSkills.has(skill.value)}
                     id={`skill-${skill.key}`}
                     name="skills"
                     value={skill.value}
@@ -253,7 +257,7 @@ export function ProfileForm({ current, onSubmit, pending }: ProfileFormProps) {
               {documentOptions.map((document) => (
                 <Field key={document.value} orientation="horizontal">
                   <Checkbox
-                    defaultChecked={current?.documents.includes(document.value)}
+                    defaultChecked={selectedDocuments.has(document.value)}
                     id={`document-${document.key}`}
                     name="documents"
                     value={document.value}

@@ -16,7 +16,8 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { cn } from "@repo/design-system/lib/utils";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ComponentProps } from "react";
@@ -46,13 +47,14 @@ function ActiveBadge({ active }: { active: boolean }) {
 function LanguageItems() {
   const currentLocale = useLocale();
   const pathname = usePathname();
-  const router = useRouter();
 
   return languages.map((language) => (
     <DropdownMenuItem
       className="cursor-pointer"
       key={language.value}
-      onClick={() => router.replace(localizedPath(language.value, pathname))}
+      render={
+        <Link href={localizedPath(language.value, pathname)} prefetch replace />
+      }
     >
       <CountryFlag countryCode={language.countryCode} />
       <span className="truncate">{language.label}</span>

@@ -30,7 +30,7 @@ import {
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { useQuery } from "convex/react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { PreferenceSubmenus } from "@/components/preferences";
 import { workspacePath } from "@/lib/locale";
@@ -52,7 +52,6 @@ export function Account() {
   const account = useQuery(api.accounts.current);
   const t = useTranslations("common");
   const locale = useLocale() === "id" ? "id" : "en";
-  const router = useRouter();
   const { signOut } = useAuthActions();
   const { isMobile } = useSidebar();
 
@@ -125,7 +124,7 @@ export function Account() {
           <DropdownMenuGroup>
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => router.push(workspacePath(locale, "profile"))}
+              render={<Link href={workspacePath(locale, "profile")} />}
             >
               <HugeIcons className="size-4" icon={UserIcon} />
               {t("profile")}
