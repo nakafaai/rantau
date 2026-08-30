@@ -45,48 +45,60 @@ export const extract = action({
     fileName: v.string(),
   },
   returns: v.object({ characters: v.number() }),
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ characters: number }> => {
     const userId = await requireUserId(ctx);
-    const blob = await ctx.storage.get(args.fileId);
-    if (
-      blob?.type !== "application/pdf" ||
-      blob.size > MAX_CV_BYTES ||
-      args.fileName.trim().length === 0
-    ) {
-      await Effect.runPromise(discardUpload(ctx, args.fileId));
-      throw new ConvexError({ code: "PDF_REQUIRED" });
-    }
-
     const outcome = await Effect.runPromise(
-      extractPdfText(blob).pipe(
-        Effect.flatMap((text) =>
-          Effect.tryPromise({
-            catch: (cause) => cause,
-            try: async () => {
-              await ctx.runMutation(internal.profiles.saveCv, {
-                fileId: args.fileId,
-                fileName: args.fileName,
-                text,
-                userId,
-              });
-              return text;
-            },
-          })
-        ),
+      Effect.gen(function* () {
+        const blob = yield* Effect.tryPromise({
+          catch: () => ({
+            code: "CV_INTAKE_FAILED" as const,
+            message: "The uploaded CV could not be read.",
+          }),
+          try: () => ctx.storage.get(args.fileId),
+        });
+        if (
+          blob?.type !== "application/pdf" ||
+          blob.size > MAX_CV_BYTES ||
+          args.fileName.trim().length === 0
+        ) {
+          return yield* Effect.fail({
+            code: "PDF_REQUIRED" as const,
+            message: "A valid PDF CV is required.",
+          });
+        }
+
+        const text = yield* extractPdfText(blob).pipe(
+          Effect.mapError(() => ({
+            code: "CV_INTAKE_FAILED" as const,
+            message: "The uploaded CV could not be extracted.",
+          }))
+        );
+        yield* Effect.tryPromise({
+          catch: () => ({
+            code: "CV_INTAKE_FAILED" as const,
+            message: "The uploaded CV could not be attached.",
+          }),
+          try: () =>
+            ctx.runMutation(internal.profiles.saveCv, {
+              fileId: args.fileId,
+              fileName: args.fileName,
+              text,
+              userId,
+            }),
+        });
+        return text.length;
+      }).pipe(
+        Effect.tapError(() => discardUpload(ctx, args.fileId)),
         Effect.match({
           onFailure: (error) => ({ error, success: false }) as const,
-          onSuccess: (text) => ({ success: true, text }) as const,
+          onSuccess: (characters) => ({ characters, success: true }) as const,
         })
       )
     );
     if (!outcome.success) {
-      await Effect.runPromise(discardUpload(ctx, args.fileId));
-      throw new ConvexError({
-        code: "CV_INTAKE_FAILED",
-        message: String(outcome.error),
-      });
+      throw new ConvexError(outcome.error);
     }
 
-    return { characters: outcome.text.length };
+    return { characters: outcome.characters };
   },
 });
