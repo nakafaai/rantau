@@ -11,7 +11,7 @@
     "build": "convex codegen",
     "clean": "git clean -xdf node_modules .turbo",
     "deploy": "convex deploy",
-    "deploy:static": "static-hosting deploy --no-spa --dist ../../apps/www/out --build-command 'NEXT_PUBLIC_CONVEX_URL=$VITE_CONVEX_URL pnpm --dir ../../apps/www build'",
+    "deploy:static": "NEXT_DEPLOYMENT_ID=$(git rev-parse HEAD) static-hosting deploy --no-spa --dist ../../apps/www/out --build-command 'NEXT_PUBLIC_CONVEX_URL=$VITE_CONVEX_URL pnpm --dir ../../apps/www build'",
     "dev": "convex dev --tail-logs",
     "setup:static": "static-hosting setup",
     "test": "vitest run --passWithNoTests",
