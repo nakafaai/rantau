@@ -226,6 +226,25 @@ describe("durable searches", () => {
         userId,
       })
     ).toBe(true);
+    await test.run(async (ctx) => {
+      const record = await ctx.db
+        .query("opportunities")
+        .withIndex("by_search", (index) => index.eq("searchId", legacyId))
+        .unique();
+      if (record === null) {
+        throw new Error("Expected the legacy opportunity fixture to exist");
+      }
+      await ctx.db.patch("opportunities", record._id, {
+        fingerprint: undefined,
+      });
+    });
+    expect(
+      await test.mutation(internal.searches.append, {
+        opportunity: opportunity("legacy"),
+        searchId: legacyId,
+        userId,
+      })
+    ).toBe(false);
     const otherId = await test.run((ctx) => ctx.db.insert("users", {}));
     await expect(
       test.mutation(internal.searches.append, {

@@ -9,7 +9,6 @@ import {
 import {
   type DiscoveryRun,
   discoverLane,
-  discoveryLanes,
 } from "@repo/backend/convex/lib/discover";
 import { requireUserId } from "@repo/backend/convex/lib/guard";
 import {
@@ -23,6 +22,11 @@ import {
   workModeValidator,
 } from "@repo/backend/convex/model";
 import schema from "@repo/backend/convex/schema";
+import {
+  discoveryLanes,
+  SEARCH_RESULT_LIMIT,
+  SEARCH_RESULT_TARGET,
+} from "@repo/domain/discoveryplan";
 import type { Opportunity } from "@repo/domain/opportunity";
 import { recommendationScore } from "@repo/domain/rank";
 import { buildReadinessPlan } from "@repo/domain/readiness";
@@ -120,6 +124,7 @@ export const start = mutation({
       query: intent.query,
       resultCount: 0,
       status: "running",
+      targetCount: SEARCH_RESULT_TARGET,
       userId,
       workMode: intent.workMode,
     });
@@ -133,6 +138,7 @@ export const start = mutation({
               ctx.db.insert("searchLanes", {
                 market: lane.market,
                 searchId,
+                sourceQuery: lane.sourceQuery,
                 status: "queued",
                 updatedAt: createdAt,
                 userId,
@@ -151,6 +157,7 @@ export const start = mutation({
                   pathway: intent.pathway,
                   query: intent.query,
                   searchId,
+                  sourceQuery: lane.sourceQuery,
                   userId,
                   workMode: intent.workMode,
                 },
@@ -188,6 +195,7 @@ export const executeLane = internalAction({
     pathway: v.optional(pathwayValidator),
     query: v.string(),
     searchId: v.id("searches"),
+    sourceQuery: v.string(),
     userId: v.id("users"),
     workMode: v.optional(workModeValidator),
   },
@@ -209,7 +217,11 @@ export const executeLane = internalAction({
       discoverLane(
         ctx,
         intent,
-        { limit: args.limit, market: args.market },
+        {
+          limit: args.limit,
+          market: args.market,
+          sourceQuery: args.sourceQuery,
+        },
         args.userId,
         (opportunity): Promise<boolean> =>
           ctx.runMutation(internal.searches.append, {
@@ -249,12 +261,12 @@ export const list = query({
       ctx.db
         .query("opportunities")
         .withIndex("by_search", (index) => index.eq("searchId", args.searchId))
-        .take(100),
+        .take(SEARCH_RESULT_LIMIT),
       ctx.db
         .query("applications")
         .withIndex("by_user_updatedAt", (index) => index.eq("userId", userId))
         .order("desc")
-        .take(100),
+        .take(SEARCH_RESULT_LIMIT),
     ]);
     const savedOpportunityIds = new Set(
       applications.map((application) => application.opportunityId)

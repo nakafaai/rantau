@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Opportunity } from "@repo/domain/opportunity";
+import { Opportunity, opportunityFingerprint } from "@repo/domain/opportunity";
 import { Schema } from "effect";
 
 describe("Opportunity", () => {
@@ -91,5 +91,15 @@ describe("Opportunity", () => {
     });
 
     expect(opportunity.support[0]?.url).toBe("mailto:training@example.com");
+  });
+
+  it("normalizes a mirrored opportunity into one fingerprint", () => {
+    expect(
+      opportunityFingerprint({
+        company: "  Example   Coffee ",
+        location: "Jakarta, Indonesia",
+        title: "Senior BARISTA",
+      })
+    ).toBe("example coffee|senior barista|jakarta, indonesia");
   });
 });

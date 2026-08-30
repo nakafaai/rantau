@@ -9,7 +9,7 @@ import {
 } from "@repo/domain/opportunity";
 import { Effect, Schema } from "effect";
 
-const MAX_SOURCE_CONTENT = 12_000;
+const MAX_SOURCE_CONTENT = 5000;
 
 const SearchResult = Schema.Struct({
   description: Schema.optional(Schema.String),
