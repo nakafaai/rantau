@@ -1,18 +1,18 @@
+import type { OpportunityRequirement } from "@repo/domain/opportunity";
 import { Schema } from "effect";
-import type { OpportunityRequirement } from "./opportunity";
 
 export const CandidateProfile = Schema.Struct({
-  documents: Schema.Array(Schema.String),
-  education: Schema.Array(Schema.String),
+  documents: Schema.Array(Schema.String).check(Schema.isLengthBetween(0, 30)),
+  education: Schema.Array(Schema.String).check(Schema.isLengthBetween(0, 30)),
   experienceYears: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
   languages: Schema.Array(
     Schema.Struct({
       language: Schema.String,
       level: Schema.String,
     })
-  ),
-  licenses: Schema.Array(Schema.String),
-  skills: Schema.Array(Schema.String),
+  ).check(Schema.isLengthBetween(0, 30)),
+  licenses: Schema.Array(Schema.String).check(Schema.isLengthBetween(0, 30)),
+  skills: Schema.Array(Schema.String).check(Schema.isLengthBetween(0, 50)),
 });
 export type CandidateProfile = Schema.Schema.Type<typeof CandidateProfile>;
 
@@ -23,10 +23,12 @@ export const ReadinessStep = Schema.Struct({
 });
 export type ReadinessStep = Schema.Schema.Type<typeof ReadinessStep>;
 
+/** Normalizes comparable profile values without changing source records. */
 function normalized(values: readonly string[]) {
   return values.map((value) => value.toLocaleLowerCase().trim());
 }
 
+/** Selects candidate evidence owned by a requirement category. */
 function profileValues(profile: CandidateProfile, category: string) {
   switch (category) {
     case "document":
@@ -49,6 +51,7 @@ function profileValues(profile: CandidateProfile, category: string) {
   }
 }
 
+/** Checks whether one requirement is represented by candidate evidence. */
 function matchesProfile(
   profile: CandidateProfile,
   requirement: OpportunityRequirement
@@ -59,6 +62,7 @@ function matchesProfile(
   );
 }
 
+/** Projects requirements into explicit candidate preparation states. */
 export function buildReadinessPlan(
   profile: CandidateProfile | null,
   requirements: readonly OpportunityRequirement[]
@@ -82,6 +86,7 @@ export function buildReadinessPlan(
   });
 }
 
+/** Calculates the share of readiness steps already satisfied. */
 export function readinessPercent(steps: readonly ReadinessStep[]) {
   if (steps.length === 0) {
     return 100;

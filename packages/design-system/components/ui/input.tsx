@@ -1,6 +1,7 @@
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 
+/** Renders the Input design-system primitive. */
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <input

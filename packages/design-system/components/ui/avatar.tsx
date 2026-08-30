@@ -4,6 +4,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { Avatar as AvatarPrimitive } from "radix-ui";
 import type * as React from "react";
 
+/** Renders the Avatar design-system primitive. */
 function Avatar({
   className,
   size = "default",
@@ -24,6 +25,7 @@ function Avatar({
   );
 }
 
+/** Renders the AvatarImage design-system primitive. */
 function AvatarImage({
   className,
   ...props
@@ -37,6 +39,7 @@ function AvatarImage({
   );
 }
 
+/** Renders the AvatarFallback design-system primitive. */
 function AvatarFallback({
   className,
   ...props
@@ -53,6 +56,7 @@ function AvatarFallback({
   );
 }
 
+/** Renders the AvatarBadge design-system primitive. */
 function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
@@ -69,6 +73,7 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
   );
 }
 
+/** Renders the AvatarGroup design-system primitive. */
 function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -82,6 +87,7 @@ function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders the AvatarGroupCount design-system primitive. */
 function AvatarGroupCount({
   className,
   ...props

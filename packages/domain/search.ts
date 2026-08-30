@@ -22,6 +22,15 @@ export class SearchIntentError extends Schema.TaggedError<SearchIntentError>()(
   }
 ) {}
 
+export class SearchExecutionError extends Schema.TaggedError<SearchExecutionError>()(
+  "SearchExecutionError",
+  {
+    message: Schema.String,
+    stage: Schema.Literals(["search", "analysis", "storage"]),
+  }
+) {}
+
+/** Normalizes and validates a candidate's free-form opportunity search. */
 export const makeSearchIntent = Effect.fn("search.makeIntent")(
   function* (input: { locale: "en" | "id"; query: string }) {
     const query = input.query.trim().replaceAll(/\s+/g, " ");

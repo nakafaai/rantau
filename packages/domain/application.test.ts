@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
+import { validateApplicationTransition } from "@repo/domain/application";
 import { Effect, Exit } from "effect";
-import { validateApplicationTransition } from "./application";
 
 describe("validateApplicationTransition", () => {
   it.effect("accepts a valid forward transition", () =>

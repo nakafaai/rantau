@@ -1,11 +1,13 @@
+import { Opportunity } from "@repo/domain/opportunity";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
-import { Opportunity } from "./opportunity";
 
 describe("Opportunity", () => {
   it("decodes a source-backed direct application", () => {
     const opportunity = Schema.decodeUnknownSync(Opportunity)({
+      applicationSteps: ["Open the employer application"],
       company: "Example Health",
+      deadline: null,
       directApplyUrl: "https://example.com/jobs/nurse",
       employmentType: "Full time",
       location: "Osaka, Japan",
@@ -22,6 +24,7 @@ describe("Opportunity", () => {
         url: "https://example.com/jobs/nurse",
       },
       summary: "Care role with relocation support.",
+      support: [],
       title: "Care worker",
       workMode: "onsite",
     });

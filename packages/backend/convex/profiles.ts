@@ -1,0 +1,160 @@
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "@repo/backend/convex/_generated/server";
+import { requireUserId } from "@repo/backend/convex/lib/guard";
+import { profileInputValidator } from "@repo/backend/convex/model";
+import schema from "@repo/backend/convex/schema";
+import type { ProfileInput as Profile } from "@repo/domain/profile";
+import { ProfileInput } from "@repo/domain/profile";
+import { ConvexError, v } from "convex/values";
+import { Effect, Schema } from "effect";
+
+const MAX_CV_BYTES = 5 * 1024 * 1024;
+
+/** Copies readonly Effect-decoded profile values into Convex-owned arrays. */
+function storedProfile(profile: Profile) {
+  return {
+    ...profile,
+    desiredLocations: [...profile.desiredLocations],
+    desiredRoles: [...profile.desiredRoles],
+    documents: [...profile.documents],
+    education: [...profile.education],
+    languages: profile.languages.map((language) => ({ ...language })),
+    licenses: [...profile.licenses],
+    pathways: [...profile.pathways],
+    skills: [...profile.skills],
+    workModes: [...profile.workModes],
+  };
+}
+
+export const get = query({
+  args: {},
+  returns: v.union(schema.doc("profiles"), v.null()),
+  handler: async (ctx) => {
+    const userId = await requireUserId(ctx);
+    return ctx.db
+      .query("profiles")
+      .withIndex("by_user", (index) => index.eq("userId", userId))
+      .unique();
+  },
+});
+
+export const upsert = mutation({
+  args: profileInputValidator.fields,
+  returns: v.id("profiles"),
+  handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const validation = await Effect.runPromise(
+      Schema.decodeUnknownEffect(ProfileInput)(args).pipe(
+        Effect.match({
+          onFailure: () => ({ success: false }) as const,
+          onSuccess: (decoded) => ({ decoded, success: true }) as const,
+        })
+      )
+    );
+    if (!validation.success) {
+      throw new ConvexError({ code: "INVALID_PROFILE" });
+    }
+    const profile = storedProfile(validation.decoded);
+
+    const existing = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (index) => index.eq("userId", userId))
+      .unique();
+    if (existing) {
+      await ctx.db.patch("profiles", existing._id, {
+        ...profile,
+        updatedAt: Date.now(),
+      });
+      return existing._id;
+    }
+
+    return ctx.db.insert("profiles", {
+      ...profile,
+      updatedAt: Date.now(),
+      userId,
+    });
+  },
+});
+
+export const uploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    await requireUserId(ctx);
+    return ctx.storage.generateUploadUrl();
+  },
+});
+
+export const attachCv = mutation({
+  args: {
+    fileId: v.id("_storage"),
+    fileName: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const metadata = await ctx.db.system.get("_storage", args.fileId);
+    if (!metadata || metadata.size > MAX_CV_BYTES) {
+      throw new ConvexError({ code: "INVALID_CV" });
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (index) => index.eq("userId", userId))
+      .unique();
+    if (!profile) {
+      throw new ConvexError({ code: "PROFILE_REQUIRED" });
+    }
+
+    await ctx.db.patch("profiles", profile._id, {
+      cvFileName: args.fileName.slice(0, 160),
+      cvStorageId: args.fileId,
+      cvText: undefined,
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const ownedCv = internalQuery({
+  args: {
+    fileId: v.id("_storage"),
+    userId: v.id("users"),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (index) => index.eq("userId", args.userId))
+      .unique();
+    return profile?.cvStorageId === args.fileId;
+  },
+});
+
+export const saveCvText = internalMutation({
+  args: {
+    fileId: v.id("_storage"),
+    text: v.string(),
+    userId: v.id("users"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (index) => index.eq("userId", args.userId))
+      .unique();
+    if (!profile || profile.cvStorageId !== args.fileId) {
+      throw new ConvexError({ code: "CV_NOT_OWNED" });
+    }
+
+    await ctx.db.patch("profiles", profile._id, {
+      cvText: args.text,
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});

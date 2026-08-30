@@ -2,7 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "allowJs": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@repo/*": ["../../packages/*"]
+    }
   },
   "include": ["convex/**/*.ts"]
 }

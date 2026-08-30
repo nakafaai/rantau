@@ -4,9 +4,9 @@
     "jsx": "preserve",
     "incremental": true,
     "plugins": [{ "name": "next" }],
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@repo/*": ["../../packages/*"]
     }
   },
   "include": [

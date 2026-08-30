@@ -1,6 +1,7 @@
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 
+/** Renders the Card design-system primitive. */
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -14,6 +15,7 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders the CardHeader design-system primitive. */
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -27,6 +29,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders the CardTitle design-system primitive. */
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -37,6 +40,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders the CardDescription design-system primitive. */
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -47,6 +51,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders the CardAction design-system primitive. */
 function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -60,6 +65,7 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders the CardContent design-system primitive. */
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -70,6 +76,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders the CardFooter design-system primitive. */
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

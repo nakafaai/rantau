@@ -6,30 +6,35 @@ import { XIcon } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import type * as React from "react";
 
+/** Renders the Dialog design-system primitive. */
 function Dialog({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
+/** Renders the DialogTrigger design-system primitive. */
 function DialogTrigger({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
 }
 
+/** Renders the DialogPortal design-system primitive. */
 function DialogPortal({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
+/** Renders the DialogClose design-system primitive. */
 function DialogClose({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
+/** Renders the DialogOverlay design-system primitive. */
 function DialogOverlay({
   className,
   ...props
@@ -46,6 +51,7 @@ function DialogOverlay({
   );
 }
 
+/** Renders the DialogContent design-system primitive. */
 function DialogContent({
   className,
   children,
@@ -80,6 +86,7 @@ function DialogContent({
   );
 }
 
+/** Renders the DialogHeader design-system primitive. */
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -90,6 +97,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders the DialogFooter design-system primitive. */
 function DialogFooter({
   className,
   showCloseButton = false,
@@ -117,6 +125,7 @@ function DialogFooter({
   );
 }
 
+/** Renders the DialogTitle design-system primitive. */
 function DialogTitle({
   className,
   ...props
@@ -130,6 +139,7 @@ function DialogTitle({
   );
 }
 
+/** Renders the DialogDescription design-system primitive. */
 function DialogDescription({
   className,
   ...props
