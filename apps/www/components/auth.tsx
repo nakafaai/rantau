@@ -27,6 +27,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { FeaturesDithering } from "@/components/dithering";
 import { AuthPreferences } from "@/components/preferences";
+import { authErrorKey } from "@/lib/auth";
 
 const RequiredName = IdentityName.pipe(Schema.check(Schema.isMinLength(1)));
 
@@ -76,9 +77,10 @@ export function Auth() {
           }
           await signIn("password", formData);
         }).pipe(
-          Effect.catchTag("UnknownError", () =>
+          Effect.catchTag("UnknownError", (error) =>
             Effect.sync(() => {
-              toast.error(common("error"));
+              const errorKey = authErrorKey(error);
+              toast.error(errorKey === "error" ? common("error") : t(errorKey));
             })
           )
         )

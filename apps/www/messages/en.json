@@ -38,7 +38,10 @@
     "signIn": "Sign in",
     "signUp": "Create account",
     "new": "New to Rantau?",
-    "existing": "Already have an account?"
+    "existing": "Already have an account?",
+    "invalid": "Email or password is incorrect.",
+    "exists": "An account already uses this email.",
+    "connection": "Connection interrupted. Try again."
   },
   "search": {
     "title": "Find work",

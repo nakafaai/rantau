@@ -12,11 +12,11 @@
 - **Auth:** Convex Auth v2 password provider with isolated JWT and JWKS keys
 - **AI models:** `openai/gpt-5.4-mini` through Vercel AI Gateway with `google/gemini-3.5-flash-lite` fallback
 - **Started:** 2026-08-30T04:20:15Z
-- **Last updated:** 2026-08-30T13:04:49Z
+- **Last updated:** 2026-08-30T13:52:30Z
 
 ## Log
 
-### 2026-08-30 - working tree
+### 2026-08-30 - e4a7d53
 Named and structured the product as a pnpm and Turborepo monorepo with separate frontend, backend, design-system, and Effect domain modules. Recorded the component-first Convex decision and selected Convex static hosting (`package.json`, `turbo.json`, `CONTEXT.md`, `docs/adr/0001-component-first-convex.md`).
 
 ### 2026-08-30 - isolated Convex backend
@@ -67,3 +67,9 @@ The complete local gate passes 52 tests, all package typechecks, Ultracite and B
 Merged PR #24 after exact head `76350f00737e8a10903bf0cedf02f0e23ce15247` passed CI, then deployed merge commit `1b92676d3c475695802f288c3245875310975a8c` to the isolated Rantau production backend and published 84 static assets with SPA fallback disabled.
 
 Production probes return 200 for the locale root, profile, and applications routes, redirect the legacy `index.html` URL to the clean locale URL with 308, and return 404 for an unknown route. Local Chrome geometry checks at 1920 px and 1280 px confirmed that page and table scroll widths equal their client widths and rows remain 56 px tall.
+
+### 2026-08-30 - working tree
+
+Traced intermittent password login failures to the browser client using the non-regional Convex origin for a Europe deployment. The browser now receives the exact regional deployment URL in local and Static Hosting builds, without reconstructing hostnames at runtime. Generic auth failures were also replaced with tested, concise credential, account, or connection feedback. Fresh account creation, workspace entry, and authenticated refresh now pass against the development deployment (`apps/www/lib/auth.ts`, `apps/www/components/auth.tsx`, `packages/backend/package.json`).
+
+Also repaired the add-filter menu's Base UI group ownership so its label and filter branches open without a runtime crash. The local gate passes 56 tests, all package typechecks, Ultracite and Biome checks, Effect source verification, repository quality contracts, and the static Next.js production build (`apps/www/components/filters.tsx`).
