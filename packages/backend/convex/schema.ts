@@ -38,7 +38,9 @@ export default defineSchema({
     cvText: v.optional(v.string()),
     updatedAt: v.number(),
     userId: v.id("users"),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_cv", ["cvStorageId"])
+    .index("by_user", ["userId"]),
   searches: defineTable({
     completedAt: v.optional(v.number()),
     createdAt: v.number(),
