@@ -16,7 +16,7 @@ import {
 import type { Opportunity } from "@repo/domain/opportunity";
 import { buildReadinessPlan, readinessPercent } from "@repo/domain/readiness";
 import { makeSearchIntent, SearchExecutionError } from "@repo/domain/search";
-import { gateway } from "ai";
+import { gateway, jsonSchema } from "ai";
 import { ConvexError, v } from "convex/values";
 import { Effect, Schema } from "effect";
 
@@ -38,7 +38,9 @@ const analyst = new Agent(components.agent, {
   name: "Rantau opportunity analyst",
 });
 
-const extractionSchema = Schema.toStandardSchemaV1(ExtractionResult);
+const extractionSchema = jsonSchema<ExtractionResult>(
+  Schema.toJsonSchemaDocument(ExtractionResult).schema
+);
 
 type SearchOutcome =
   | { count: number; success: true }
@@ -222,8 +224,19 @@ export const search = action({
             schema: extractionSchema,
           }),
       });
+      const extraction = yield* Schema.decodeUnknownEffect(ExtractionResult)(
+        generated.object
+      ).pipe(
+        Effect.mapError(
+          () =>
+            new SearchExecutionError({
+              message: "The opportunity analyst returned invalid data.",
+              stage: "analysis",
+            })
+        )
+      );
       const bound = yield* bindOpportunities(
-        generated.object,
+        extraction,
         sources,
         new Date().toISOString()
       );

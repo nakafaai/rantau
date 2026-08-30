@@ -2,10 +2,18 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   bindOpportunities,
   decodeDiscoverySources,
+  ExtractionResult,
 } from "@repo/domain/discovery";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 describe("opportunity discovery", () => {
+  it("emits an inline JSON Schema for AI structured output", () => {
+    const document = Schema.toJsonSchemaDocument(ExtractionResult);
+
+    expect(document.schema).toMatchObject({ type: "object" });
+    expect(document.definitions).toEqual({});
+  });
+
   it.effect("decodes a bounded source record", () =>
     Effect.gen(function* () {
       const sources = yield* decodeDiscoverySources({
