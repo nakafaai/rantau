@@ -1,18 +1,36 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Button } from "@repo/design-system/components/ui/button";
-import { cn } from "@repo/design-system/lib/utils";
 import {
-  BriefcaseBusiness,
-  CircleHelp,
-  FileUser,
-  Globe2,
-  LogOut,
-  Menu,
-  SearchIcon,
-  X,
-} from "lucide-react";
+  BriefcaseBusinessIcon,
+  FileUserIcon,
+  InformationCircleIcon,
+  LanguageSquareIcon,
+  Logout01Icon,
+  Search02Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+} from "@repo/design-system/components/ui/sidebar-content";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuDescription,
+  SidebarMenuItem,
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import {
+  Sidebar,
+  SidebarInset,
+  SidebarTrigger,
+} from "@repo/design-system/components/ui/sidebar-shell";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -25,118 +43,136 @@ import { alternatePath } from "@/lib/locale";
 type View = "costs" | "profile" | "search" | "tracker";
 
 const views = [
-  { icon: SearchIcon, key: "search" },
-  { icon: FileUser, key: "profile" },
-  { icon: BriefcaseBusiness, key: "tracker" },
-  { icon: CircleHelp, key: "costs" },
+  { icon: FileUserIcon, key: "profile" },
+  { icon: BriefcaseBusinessIcon, key: "tracker" },
+  { icon: InformationCircleIcon, key: "costs" },
 ] as const;
 
-/** Renders the responsive Nakafa-inspired application shell. */
+/** Renders the exact Nakafa sidebar composition around the Rantau workspace. */
 export function Shell() {
+  const t = useTranslations("common");
+  const [view, setView] = useState<View>("search");
+
+  return (
+    <SidebarProvider>
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center border-b bg-background lg:hidden">
+          <div className="flex w-full items-center gap-3 px-6">
+            <SidebarTrigger className="size-9" variant="outline" />
+            <p className="truncate font-medium text-sm">{t(view)}</p>
+          </div>
+        </header>
+        <div className="relative">
+          <div className="mx-auto w-full max-w-3xl px-6 py-12 sm:py-16">
+            {view === "search" ? <Search /> : null}
+            {view === "profile" ? <Profile /> : null}
+            {view === "tracker" ? <Tracker /> : null}
+            {view === "costs" ? <Costs /> : null}
+          </div>
+        </div>
+      </SidebarInset>
+      <AppSidebar
+        containerClassName="order-first"
+        onViewChange={setView}
+        view={view}
+      />
+    </SidebarProvider>
+  );
+}
+
+type AppSidebarProps = Readonly<{
+  containerClassName?: string;
+  onViewChange: (view: View) => void;
+  view: View;
+}>;
+
+/** Renders Rantau navigation with Nakafa's header, groups, and footer. */
+function AppSidebar({
+  containerClassName,
+  onViewChange,
+  view,
+}: AppSidebarProps) {
   const t = useTranslations("common");
   const locale = useLocale();
   const { signOut } = useAuthActions();
-  const [view, setView] = useState<View>("search");
-  const [open, setOpen] = useState(false);
+  const { setOpenMobile } = useSidebar();
 
-  /** Selects one workspace view and closes the mobile navigation. */
+  /** Selects a workspace view and closes the mobile sheet. */
   function choose(next: View) {
-    setView(next);
-    setOpen(false);
+    onViewChange(next);
+    setOpenMobile(false);
   }
 
   return (
-    <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[17rem_1fr]">
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col border-sidebar-border border-r bg-sidebar p-4 transition-transform lg:sticky lg:top-0 lg:h-dvh lg:w-auto lg:translate-x-0",
-          open && "translate-x-0"
-        )}
-      >
-        <div className="flex items-center justify-between px-2 py-3">
-          <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-full bg-primary font-semibold text-primary-foreground">
-              R
-            </span>
-            <div>
-              <p className="font-semibold">{t("brand")}</p>
-              <p className="text-muted-foreground text-xs">{t("tagline")}</p>
-            </div>
-          </div>
-          <Button
-            aria-label="Close navigation"
-            className="lg:hidden"
-            onClick={() => setOpen(false)}
-            size="icon"
-            variant="ghost"
-          >
-            <X />
-          </Button>
-        </div>
-
-        <nav aria-label="Workspace" className="mt-6 grid gap-1">
-          {views.map(({ icon: Icon, key }) => (
-            <button
-              className={cn(
-                "flex h-11 items-center gap-3 rounded-lg px-3 text-left font-medium text-sm transition-colors",
-                view === key
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-xs"
-                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
-              )}
-              key={key}
-              onClick={() => choose(key)}
-              type="button"
+    <Sidebar className="z-20" containerClassName={containerClassName}>
+      <SidebarHeader className="border-b">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={() => choose("search")} size="lg">
+              <div className="grid aspect-square size-8 place-items-center rounded-sm border bg-background">
+                <HugeIcons icon={BriefcaseBusinessIcon} />
+              </div>
+              <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+                <p className="truncate font-medium">{t("brand")}</p>
+                <SidebarMenuDescription>{t("tagline")}</SidebarMenuDescription>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              className="justify-start text-muted-foreground"
+              isActive={view === "search"}
+              onClick={() => choose("search")}
+              variant="outline"
             >
-              <Icon className="size-4" />
-              {t(key)}
-            </button>
-          ))}
-        </nav>
-
-        <div className="mt-auto grid gap-1 border-sidebar-border border-t pt-4">
-          <Button asChild className="justify-start" variant="ghost">
-            <Link href={alternatePath(locale)}>
-              <Globe2 /> {t("language")}
-            </Link>
-          </Button>
-          <Button
-            className="justify-start"
-            onClick={() => signOut()}
-            variant="ghost"
-          >
-            <LogOut /> {t("signOut")}
-          </Button>
-        </div>
-      </aside>
-
-      {open ? (
-        <button
-          aria-label="Close navigation"
-          className="fixed inset-0 z-30 bg-foreground/20 backdrop-blur-sm lg:hidden"
-          onClick={() => setOpen(false)}
-          type="button"
-        />
-      ) : null}
-
-      <main className="min-w-0">
-        <header className="sticky top-0 z-20 flex h-16 items-center border-b bg-background/90 px-4 backdrop-blur lg:hidden">
-          <Button
-            aria-label="Open navigation"
-            onClick={() => setOpen(true)}
-            size="icon"
-            variant="outline"
-          >
-            <Menu />
-          </Button>
-          <span className="ml-3 font-semibold">{t(view)}</span>
-        </header>
-        <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-8 lg:py-12">
-          {view === "search" ? <Search /> : null}
-          {view === "profile" ? <Profile /> : null}
-          {view === "tracker" ? <Tracker /> : null}
-          {view === "costs" ? <Costs /> : null}
-        </div>
-      </main>
-    </div>
+              <HugeIcons icon={Search02Icon} />
+              <span>{t("search")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>{t("workspace")}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {views.map((item) => (
+                <SidebarMenuItem key={item.key}>
+                  <SidebarMenuButton
+                    isActive={view === item.key}
+                    onClick={() => choose(item.key)}
+                    tooltip={t(item.key)}
+                  >
+                    <HugeIcons icon={item.icon} />
+                    <span>{t(item.key)}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter className="border-t">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              render={<Link href={alternatePath(locale)} />}
+              tooltip={t("language")}
+            >
+              <HugeIcons icon={LanguageSquareIcon} />
+              <span>{t("language")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={() => signOut()} tooltip={t("signOut")}>
+              <HugeIcons icon={Logout01Icon} />
+              <span>{t("signOut")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

@@ -7,21 +7,21 @@ export default function Page() {
   return (
     <main className="grid min-h-dvh place-items-center px-6">
       <section className="max-w-lg space-y-6 text-center">
-        <p className="font-semibold text-primary text-sm uppercase tracking-[0.2em]">
-          Rantau
-        </p>
-        <h1 className="font-semibold text-4xl tracking-tight sm:text-5xl">
-          Cari kerja, tanpa ribet.
-        </h1>
-        <p className="text-muted-foreground">
-          Pilih bahasa untuk mulai mencari kesempatan langsung di seluruh dunia.
-        </p>
+        <h1 className="font-semibold text-2xl">Rantau</h1>
+        <p className="text-muted-foreground">Pilih bahasa</p>
         <div className="flex justify-center gap-3">
-          <Button asChild size="lg">
-            <Link href={localePath("id")}>Bahasa Indonesia</Link>
+          <Button
+            nativeButton={false}
+            render={<Link href={localePath("id")} />}
+          >
+            Bahasa Indonesia
           </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href={localePath("en")}>English</Link>
+          <Button
+            nativeButton={false}
+            render={<Link href={localePath("en")} />}
+            variant="outline"
+          >
+            English
           </Button>
         </div>
       </section>

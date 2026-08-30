@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  AlertCircleIcon,
+  ArrowUpRight01Icon,
+  Bookmark01Icon,
+  Building02Icon,
+  CheckmarkCircle02Icon,
+  Location01Icon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -10,17 +18,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Progress } from "@repo/design-system/components/ui/progress";
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import {
-  ArrowUpRight,
-  Bookmark,
-  Building2,
-  CheckCircle2,
-  CircleAlert,
-  MapPin,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -67,10 +68,12 @@ export function Opportunity({ record }: OpportunityProps) {
           </CardTitle>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm">
             <span className="inline-flex items-center gap-1.5">
-              <Building2 className="size-4" /> {opportunity.company}
+              <HugeIcons className="size-4" icon={Building02Icon} />
+              {opportunity.company}
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <MapPin className="size-4" /> {opportunity.location}
+              <HugeIcons className="size-4" icon={Location01Icon} />
+              {opportunity.location}
             </span>
           </div>
         </div>
@@ -99,9 +102,15 @@ export function Opportunity({ record }: OpportunityProps) {
                     key={`${step.category}-${step.description}`}
                   >
                     {step.status === "ready" ? (
-                      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                      <HugeIcons
+                        className="mt-0.5 size-4 text-success"
+                        icon={CheckmarkCircle02Icon}
+                      />
                     ) : (
-                      <CircleAlert className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <HugeIcons
+                        className="mt-0.5 size-4 text-primary"
+                        icon={AlertCircleIcon}
+                      />
                     )}
                     <span>{step.description}</span>
                   </li>
@@ -123,22 +132,30 @@ export function Opportunity({ record }: OpportunityProps) {
             </div>
           </div>
         ) : null}
-        <button
-          className="font-medium text-primary text-sm hover:underline"
+        <Button
+          className="h-auto w-fit p-0"
           onClick={() => setExpanded((value) => !value)}
-          type="button"
+          size="sm"
+          variant="link"
         >
-          {expanded ? "Hide details" : t("requirements")}
-        </button>
+          {expanded ? t("hide") : t("requirements")}
+        </Button>
       </CardContent>
       <CardFooter className="flex-wrap gap-2 border-t bg-muted/30 px-5 py-4 sm:px-6">
-        <Button asChild>
-          <a href={opportunity.directApplyUrl} rel="noreferrer" target="_blank">
-            {t("apply")} <ArrowUpRight />
-          </a>
+        <Button
+          nativeButton={false}
+          render={
+            <a
+              href={opportunity.directApplyUrl}
+              rel="noreferrer"
+              target="_blank"
+            />
+          }
+        >
+          {t("apply")} <HugeIcons icon={ArrowUpRight01Icon} />
         </Button>
         <Button disabled={saved} onClick={saveOpportunity} variant="outline">
-          <Bookmark /> {saved ? t("saved") : t("save")}
+          <HugeIcons icon={Bookmark01Icon} /> {saved ? t("saved") : t("save")}
         </Button>
         <a
           className="ml-auto truncate text-muted-foreground text-xs hover:text-foreground"

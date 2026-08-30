@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ArrowUpRight01Icon,
+  BriefcaseBusinessIcon,
+  Mail01Icon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -10,14 +15,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import type { ApplicationStatus } from "@repo/domain/application";
 import { nextApplicationStatuses } from "@repo/domain/application";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { ArrowUpRight, BriefcaseBusiness, Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Header } from "@/components/header";
 
 /** Renders realtime application records and domain-valid status changes. */
 export function Tracker() {
@@ -69,24 +75,12 @@ export function Tracker() {
 
   return (
     <section className="space-y-8">
-      <header className="max-w-3xl space-y-3">
-        <p className="font-semibold text-primary text-sm uppercase tracking-[0.16em]">
-          {t("eyebrow")}
-        </p>
-        <h1 className="font-semibold text-3xl tracking-tight sm:text-4xl">
-          {t("title")}
-        </h1>
-        <p className="text-muted-foreground leading-relaxed">
-          {t("description")}
-        </p>
-      </header>
+      <Header description={t("description")} title={t("title")} />
 
       <Card className="bg-muted/30 shadow-none">
         <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-primary">
-              <Mail className="size-5" />
-            </div>
+            <HugeIcons className="mt-0.5 size-5" icon={Mail01Icon} />
             <div className="space-y-1">
               <p className="font-semibold">{t("mailTitle")}</p>
               <p className="text-muted-foreground text-sm leading-relaxed">
@@ -100,7 +94,7 @@ export function Tracker() {
             onClick={emailDigest}
             variant="outline"
           >
-            <Mail /> {t("mailButton")}
+            <HugeIcons icon={Mail01Icon} /> {t("mailButton")}
           </Button>
         </CardContent>
       </Card>
@@ -174,7 +168,7 @@ export function Tracker() {
                     target="_blank"
                   >
                     {opportunity.opportunity.source.name}{" "}
-                    <ArrowUpRight className="size-4" />
+                    <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
                   </a>
                 </CardContent>
               </Card>
@@ -182,12 +176,10 @@ export function Tracker() {
           })}
         </div>
       ) : (
-        <Card className="border-dashed bg-muted/30 shadow-none">
-          <CardContent className="flex flex-col items-center gap-3 py-12 text-center text-muted-foreground">
-            <BriefcaseBusiness className="size-8" />
-            <p>{t("empty")}</p>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <HugeIcons icon={BriefcaseBusinessIcon} />
+          <p>{t("empty")}</p>
+        </div>
       )}
     </section>
   );

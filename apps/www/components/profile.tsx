@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  FileTextIcon,
+  SaveIcon,
+  Upload02Icon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -10,15 +15,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { ProfileInput } from "@repo/domain/profile";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { Effect, Schema } from "effect";
-import { FileText, Save, Upload } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { Header } from "@/components/header";
 
 /** Splits a comma-delimited form value into concise nonempty values. */
 function split(value: FormDataEntryValue | null) {
@@ -120,17 +126,7 @@ export function Profile() {
 
   return (
     <section className="space-y-8">
-      <header className="max-w-3xl space-y-3">
-        <p className="font-semibold text-primary text-sm uppercase tracking-[0.16em]">
-          {t("eyebrow")}
-        </p>
-        <h1 className="font-semibold text-3xl tracking-tight sm:text-4xl">
-          {t("title")}
-        </h1>
-        <p className="text-muted-foreground leading-relaxed">
-          {t("description")}
-        </p>
-      </header>
+      <Header description={t("description")} title={t("title")} />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
         <Card>
@@ -207,7 +203,7 @@ export function Profile() {
                 disabled={pending}
                 type="submit"
               >
-                <Save /> {t("save")}
+                <HugeIcons icon={SaveIcon} /> {t("save")}
               </Button>
             </form>
           </CardContent>
@@ -215,9 +211,7 @@ export function Profile() {
 
         <Card className="h-fit">
           <CardHeader>
-            <div className="mb-2 grid size-10 place-items-center rounded-full bg-secondary text-primary">
-              <FileText className="size-5" />
-            </div>
+            <HugeIcons className="size-5" icon={FileTextIcon} />
             <CardTitle>{t("cv")}</CardTitle>
             <CardDescription>{t("cvHelp")}</CardDescription>
           </CardHeader>
@@ -232,8 +226,9 @@ export function Profile() {
               className="w-full"
               disabled={cvPending || !current}
               onClick={upload}
+              variant="outline"
             >
-              <Upload /> {t("upload")}
+              <HugeIcons icon={Upload02Icon} /> {t("upload")}
             </Button>
           </CardContent>
         </Card>
