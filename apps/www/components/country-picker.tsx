@@ -10,9 +10,13 @@ import {
 } from "@repo/design-system/components/ui/combobox";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { CountryFlag } from "@/components/country-flag";
-import { type CountryOption, loadCountries } from "@/lib/geography";
+import {
+  type CountryOption,
+  countryCodeFromName,
+  loadCountries,
+} from "@/lib/geography";
 
 type CountryPickerProps = Readonly<{
   code?: string;
@@ -34,7 +38,6 @@ export function CountryPicker({
   const locale = useLocale();
   const [countries, setCountries] = useState<readonly CountryOption[]>([]);
   const [failed, setFailed] = useState(false);
-  const resolvedDefault = useRef("");
 
   useEffect(() => {
     let active = true;
@@ -56,28 +59,14 @@ export function CountryPicker({
     };
   }, [locale]);
 
-  const selected = useMemo(() => {
-    const normalized = value.toLocaleLowerCase();
-    return countries.find(
-      (country) =>
-        country.code === code ||
-        country.name.toLocaleLowerCase() === normalized ||
-        country.label.toLocaleLowerCase() === normalized
-    );
-  }, [code, countries, value]);
-
-  useEffect(() => {
-    if (
-      code ||
-      !selected ||
-      !value ||
-      resolvedDefault.current === selected.code
-    ) {
-      return;
-    }
-    resolvedDefault.current = selected.code;
-    onChange(selected);
-  }, [code, onChange, selected, value]);
+  const normalized = value.toLowerCase();
+  const resolvedCode = code ?? countryCodeFromName(value, locale);
+  const selected = countries.find(
+    (country) =>
+      country.code === resolvedCode ||
+      country.name.toLowerCase() === normalized ||
+      country.label.toLowerCase() === normalized
+  );
 
   return (
     <Combobox

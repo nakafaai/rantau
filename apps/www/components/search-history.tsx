@@ -29,11 +29,54 @@ type SearchHistoryProps = Readonly<{
   activeSearchId?: Id<"searches">;
 }>;
 
+const historyMonths = {
+  en: [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ],
+  id: [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "Mei",
+    "Jun",
+    "Jul",
+    "Agu",
+    "Sep",
+    "Okt",
+    "Nov",
+    "Des",
+  ],
+} as const;
+
 /** Formats the narrowest durable place stored on a search session. */
 function searchPlace(search: Doc<"searches">) {
   return [search.city, search.region, search.country]
     .filter(Boolean)
     .join(", ");
+}
+
+/** Formats one stored timestamp deterministically in UTC for hydration safety. */
+function searchTimestamp(timestamp: number, locale: string) {
+  const date = new Date(timestamp);
+  const language = locale === "id" ? "id" : "en";
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = historyMonths[language][date.getUTCMonth()];
+  const year = date.getUTCFullYear();
+  const hour = String(date.getUTCHours()).padStart(2, "0");
+  const minute = String(date.getUTCMinutes()).padStart(2, "0");
+  return `${day} ${month} ${year}, ${hour}:${minute} UTC`;
 }
 
 /** Renders realtime, paginated search history without leaving the workspace. */
@@ -49,10 +92,6 @@ export function SearchHistory({ activeSearchId }: SearchHistoryProps) {
     {},
     { initialNumItems: 20 }
   );
-  const formatter = new Intl.DateTimeFormat(locale, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
 
   /** Selects one durable session through client routing, preserving app state. */
   function select(searchId: Id<"searches">) {
@@ -134,7 +173,7 @@ export function SearchHistory({ activeSearchId }: SearchHistoryProps) {
                         </span>
                       ) : null}
                       <span className="flex flex-wrap items-center gap-2 text-muted-foreground text-xs">
-                        <span>{formatter.format(search.createdAt)}</span>
+                        <span>{searchTimestamp(search.createdAt, locale)}</span>
                         <Badge variant="secondary">
                           {t("historyResults", {
                             count: search.resultCount ?? 0,

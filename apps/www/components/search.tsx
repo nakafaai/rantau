@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Filters, type FilterValue } from "@/components/filters";
 import { Results } from "@/components/results";
 import { SearchHistory } from "@/components/search-history";
+import { countryCodeFromName } from "@/lib/geography";
 
 const OptionalPathway = Schema.Union([OpportunityPathway, Schema.Literal("")]);
 const OptionalWorkMode = Schema.Union([WorkMode, Schema.Literal("")]);
@@ -56,7 +57,8 @@ function sameSearchCriteria(
 
 /** Restores one durable search session into editable form values. */
 function sessionSearchValues(
-  session: Doc<"searches"> | null | undefined
+  session: Doc<"searches"> | null | undefined,
+  locale: string
 ): SearchFormValues | null {
   if (!session) {
     return null;
@@ -64,7 +66,10 @@ function sessionSearchValues(
   return {
     city: session.city ?? "",
     country: session.country ?? "",
-    countryCode: session.countryCode ?? "",
+    countryCode:
+      session.countryCode ??
+      countryCodeFromName(session.country ?? "", locale) ??
+      "",
     pathway: session.pathway ?? "",
     query: session.query,
     region: session.region ?? "",
@@ -74,11 +79,12 @@ function sessionSearchValues(
 }
 
 /** Projects saved profile preferences into initial search values. */
-function profileSearchValues(profile: Doc<"profiles"> | null) {
+function profileSearchValues(profile: Doc<"profiles"> | null, locale: string) {
+  const country = profile?.desiredLocations[0] ?? "";
   return {
     city: "",
-    country: profile?.desiredLocations[0] ?? "",
-    countryCode: "",
+    country,
+    countryCode: countryCodeFromName(country, locale) ?? "",
     pathway: profile?.pathways[0] ?? "",
     query: profile?.desiredRoles[0] ?? "",
     region: "",
@@ -114,8 +120,8 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
     ? selected === undefined
     : latest === undefined;
   const running = session?.status === "running";
-  const sessionValues = sessionSearchValues(session);
-  const profileValues = profileSearchValues(profile);
+  const sessionValues = sessionSearchValues(session, locale);
+  const profileValues = profileSearchValues(profile, locale);
 
   const form = useForm({
     defaultValues: sessionValues ?? profileValues,

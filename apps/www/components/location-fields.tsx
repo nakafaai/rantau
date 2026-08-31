@@ -15,7 +15,7 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { CountryPicker } from "@/components/country-picker";
 import {
   type CityOption,
@@ -38,6 +38,16 @@ type LocationFieldsProps = Readonly<{
   value: PlaceDraft;
 }>;
 
+type RegionState = Readonly<{
+  key: string;
+  options: readonly RegionOption[];
+}>;
+
+type CityState = Readonly<{
+  key: string;
+  options: readonly CityOption[];
+}>;
+
 /** Renders dependent country, region, and city comboboxes. */
 export function LocationFields({
   disabled,
@@ -46,73 +56,83 @@ export function LocationFields({
 }: LocationFieldsProps) {
   const t = useTranslations("search");
   const locale = useLocale();
-  const [regions, setRegions] = useState<readonly RegionOption[]>([]);
-  const [cities, setCities] = useState<readonly CityOption[]>([]);
-  const [regionsLoading, setRegionsLoading] = useState(false);
-  const [citiesLoading, setCitiesLoading] = useState(false);
+  const [regionState, setRegionState] = useState<RegionState>({
+    key: "",
+    options: [],
+  });
+  const [cityState, setCityState] = useState<CityState>({
+    key: "",
+    options: [],
+  });
+  const regionKey = `${locale}:${value.countryCode}`;
+  const cityKey = `${regionKey}:${value.regionCode}`;
+  const regions =
+    value.countryCode && regionState.key === regionKey
+      ? regionState.options
+      : [];
+  const cities =
+    value.countryCode && value.regionCode && cityState.key === cityKey
+      ? cityState.options
+      : [];
+  const regionsLoading =
+    Boolean(value.countryCode) &&
+    !regions.length &&
+    regionState.key !== regionKey;
+  const citiesLoading =
+    Boolean(value.countryCode && value.regionCode) &&
+    !cities.length &&
+    cityState.key !== cityKey;
 
   useEffect(() => {
     if (!value.countryCode) {
-      setRegions([]);
       return;
     }
     let active = true;
-    setRegionsLoading(true);
     Effect.runPromise(loadRegions(value.countryCode, locale)).then(
       (options) => {
         if (active) {
-          setRegions(options);
-          setRegionsLoading(false);
+          setRegionState({ key: regionKey, options });
         }
       },
       () => {
         if (active) {
-          setRegions([]);
-          setRegionsLoading(false);
+          setRegionState({ key: regionKey, options: [] });
         }
       }
     );
     return () => {
       active = false;
     };
-  }, [locale, value.countryCode]);
+  }, [locale, regionKey, value.countryCode]);
 
   useEffect(() => {
     if (!(value.countryCode && value.regionCode)) {
-      setCities([]);
       return;
     }
     let active = true;
-    setCitiesLoading(true);
     Effect.runPromise(
       loadCities(value.countryCode, value.regionCode, locale)
     ).then(
       (options) => {
         if (active) {
-          setCities(options);
-          setCitiesLoading(false);
+          setCityState({ key: cityKey, options });
         }
       },
       () => {
         if (active) {
-          setCities([]);
-          setCitiesLoading(false);
+          setCityState({ key: cityKey, options: [] });
         }
       }
     );
     return () => {
       active = false;
     };
-  }, [locale, value.countryCode, value.regionCode]);
+  }, [cityKey, locale, value.countryCode, value.regionCode]);
 
-  const selectedRegion = useMemo(
-    () => regions.find((region) => region.code === value.regionCode),
-    [regions, value.regionCode]
+  const selectedRegion = regions.find(
+    (region) => region.code === value.regionCode
   );
-  const selectedCity = useMemo(
-    () => cities.find((city) => city.name === value.city),
-    [cities, value.city]
-  );
+  const selectedCity = cities.find((city) => city.name === value.city);
 
   return (
     <div className="space-y-4">

@@ -6,6 +6,7 @@ import {
   type ICountry,
   type IState,
 } from "@countrystatecity/countries-browser";
+import { countries as countryCodes } from "country-flag-icons";
 import { Effect, Schema } from "effect";
 
 export const ASEAN_COUNTRY_CODES = [
@@ -23,6 +24,28 @@ export const ASEAN_COUNTRY_CODES = [
 ] as const;
 
 const aseanCodes: ReadonlySet<string> = new Set(ASEAN_COUNTRY_CODES);
+const countryNames = {
+  en: new Intl.DisplayNames(["en"], { type: "region" }),
+  id: new Intl.DisplayNames(["id"], { type: "region" }),
+} as const;
+const labelSorters = {
+  en: new Intl.Collator("en"),
+  id: new Intl.Collator("id"),
+} as const;
+const countryCodesByName = {
+  en: new Map(
+    countryCodes.flatMap((code) => {
+      const name = countryNames.en.of(code)?.toLowerCase();
+      return name ? [[name, code] as const] : [];
+    })
+  ),
+  id: new Map(
+    countryCodes.flatMap((code) => {
+      const name = countryNames.id.of(code)?.toLowerCase();
+      return name ? [[name, code] as const] : [];
+    })
+  ),
+} as const;
 
 export type CountryOption = Readonly<{
   code: string;
@@ -51,11 +74,26 @@ export class GeographyError extends Schema.TaggedError<GeographyError>()(
   }
 ) {}
 
+/** Narrows an application locale to the supported geography languages. */
+function geographyLocale(locale: string) {
+  return locale === "id" ? "id" : "en";
+}
+
 /** Produces a stable localized label from an ISO country code. */
 function countryLabel(country: ICountry, locale: string) {
+  return countryNames[geographyLocale(locale)].of(country.iso2) ?? country.name;
+}
+
+/** Resolves a stored country label to its ISO code without a network request. */
+export function countryCodeFromName(value: string, locale: string) {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) {
+    return;
+  }
+  const requestedLocale = geographyLocale(locale);
   return (
-    new Intl.DisplayNames([locale], { type: "region" }).of(country.iso2) ??
-    country.name
+    countryCodesByName[requestedLocale].get(normalized) ??
+    countryCodesByName.en.get(normalized)
   );
 }
 
@@ -89,7 +127,7 @@ export const loadCountries = Effect.fn("geography.loadCountries")(function* (
     catch: (cause) => geographyError("countries", cause),
     try: getCountries,
   });
-  const collator = new Intl.Collator(locale);
+  const collator = labelSorters[geographyLocale(locale)];
   return countries
     .map(
       (country): CountryOption => ({
@@ -116,7 +154,7 @@ export const loadRegions = Effect.fn("geography.loadRegions")(function* (
     catch: (cause) => geographyError("regions", cause),
     try: () => getStatesOfCountry(countryCode),
   });
-  const collator = new Intl.Collator(locale);
+  const collator = labelSorters[geographyLocale(locale)];
   return regions
     .map(
       (region): RegionOption => ({
@@ -138,7 +176,7 @@ export const loadCities = Effect.fn("geography.loadCities")(function* (
     catch: (cause) => geographyError("cities", cause),
     try: () => getCitiesOfState(countryCode, regionCode),
   });
-  const collator = new Intl.Collator(locale);
+  const collator = labelSorters[geographyLocale(locale)];
   return cities
     .map(
       (city): CityOption => ({
