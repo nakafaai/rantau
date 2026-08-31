@@ -14,6 +14,7 @@ const app = defineApp({
   env: {
     AGENTMAIL_API_KEY: v.string(),
     AGENTMAIL_BASE_URL: v.optional(v.string()),
+    AGENTMAIL_INBOX_ID: v.string(),
     AGENTMAIL_WEBHOOK_SECRET: v.optional(v.string()),
     AUTH_JWKS: v.string(),
     AUTH_PRIVATE_KEY: v.string(),

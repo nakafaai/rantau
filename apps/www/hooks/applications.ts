@@ -8,7 +8,8 @@ import { useMutation } from "convex/react";
 /** Marks one saved opportunity in every active realtime results query. */
 function markSaved(
   store: OptimisticLocalStore,
-  opportunityIds: ReadonlySet<Id<"opportunities">>
+  opportunityIds: ReadonlySet<Id<"opportunities">>,
+  isSaved = true
 ) {
   for (const query of store.getAllQueries(api.opportunities.list)) {
     if (!query.value) {
@@ -19,11 +20,30 @@ function markSaved(
       query.args,
       query.value.map((record) =>
         opportunityIds.has(record.opportunity._id)
-          ? { ...record, isSaved: true }
+          ? { ...record, isSaved }
           : record
       )
     );
   }
+}
+
+/** Returns the delete mutation with an immediate tracker and result projection. */
+export function useDeleteApplication(opportunityId: Id<"opportunities">) {
+  return useMutation(api.applications.remove).withOptimisticUpdate(
+    (store, args) => {
+      const records = store.getQuery(api.applications.list, {});
+      if (records) {
+        store.setQuery(
+          api.applications.list,
+          {},
+          records.filter(
+            (record) => record.application._id !== args.applicationId
+          )
+        );
+      }
+      markSaved(store, new Set([opportunityId]), false);
+    }
+  );
 }
 
 /** Returns the application save mutation with immediate local feedback. */

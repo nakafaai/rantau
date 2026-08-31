@@ -100,8 +100,10 @@
     "support": "Bantuan tersedia",
     "source": "Sumber",
     "readiness": "Yang perlu disiapkan",
-    "readinessCount": "{ready} dari {total} syarat sudah terkonfirmasi dari profilmu.",
-    "profileNeeded": "Isi profil untuk memeriksa {count} syarat.",
+    "readinessCompared": "Dibandingkan dengan profil tersimpanmu. Siap berarti data yang sesuai sudah ditemukan; periksa sisanya sebelum melamar.",
+    "profileNeeded": "Simpan profil untuk membandingkan syarat ini dengan datamu.",
+    "readyRequirement": "Siap",
+    "reviewRequirement": "Periksa",
     "requirementsUnknown": "Sumber belum mencantumkan cukup syarat untuk diperiksa.",
     "failed": "Pencarian belum berhasil. Ubah kata kunci atau filter, lalu coba lagi.",
     "noResults": "Belum ada kesempatan langsung yang cocok. Coba filter yang lebih luas."
@@ -186,6 +188,7 @@
     "applicationCount": "{count} lamaran",
     "empty": "Belum ada lamaran tersimpan. Kesempatan tersimpan akan muncul di sini.",
     "notes": "Catatan",
+    "notesHelp": "Catatan ini hanya dapat dilihat olehmu.",
     "saved": "Tersimpan",
     "applied": "Sudah melamar",
     "interview": "Wawancara",
@@ -194,12 +197,18 @@
     "rejected": "Ditolak",
     "withdrawn": "Dibatalkan",
     "status": "Status",
+    "nextStatus": "Status berikutnya",
+    "statusHelp": "Pilih tahap berikutnya sesuai kejadian yang sebenarnya.",
     "update": "Perbarui status",
     "updated": "Lamaran diperbarui",
+    "delete": "Hapus",
+    "deleteTitle": "Hapus lamaran ini?",
+    "deleteBody": "Lamaran dan catatan pribadinya akan dihapus dari Rantau. Tindakan ini tidak dapat dibatalkan.",
+    "deleted": "Lamaran dihapus",
+    "cancel": "Batal",
     "mailTitle": "Ringkasan lamaran lewat email",
-    "mailBody": "Kirim 10 lamaran tersimpan terbaru ke email akunmu.",
-    "mailProfile": "Simpan profil sebelum meminta ringkasan email.",
-    "mailButton": "Kirim ringkasan",
-    "mailSent": "Ringkasan lamaran terkirim"
+    "mailBody": "Kirim ringkasan 10 lamaran terbaru ke email akunmu.",
+    "mailButton": "Kirim ke email saya",
+    "mailSent": "Ringkasan masuk antrean pengiriman ke email akunmu"
   }
 }

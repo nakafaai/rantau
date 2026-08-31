@@ -162,9 +162,9 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
       <div className="relative min-h-0 flex-1">
         <Table
           className="min-w-full table-auto"
-          containerClassName="h-full min-h-0 overflow-auto overscroll-contain [scrollbar-gutter:stable]"
+          containerClassName="h-full min-h-0 overflow-x-auto overflow-y-scroll overscroll-contain [scrollbar-width:thin]"
         >
-          <TableHeader className="sticky top-0 z-10 bg-background">
+          <TableHeader className="sticky top-0 z-30 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (

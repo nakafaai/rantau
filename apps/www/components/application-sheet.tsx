@@ -7,7 +7,6 @@ import {
   MoreVerticalIcon,
   UnfoldMoreIcon,
 } from "@hugeicons/core-free-icons";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -35,8 +34,13 @@ import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { DeleteApplicationDialog } from "@/components/application-delete";
+import { ApplicationStatusBadge } from "@/components/application-status";
 import { CountryFlag } from "@/components/country-flag";
-import { useTransitionApplication } from "@/hooks/applications";
+import {
+  useDeleteApplication,
+  useTransitionApplication,
+} from "@/hooks/applications";
 import {
   type ApplicationRecord,
   applicationLocation,
@@ -51,7 +55,9 @@ export function ApplicationSheet({
   const search = useTranslations("search");
   const common = useTranslations("common");
   const transition = useTransitionApplication();
-  const [pending, setPending] = useState(false);
+  const remove = useDeleteApplication(record.opportunity._id);
+  const [deletePending, setDeletePending] = useState(false);
+  const [updatePending, setUpdatePending] = useState(false);
   const next = nextApplicationStatuses(record.application.status);
   const [selectedStatus, setSelectedStatus] = useState<ApplicationStatus>(
     next[0] ?? record.application.status
@@ -69,7 +75,7 @@ export function ApplicationSheet({
       toast.error(common("error"));
       return;
     }
-    setPending(true);
+    setUpdatePending(true);
     const updated = await transition({
       applicationId: record.application._id,
       notes: String(formData.get("notes") ?? ""),
@@ -79,13 +85,30 @@ export function ApplicationSheet({
       () => true,
       () => false
     );
-    setPending(false);
+    setUpdatePending(false);
     if (!updated) {
       toast.error(common("error"));
       return;
     }
     setSelectedStatus(nextApplicationStatuses(parsedStatus)[0] ?? parsedStatus);
     toast.success(t("updated"));
+  }
+
+  /** Removes one owned application and lets Convex reconcile the realtime list. */
+  async function deleteApplication() {
+    setDeletePending(true);
+    const deleted = await remove({
+      applicationId: record.application._id,
+    }).then(
+      () => true,
+      () => false
+    );
+    setDeletePending(false);
+    if (!deleted) {
+      toast.error(common("error"));
+      return;
+    }
+    toast.success(t("deleted"));
   }
 
   /** Accepts only domain-valid application statuses from the radio menu. */
@@ -114,9 +137,7 @@ export function ApplicationSheet({
       </SheetTrigger>
       <SheetContent className="sm:max-w-lg">
         <SheetHeader className="border-b pr-12">
-          <Badge className="mb-2 w-fit" variant="secondary">
-            {t(record.application.status)}
-          </Badge>
+          <ApplicationStatusBadge status={record.application.status} />
           <SheetTitle>{opportunity.title}</SheetTitle>
           <SheetDescription className="flex min-w-0 items-center gap-1.5">
             <CountryFlag countryCode={opportunity.countryCode} />
@@ -126,7 +147,7 @@ export function ApplicationSheet({
           </SheetDescription>
         </SheetHeader>
         <form action={update} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-4">
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain p-4">
             <div className="grid grid-cols-2 gap-2">
               <Button
                 className="min-w-0"
@@ -165,8 +186,9 @@ export function ApplicationSheet({
             </div>
             <div className="space-y-2">
               <label className="font-medium text-sm" htmlFor={statusId}>
-                {t("status")}
+                {t("nextStatus")}
               </label>
+              <p className="text-muted-foreground text-sm">{t("statusHelp")}</p>
               <input name="status" type="hidden" value={selectedStatus} />
               <DropdownMenu>
                 <DropdownMenuTrigger
@@ -206,6 +228,7 @@ export function ApplicationSheet({
               <label className="font-medium text-sm" htmlFor={notesId}>
                 {t("notes")}
               </label>
+              <p className="text-muted-foreground text-sm">{t("notesHelp")}</p>
               <Textarea
                 defaultValue={record.application.notes}
                 id={notesId}
@@ -214,25 +237,34 @@ export function ApplicationSheet({
               />
             </div>
           </div>
-          <SheetFooter className="border-t sm:flex-row sm:justify-end">
-            <Button disabled={pending || next.length === 0} type="submit">
-              {t("update")}
-            </Button>
-            <Button
-              nativeButton={false}
-              render={
-                <a
-                  aria-label={search("apply")}
-                  href={opportunity.directApplyUrl}
-                  rel="noreferrer"
-                  target="_blank"
-                />
-              }
-              variant="outline"
-            >
-              {search("apply")}
-              <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
-            </Button>
+          <SheetFooter className="border-t bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
+            <DeleteApplicationDialog
+              disabled={deletePending || updatePending}
+              onDelete={deleteApplication}
+            />
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button
+                nativeButton={false}
+                render={
+                  <a
+                    aria-label={search("apply")}
+                    href={opportunity.directApplyUrl}
+                    rel="noreferrer"
+                    target="_blank"
+                  />
+                }
+                variant="outline"
+              >
+                {search("apply")}
+                <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
+              </Button>
+              <Button
+                disabled={deletePending || updatePending || next.length === 0}
+                type="submit"
+              >
+                {t("update")}
+              </Button>
+            </div>
           </SheetFooter>
         </form>
       </SheetContent>

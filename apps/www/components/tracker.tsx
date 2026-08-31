@@ -3,13 +3,11 @@
 import {
   ArrowUpRight01Icon,
   BriefcaseBusinessIcon,
-  Building02Icon,
   Loading03Icon,
   Mail01Icon,
   MapsLocation01Icon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
@@ -21,11 +19,12 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ApplicationSheet } from "@/components/application-sheet";
+import { ApplicationStatusBadge } from "@/components/application-status";
 import { CountryFlag } from "@/components/country-flag";
 import { Header } from "@/components/header";
 import {
@@ -43,60 +42,68 @@ const LOADING_ROW_KEYS = [
   "echo",
 ] as const;
 
-/** Returns responsive widths for application table columns. */
-function applicationColumnClass(column: string) {
+type ApplicationColumnRegion = "body" | "header";
+
+/** Returns readable widths, spacing, and pinning for application columns. */
+function applicationColumnClass(
+  column: string,
+  region: ApplicationColumnRegion = "body"
+) {
+  if (column === "role") {
+    return "min-w-64 px-3";
+  }
   if (column === "company") {
-    return "hidden w-44 md:table-cell";
+    return "min-w-64 px-3";
   }
   if (column === "location") {
-    return "hidden w-52 lg:table-cell";
+    return "min-w-64 px-3";
   }
   if (column === "status") {
-    return "w-28";
+    return "min-w-40 px-3";
   }
   if (column === "actions") {
-    return "w-9 px-1";
+    const layer = region === "header" ? "z-40" : "z-20";
+    return `sticky right-0 ${layer} w-11 min-w-11 max-w-11 overflow-hidden bg-background px-2 shadow-[inset_0_-1px_0_var(--border)] group-hover:bg-muted`;
   }
-  return "min-w-0";
+  return "px-3";
 }
 
-/** Renders one application row without wrapping dense table text. */
+/** Renders one application row with direct links and a pinned action. */
 function ApplicationRow({ record }: Readonly<{ record: ApplicationRecord }>) {
-  const t = useTranslations("tracker");
   const { opportunity } = record.opportunity;
 
   return (
-    <TableRow className="h-14">
+    <TableRow className="group h-14">
       <TableCell className={applicationColumnClass("role")}>
-        <div className="min-w-0">
-          <p className="truncate font-medium">{opportunity.title}</p>
-          <p className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-muted-foreground text-xs">
-            <span className="truncate md:hidden">{opportunity.company}</span>
-            <CountryFlag
-              className="ml-0.5 lg:hidden"
-              countryCode={opportunity.countryCode}
-            />
-            <span className="hidden truncate md:hidden min-[520px]:inline">
-              {applicationLocation(record)}
-            </span>
+        <div>
+          <a
+            className="inline-flex items-center gap-1.5 font-medium hover:underline"
+            href={opportunity.directApplyUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            {opportunity.title}
+            <HugeIcons className="size-4 shrink-0" icon={ArrowUpRight01Icon} />
+          </a>
+          <p className="mt-0.5 text-muted-foreground text-xs">
+            {opportunity.employmentType}
           </p>
         </div>
       </TableCell>
       <TableCell className={applicationColumnClass("company")}>
         <a
-          className="flex min-w-0 items-center gap-1.5 hover:underline"
+          className="inline-flex items-center gap-1.5 hover:underline"
           href={opportunity.source.url}
           rel="noreferrer"
           target="_blank"
         >
-          <HugeIcons className="size-4 shrink-0" icon={Building02Icon} />
-          <span className="truncate">{opportunity.company}</span>
+          {opportunity.company}
           <HugeIcons className="size-4 shrink-0" icon={ArrowUpRight01Icon} />
         </a>
       </TableCell>
       <TableCell className={applicationColumnClass("location")}>
         <a
-          className="flex min-w-0 items-center gap-1.5 hover:underline"
+          className="inline-flex items-center gap-1.5 hover:underline"
           href={applicationMapsUrl(record)}
           rel="noreferrer"
           target="_blank"
@@ -107,14 +114,12 @@ function ApplicationRow({ record }: Readonly<{ record: ApplicationRecord }>) {
               <HugeIcons className="size-4" icon={MapsLocation01Icon} />
             }
           />
-          <span className="truncate">{applicationLocation(record)}</span>
+          {applicationLocation(record)}
           <HugeIcons className="size-4 shrink-0" icon={ArrowUpRight01Icon} />
         </a>
       </TableCell>
       <TableCell className={applicationColumnClass("status")}>
-        <Badge className="max-w-full truncate" variant="secondary">
-          {t(record.application.status)}
-        </Badge>
+        <ApplicationStatusBadge status={record.application.status} />
       </TableCell>
       <TableCell className={applicationColumnClass("actions")}>
         <ApplicationSheet record={record} />
@@ -133,7 +138,9 @@ function ApplicationLoadingRows() {
             className={applicationColumnClass(column)}
             key={`${rowKey}-${column}`}
           >
-            <Skeleton className="h-4 w-2/3" />
+            <Skeleton
+              className={column === "actions" ? "mx-auto size-4" : "h-4 w-2/3"}
+            />
           </TableCell>
         )
       )}
@@ -147,21 +154,16 @@ export function Tracker() {
   const common = useTranslations("common");
   const search = useTranslations("search");
   const records = useQuery(api.applications.list);
-  const profile = useQuery(api.profiles.get);
-  const inbox = useQuery(api.mail.inbox);
-  const provision = useAction(api.mail.provision);
   const sendDigest = useMutation(api.mail.sendDigest);
   const [mailPending, setMailPending] = useState(false);
 
-  /** Provisions a private inbox when needed and sends the latest digest. */
+  /** Queues the latest application digest for the account email. */
   async function emailDigest() {
     setMailPending(true);
-    const sent = await (inbox ? Promise.resolve() : provision({}))
-      .then(() => sendDigest({}))
-      .then(
-        () => true,
-        () => false
-      );
+    const sent = await sendDigest({}).then(
+      () => true,
+      () => false
+    );
     setMailPending(false);
     if (!sent) {
       toast.error(common("error"));
@@ -175,9 +177,10 @@ export function Tracker() {
       <Header
         actions={
           <Button
-            disabled={mailPending || !profile || inbox === undefined}
+            disabled={mailPending}
             onClick={emailDigest}
             size="sm"
+            title={t("mailBody")}
             variant="outline"
           >
             <HugeIcons
@@ -189,51 +192,71 @@ export function Tracker() {
         }
         title={t("title")}
       />
-      <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 px-4 py-4 sm:px-6">
+      <div className="mx-auto flex min-h-0 w-full max-w-[90rem] flex-1 px-4 py-4 sm:px-6">
         <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border">
-          <Table
-            className="table-fixed"
-            containerClassName="min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
-          >
-            <TableHeader className="sticky top-0 z-10 bg-background">
-              <TableRow>
-                <TableHead className={applicationColumnClass("role")}>
-                  {search("role")}
-                </TableHead>
-                <TableHead className={applicationColumnClass("company")}>
-                  {search("company")}
-                </TableHead>
-                <TableHead className={applicationColumnClass("location")}>
-                  {search("location")}
-                </TableHead>
-                <TableHead className={applicationColumnClass("status")}>
-                  {t("status")}
-                </TableHead>
-                <TableHead className={applicationColumnClass("actions")}>
-                  <span className="sr-only">{search("actions")}</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {records === undefined ? <ApplicationLoadingRows /> : null}
-              {records?.map((record) => (
-                <ApplicationRow key={record.application._id} record={record} />
-              ))}
-              {records?.length === 0 ? (
+          <div className="relative min-h-0 flex-1">
+            <Table
+              className="min-w-full table-auto"
+              containerClassName="h-full min-h-0 overflow-x-auto overflow-y-scroll overscroll-contain [scrollbar-width:thin]"
+            >
+              <TableHeader className="sticky top-0 z-30 bg-background">
                 <TableRow>
-                  <TableCell className="h-24 text-center" colSpan={5}>
-                    <span className="inline-flex items-center gap-2 text-muted-foreground">
-                      <HugeIcons
-                        className="size-4"
-                        icon={BriefcaseBusinessIcon}
-                      />
-                      {t("empty")}
-                    </span>
-                  </TableCell>
+                  <TableHead
+                    className={applicationColumnClass("role", "header")}
+                  >
+                    {search("role")}
+                  </TableHead>
+                  <TableHead
+                    className={applicationColumnClass("company", "header")}
+                  >
+                    {search("company")}
+                  </TableHead>
+                  <TableHead
+                    className={applicationColumnClass("location", "header")}
+                  >
+                    {search("location")}
+                  </TableHead>
+                  <TableHead
+                    className={applicationColumnClass("status", "header")}
+                  >
+                    {t("status")}
+                  </TableHead>
+                  <TableHead
+                    className={applicationColumnClass("actions", "header")}
+                  >
+                    <span className="sr-only">{search("actions")}</span>
+                  </TableHead>
                 </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {records === undefined ? <ApplicationLoadingRows /> : null}
+                {records?.map((record) => (
+                  <ApplicationRow
+                    key={record.application._id}
+                    record={record}
+                  />
+                ))}
+                {records?.length === 0 ? (
+                  <TableRow>
+                    <TableCell className="h-24 text-center" colSpan={5}>
+                      <span className="inline-flex items-center gap-2 text-muted-foreground">
+                        <HugeIcons
+                          className="size-4"
+                          icon={BriefcaseBusinessIcon}
+                        />
+                        {t("empty")}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-11 z-40 w-px bg-border"
+              data-slot="applications-action-divider"
+            />
+          </div>
           <footer className="flex min-h-12 shrink-0 items-center border-t bg-muted/20 px-3 py-2 text-muted-foreground text-sm">
             {records === undefined ? (
               <Skeleton className="h-4 w-24" />

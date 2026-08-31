@@ -14,7 +14,6 @@ const SKIPPED_PARTS = new Set([
   "node_modules",
   "out",
 ]);
-const ALLOWED_JAVASCRIPT = new Set(["apps/www/postcss.config.mjs"]);
 const SHADCN_CONFIGS = [
   "apps/www/components.json",
   "packages/design-system/components.json",
@@ -208,11 +207,9 @@ function pathViolations(files: readonly string[]) {
   const repositoryFiles = new Set(files.map(repositoryPath));
   return files.flatMap((filePath) => {
     const relativePath = repositoryPath(filePath);
-    const javascript =
-      JAVASCRIPT_PATTERN.test(relativePath) &&
-      !ALLOWED_JAVASCRIPT.has(relativePath)
-        ? [`${relativePath} is hand-written JavaScript`]
-        : [];
+    const javascript = JAVASCRIPT_PATTERN.test(relativePath)
+      ? [`${relativePath} is hand-written JavaScript`]
+      : [];
     const invalidTest =
       RUNNABLE_TEST_PATTERN.test(relativePath) &&
       !FINAL_TEST_PATTERN.test(relativePath)

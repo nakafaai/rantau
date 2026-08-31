@@ -129,6 +129,24 @@ export const transition = mutation({
   },
 });
 
+/** Deletes one application owned by the current authenticated candidate. */
+export const remove = mutation({
+  args: {
+    applicationId: v.id("applications"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const application = await ctx.db.get("applications", args.applicationId);
+    if (!application || application.userId !== userId) {
+      throw new ConvexError({ code: "NOT_FOUND" });
+    }
+
+    await ctx.db.delete("applications", application._id);
+    return null;
+  },
+});
+
 export const list = query({
   args: {},
   returns: v.array(
