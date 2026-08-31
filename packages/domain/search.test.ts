@@ -73,4 +73,21 @@ describe("makeSearchIntent", () => {
       expect(Exit.isFailure(exit)).toBe(true);
     })
   );
+
+  it.effect("rejects invalid structured place filters", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        makeSearchIntent({
+          locale: "en",
+          place: {
+            country: "Germany",
+            countryCode: "de",
+            level: "country",
+          },
+          query: "nurse",
+        })
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 });

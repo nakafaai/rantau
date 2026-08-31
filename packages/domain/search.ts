@@ -49,7 +49,7 @@ export const makeSearchIntent = Effect.fn("search.makeIntent")(
       | "job"
       | "vocational";
     query: string;
-    place?: Schema.Schema.Type<typeof PlaceScope>;
+    place?: unknown;
     workMode?: "hybrid" | "onsite" | "remote";
   }) {
     const query = input.query.trim().replaceAll(/\s+/g, " ");
@@ -72,12 +72,19 @@ export const makeSearchIntent = Effect.fn("search.makeIntent")(
       );
     }
 
-    return {
+    return yield* Schema.decodeUnknownEffect(SearchIntent)({
       locale: input.locale,
       pathway: input.pathway,
       place: input.place,
-      query: SearchQuery.make(query || "work opportunities"),
+      query: query || "work opportunities",
       workMode: input.workMode,
-    };
+    }).pipe(
+      Effect.mapError(
+        () =>
+          new SearchIntentError({
+            message: "The selected search filters are invalid.",
+          })
+      )
+    );
   }
 );

@@ -1,5 +1,8 @@
 import { internalMutation } from "@repo/backend/convex/_generated/server";
-import { MAX_SEARCH_LANES } from "@repo/backend/convex/lib/searchwork";
+import {
+  MAX_SEARCH_LANES,
+  stopSearchLanes,
+} from "@repo/backend/convex/lib/searchwork";
 import { opportunityValidator } from "@repo/backend/convex/model";
 import { SEARCH_RESULT_LIMIT } from "@repo/domain/discoveryplan";
 import { opportunityFingerprint } from "@repo/domain/opportunity";
@@ -89,17 +92,12 @@ export const expire = internalMutation({
       .query("searchLanes")
       .withIndex("by_search", (index) => index.eq("searchId", search._id))
       .take(MAX_SEARCH_LANES);
-    await Promise.all(
-      lanes
-        .filter((lane) => lane.status === "queued" || lane.status === "running")
-        .map((lane) =>
-          ctx.db.patch("searchLanes", lane._id, {
-            completedAt,
-            error: "Search lane exceeded its execution deadline.",
-            status: "failed",
-            updatedAt: completedAt,
-          })
-        )
+    await stopSearchLanes(
+      ctx,
+      lanes,
+      completedAt,
+      "Search lane exceeded its execution deadline.",
+      "deadline"
     );
     await ctx.db.patch("searches", search._id, {
       completedAt,

@@ -160,7 +160,7 @@ describe("place scope", () => {
             matchesPlaceScope(city, {
               city: "Munchen",
               countryCode: "DE",
-              location: "München, Deutschland",
+              location: "München, Bavaria, Deutschland",
             })
         ).toBe(true);
         expect(
@@ -197,6 +197,15 @@ describe("place scope", () => {
             city: "Bogor",
             countryCode: "ID",
             location: "Bogor, Jawa Barat, Indonesia",
+          })
+      ).toBe(false);
+      expect(
+        city &&
+          matchesPlaceScope(city, {
+            city: "Bandung",
+            countryCode: "ID",
+            location: "Bandung, Jawa Tengah, Indonesia",
+            region: "Jawa Tengah",
           })
       ).toBe(false);
     })

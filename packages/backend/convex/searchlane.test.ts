@@ -167,65 +167,47 @@ describe("search lane lifecycle", () => {
   it("fails empty searches and records target attainment", async () => {
     const test = convexTest(schema, modules);
     const userId = await test.run((ctx) => ctx.db.insert("users", {}));
-    const [emptyId, capacityId, partialId, targetId] = await test.run(
-      async (ctx) => {
-        const empty = await ctx.db.insert("searches", {
-          createdAt: 1,
-          locale: "en",
-          query: "empty",
-          status: "running",
-          userId,
-        });
-        const capacity = await ctx.db.insert("searches", {
-          createdAt: 2,
-          locale: "en",
-          query: "capacity",
-          stage: "expansion",
-          status: "running",
-          userId,
-        });
-        const partial = await ctx.db.insert("searches", {
-          createdAt: 3,
-          locale: "en",
-          query: "partial",
-          resultCount: 1,
-          stage: "expansion",
-          status: "running",
-          userId,
-        });
-        const target = await ctx.db.insert("searches", {
-          createdAt: 4,
-          locale: "en",
-          query: "target",
-          resultCount: 50,
-          stage: "initial",
-          status: "running",
-          userId,
-        });
-        return [empty, capacity, partial, target] as const;
-      }
-    );
-    const [emptyLaneId, capacityLaneId, partialLaneId, targetLaneId] =
-      await test.run(async (ctx) => {
-        await ctx.db.insert("searchLanes", {
-          error: "Firecrawl /v2/search failed: Rate limit exceeded",
-          market: "Earlier capacity failure",
-          searchId: capacityId,
-          status: "failed",
-          updatedAt: 1,
-          userId,
-        });
-        return [
+    const [emptyId, partialId, targetId] = await test.run(async (ctx) => {
+      const empty = await ctx.db.insert("searches", {
+        createdAt: 1,
+        locale: "en",
+        query: "empty",
+        status: "running",
+        userId,
+      });
+      const partial = await ctx.db.insert("searches", {
+        createdAt: 3,
+        locale: "en",
+        query: "partial",
+        resultCount: 1,
+        stage: "expansion",
+        status: "running",
+        userId,
+      });
+      const target = await ctx.db.insert("searches", {
+        createdAt: 4,
+        locale: "en",
+        query: "target",
+        resultCount: 50,
+        stage: "initial",
+        status: "running",
+        userId,
+      });
+      await ctx.db.insert("searchLanes", {
+        market: "Target remainder",
+        searchId: target,
+        status: "running",
+        updatedAt: 1,
+        userId,
+      });
+      return [empty, partial, target] as const;
+    });
+    const [emptyLaneId, partialLaneId, targetLaneId] = await test.run(
+      async (ctx) =>
+        [
           await ctx.db.insert("searchLanes", {
             market: "Empty",
             searchId: emptyId,
-            status: "queued",
-            updatedAt: 1,
-            userId,
-          }),
-          await ctx.db.insert("searchLanes", {
-            market: "Capacity",
-            searchId: capacityId,
             status: "queued",
             updatedAt: 1,
             userId,
@@ -244,8 +226,8 @@ describe("search lane lifecycle", () => {
             updatedAt: 1,
             userId,
           }),
-        ] as const;
-      });
+        ] as const
+    );
 
     await test.mutation(internal.searchlane.finishLane, {
       context: { laneId: emptyLaneId, searchId: emptyId, userId },
@@ -256,18 +238,6 @@ describe("search lane lifecycle", () => {
       await test.run((ctx) => ctx.db.get("searches", emptyId))
     ).toMatchObject({
       error: "No source-backed opportunities were found.",
-      status: "failed",
-    });
-
-    await test.mutation(internal.searchlane.finishLane, {
-      context: { laneId: capacityLaneId, searchId: capacityId, userId },
-      result: { kind: "canceled" },
-      workId: "work-capacity" as WorkId,
-    });
-    expect(
-      await test.run((ctx) => ctx.db.get("searches", capacityId))
-    ).toMatchObject({
-      limitation: "source_capacity",
       status: "failed",
     });
 
@@ -301,12 +271,22 @@ describe("search lane lifecycle", () => {
     expect(
       await test.run((ctx) => ctx.db.get("searches", targetId))
     ).toMatchObject({ outcome: "target_met", status: "complete" });
+    expect(
+      await test.run(async (ctx) =>
+        (
+          await ctx.db
+            .query("searchLanes")
+            .withIndex("by_search", (index) => index.eq("searchId", targetId))
+            .collect()
+        ).map((lane) => lane.status)
+      )
+    ).toEqual(["failed", "complete"]);
   });
 
-  it("stops immediately at typed capacity and recognizes legacy failures", async () => {
+  it("stops at typed capacity without inferring raw provider messages", async () => {
     const test = convexTest(schema, modules);
     const userId = await test.run((ctx) => ctx.db.insert("users", {}));
-    const [typedSearchId, legacySearchId] = await test.run(async (ctx) => [
+    const [typedSearchId, rawSearchId] = await test.run(async (ctx) => [
       await ctx.db.insert("searches", {
         createdAt: 1,
         locale: "en",
@@ -317,14 +297,14 @@ describe("search lane lifecycle", () => {
       await ctx.db.insert("searches", {
         createdAt: 2,
         locale: "en",
-        query: "legacy capacity",
+        query: "raw provider message",
         resultCount: 1,
         stage: "expansion",
         status: "running",
         userId,
       }),
     ]);
-    const [typedLaneId, legacyLaneId] = await test.run(async (ctx) => {
+    const [typedLaneId, rawLaneId] = await test.run(async (ctx) => {
       const typed = await ctx.db.insert("searchLanes", {
         market: "Typed",
         searchId: typedSearchId,
@@ -333,35 +313,35 @@ describe("search lane lifecycle", () => {
         userId,
       });
       await ctx.db.insert("searchLanes", {
-        market: "Unknown legacy failure",
-        searchId: legacySearchId,
+        market: "Unknown raw failure",
+        searchId: rawSearchId,
         status: "failed",
         updatedAt: 1,
         userId,
       });
       await ctx.db.insert("searchLanes", {
         error: "Firecrawl /v2/search failed: Rate limit exceeded",
-        market: "Known legacy failure",
-        searchId: legacySearchId,
+        market: "Raw provider failure",
+        searchId: rawSearchId,
         status: "failed",
         updatedAt: 1,
         userId,
       });
       await ctx.db.insert("searchLanes", {
-        market: "Legacy success without usage",
-        searchId: legacySearchId,
+        market: "Success without usage",
+        searchId: rawSearchId,
         status: "complete",
         updatedAt: 1,
         userId,
       });
-      const legacy = await ctx.db.insert("searchLanes", {
-        market: "Legacy completion",
-        searchId: legacySearchId,
+      const raw = await ctx.db.insert("searchLanes", {
+        market: "Final completion",
+        searchId: rawSearchId,
         status: "queued",
         updatedAt: 1,
         userId,
       });
-      return [typed, legacy] as const;
+      return [typed, raw] as const;
     });
 
     await test.mutation(internal.searchlane.finishLane, {
@@ -384,15 +364,15 @@ describe("search lane lifecycle", () => {
     });
 
     await test.mutation(internal.searchlane.finishLane, {
-      context: { laneId: legacyLaneId, searchId: legacySearchId, userId },
+      context: { laneId: rawLaneId, searchId: rawSearchId, userId },
       result: { kind: "canceled" },
-      workId: "work-legacy-capacity" as WorkId,
+      workId: "work-raw-provider" as WorkId,
     });
     expect(
-      await test.run((ctx) => ctx.db.get("searches", legacySearchId))
+      await test.run((ctx) => ctx.db.get("searches", rawSearchId))
     ).toMatchObject({
       inputTokens: 0,
-      limitation: "source_capacity",
+      limitation: "source_exhausted",
       outcome: "partial",
       outputTokens: 0,
       status: "complete",

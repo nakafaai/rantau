@@ -1,3 +1,4 @@
+import { vWorkId } from "@convex-dev/workpool";
 import { legacyAuthTables } from "@repo/backend/convex/legacy";
 import {
   applicationStatusValidator,
@@ -100,7 +101,7 @@ export default defineSchema({
     threadId: v.optional(v.string()),
     updatedAt: v.number(),
     userId: v.id("users"),
-    workId: v.optional(v.string()),
+    workId: v.optional(vWorkId),
   })
     .index("by_search", ["searchId"])
     .index("by_search_and_market", ["searchId", "market"]),

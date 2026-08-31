@@ -6,6 +6,7 @@ import {
   discoveryLaneResultValidator,
   MAX_SEARCH_LANES,
   searchWork,
+  stopSearchLanes,
 } from "@repo/backend/convex/lib/searchwork";
 import { SEARCH_RESULT_TARGET } from "@repo/domain/discoveryplan";
 import { ConvexError, v } from "convex/values";
@@ -16,24 +17,6 @@ const laneContextValidator = v.object({
   searchId: v.id("searches"),
   userId: v.id("users"),
 });
-const SOURCE_CAPACITY_PATTERN =
-  /(?:Insufficient credits|Rate limit exceeded|"status":40[29])/u;
-
-/** Detects a terminal Firecrawl credit or rate boundary from internal errors. */
-function sourceCapacityReached(
-  lanes: readonly {
-    error?: string;
-    limitation?: "deadline" | "source_capacity" | "source_exhausted";
-    status: string;
-  }[]
-) {
-  return lanes.some(
-    (lane) =>
-      lane.status === "failed" &&
-      (lane.limitation === "source_capacity" ||
-        SOURCE_CAPACITY_PATTERN.test(lane.error ?? ""))
-  );
-}
 
 /** Summarizes successful lane usage without exposing incomplete lane records. */
 function successfulSummary(
@@ -131,22 +114,29 @@ export const finishLane = searchWork.defineOnComplete<
     const successful = settled.filter((record) => record.status === "complete");
     const usage = successfulSummary(successful);
     const resultCount = search.resultCount ?? 0;
+    if (resultCount >= SEARCH_RESULT_TARGET) {
+      await stopSearchLanes(
+        ctx,
+        settled,
+        completedAt,
+        "Search target was reached."
+      );
+      await ctx.db.patch("searches", search._id, {
+        completedAt,
+        ...usage,
+        model: DISCOVERY_MODEL,
+        outcome: "target_met",
+        status: "complete",
+      });
+      return;
+    }
     if (completedLane.limitation === "source_capacity") {
-      await Promise.all(
-        settled
-          .filter(
-            (record) =>
-              record.status === "queued" || record.status === "running"
-          )
-          .map((record) =>
-            ctx.db.patch("searchLanes", record._id, {
-              completedAt,
-              error: "Search source capacity was reached.",
-              limitation: "source_capacity",
-              status: "failed",
-              updatedAt: completedAt,
-            })
-          )
+      await stopSearchLanes(
+        ctx,
+        settled,
+        completedAt,
+        "Search source capacity was reached.",
+        "source_capacity"
       );
       await ctx.db.patch("searches", search._id, {
         completedAt,
@@ -174,12 +164,7 @@ export const finishLane = searchWork.defineOnComplete<
       return;
     }
 
-    const atSourceCapacity = sourceCapacityReached(settled);
-    if (
-      search.stage === "initial" &&
-      resultCount < SEARCH_RESULT_TARGET &&
-      !atSourceCapacity
-    ) {
+    if (search.stage === "initial" && resultCount < SEARCH_RESULT_TARGET) {
       await ctx.db.patch("searches", search._id, { stage: "expansion" });
       await Effect.runPromise(
         enqueueDiscoveryStage(
@@ -198,23 +183,18 @@ export const finishLane = searchWork.defineOnComplete<
       await ctx.db.patch("searches", search._id, {
         completedAt,
         error: "No source-backed opportunities were found.",
-        limitation: atSourceCapacity ? "source_capacity" : "source_exhausted",
+        limitation: "source_exhausted",
         status: "failed",
       });
       return;
-    }
-
-    let limitation: "source_capacity" | "source_exhausted" | undefined;
-    if (resultCount < SEARCH_RESULT_TARGET) {
-      limitation = atSourceCapacity ? "source_capacity" : "source_exhausted";
     }
 
     await ctx.db.patch("searches", search._id, {
       completedAt,
       ...usage,
       model: DISCOVERY_MODEL,
-      limitation,
-      outcome: resultCount >= SEARCH_RESULT_TARGET ? "target_met" : "partial",
+      limitation: "source_exhausted",
+      outcome: "partial",
       status: "complete",
     });
   },

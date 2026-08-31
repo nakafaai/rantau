@@ -171,8 +171,11 @@ export function matchesPlaceScope(
   const regionEvidence = matchLabel(
     [opportunity.region, opportunity.location].filter(Boolean).join(" ")
   );
+  if (!regionEvidence.includes(matchLabel(place.region))) {
+    return false;
+  }
   if (place.level === "region") {
-    return regionEvidence.includes(matchLabel(place.region));
+    return true;
   }
 
   const cityEvidence = matchLabel(
