@@ -133,7 +133,7 @@ function AccountMenu({ onNavigate, placement }: AccountMenuProps) {
           <Separator />
           <Dropdown.Item
             id="sign-out"
-            textValue={t("signOut")}
+            textValue={t("sign-out")}
             variant="danger"
           >
             <HugeiconsIcon
@@ -141,7 +141,7 @@ function AccountMenu({ onNavigate, placement }: AccountMenuProps) {
               icon={Logout01Icon}
               strokeWidth={2}
             />
-            <Label>{t("signOut")}</Label>
+            <Label>{t("sign-out")}</Label>
           </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown.Popover>

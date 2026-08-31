@@ -13,7 +13,7 @@ import { Effect, Option, Schema } from "effect";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Filters, type FilterValue } from "@/components/filters";
-import { Results } from "@/components/results";
+import { Results } from "@/components/result/table";
 import { SearchHistory } from "@/components/search-history";
 import { countryCodeFromName } from "@/lib/geography";
 
@@ -129,7 +129,7 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
         makePlaceScope(value).pipe(Effect.option)
       );
       if (Option.isNone(placeOption)) {
-        toast.danger(t("invalidPlace"));
+        toast.danger(t("invalid-place"));
         return;
       }
       const place = placeOption.value;
@@ -249,7 +249,7 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
                 {(criteriaChanged) =>
                   criteriaChanged ? (
                     <span className="text-muted text-sm">
-                      {t("criteriaChanged")}
+                      {t("criteria-changed")}
                     </span>
                   ) : null
                 }
@@ -258,17 +258,17 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
                 <span className="inline-flex items-center gap-2 text-muted text-sm">
                   <span className="size-2 animate-pulse rounded-full bg-accent" />
                   {session.stage === "expansion"
-                    ? t("expandingResults")
-                    : t("streamingResults")}
+                    ? t("expanding-results")
+                    : t("streaming-results")}
                 </span>
               ) : null}
               {session?.outcome === "partial" ? (
                 <span className="text-muted text-sm">
                   {session.limitation === "source_capacity"
-                    ? t("partialCapacity", {
+                    ? t("partial-capacity", {
                         count: session.resultCount ?? 0,
                       })
-                    : t("partialResults", {
+                    : t("partial-results", {
                         count: session.resultCount ?? 0,
                       })}
                 </span>

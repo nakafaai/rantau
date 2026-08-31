@@ -16,7 +16,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { CountryFlag } from "@/components/country-flag";
-import { PathwayBadge } from "@/components/opportunity";
+import { PathwayBadge } from "@/components/opportunity/badge";
 import { Source, SourceContent, SourceTrigger } from "@/components/source";
 import {
   locationLabel,
@@ -52,7 +52,7 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
       {
         cell: ({ row }) => (
           <Checkbox
-            aria-label={t("selectRow")}
+            aria-label={t("select-row")}
             isSelected={row.getIsSelected()}
             onChange={(value) => row.toggleSelected(value)}
             slot="selection"
@@ -68,7 +68,7 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
         enableSorting: false,
         header: ({ table }) => (
           <Checkbox
-            aria-label={t("selectPage")}
+            aria-label={t("select-page")}
             isIndeterminate={table.getIsSomePageRowsSelected()}
             isSelected={table.getIsAllPageRowsSelected()}
             onChange={(value) => table.toggleAllPageRowsSelected(value)}
@@ -90,7 +90,7 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
           const level = recommendationLevel(row.original.recommendation);
           return (
             <Chip color={matchLevelColor[level]} size="sm" variant="soft">
-              {t(`matchLevel.${level}`)}
+              {t(`match-level.${level}`)}
             </Chip>
           );
         },
@@ -191,14 +191,14 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
         cell: ({ row }) => (
           <span>{t(row.original.opportunity.opportunity.workMode)}</span>
         ),
-        header: t("workMode"),
+        header: t("work-mode"),
         id: "mode",
       },
       {
         accessorFn: (record) => record.opportunity.opportunity.salary ?? "",
         cell: ({ row }) => (
           <span>
-            {row.original.opportunity.opportunity.salary ?? t("notListed")}
+            {row.original.opportunity.opportunity.salary ?? t("not-listed")}
           </span>
         ),
         header: t("salary"),

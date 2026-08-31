@@ -90,8 +90,8 @@ export function Rekey({ email, onOpenChange, open, password }: RekeyProps) {
         <Modal.Dialog className="sm:max-w-md">
           <Modal.CloseTrigger />
           <Modal.Header>
-            <Modal.Heading>{t("upgradeTitle")}</Modal.Heading>
-            <p className="text-muted text-sm">{t("upgradeDescription")}</p>
+            <Modal.Heading>{t("upgrade-title")}</Modal.Heading>
+            <p className="text-muted text-sm">{t("upgrade-description")}</p>
           </Modal.Header>
           <Modal.Body>
             <Form
@@ -117,7 +117,7 @@ export function Rekey({ email, onOpenChange, open, password }: RekeyProps) {
                       type="password"
                       value={field.state.value}
                     >
-                      <Label>{t("newPassword")}</Label>
+                      <Label>{t("new-password")}</Label>
                       <Input
                         autoComplete="new-password"
                         id={field.name}
@@ -127,9 +127,9 @@ export function Rekey({ email, onOpenChange, open, password }: RekeyProps) {
                         variant="secondary"
                       />
                       {isInvalid ? (
-                        <FieldError>{t("passwordRule")}</FieldError>
+                        <FieldError>{t("password-rule")}</FieldError>
                       ) : (
-                        <Description>{t("passwordRule")}</Description>
+                        <Description>{t("password-rule")}</Description>
                       )}
                     </TextField>
                   );

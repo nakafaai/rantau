@@ -5,21 +5,21 @@ interface ThemeDefinition {
   readonly value: string;
 }
 
-const SKY_SHADER_COLOR = "rgb(125, 211, 252)";
+const AIRBNB_SHADER_COLOR = "rgb(255, 56, 92)";
 
 /** Selectable HeroUI appearances and the shader color owned by each theme. */
 export const themes = [
   {
     value: "light",
-    shaderColor: SKY_SHADER_COLOR,
+    shaderColor: AIRBNB_SHADER_COLOR,
   },
   {
     value: "dark",
-    shaderColor: SKY_SHADER_COLOR,
+    shaderColor: AIRBNB_SHADER_COLOR,
   },
   {
     value: "system",
-    shaderColor: SKY_SHADER_COLOR,
+    shaderColor: AIRBNB_SHADER_COLOR,
   },
 ] as const satisfies readonly ThemeDefinition[];
 
@@ -27,7 +27,7 @@ export const themes = [
 export type ThemeValue = (typeof themes)[number]["value"];
 
 /** Local-storage key owned by the next-themes runtime. */
-export const THEME_STORAGE_KEY = "theme";
+export const THEME_STORAGE_KEY = "rantau-theme";
 
 /** First-visit theme resolved by next-themes before first paint. */
 export const DEFAULT_THEME = "system" satisfies ThemeValue;
@@ -39,5 +39,5 @@ export const concreteThemeValues = ["light", "dark"];
 export function getThemeShaderColor(resolvedTheme: string | undefined) {
   const definition = themes.find((theme) => theme.value === resolvedTheme);
 
-  return definition?.shaderColor ?? SKY_SHADER_COLOR;
+  return definition?.shaderColor ?? AIRBNB_SHADER_COLOR;
 }

@@ -1,5 +1,5 @@
 export const skillOptions = [
-  { key: "customerService", value: "Customer service" },
+  { key: "customer-service", value: "Customer service" },
   { key: "healthcare", value: "Healthcare" },
   { key: "hospitality", value: "Hospitality" },
   { key: "logistics", value: "Logistics" },
@@ -10,8 +10,8 @@ export const skillOptions = [
 export const documentOptions = [
   { key: "passport", value: "Passport" },
   { key: "diploma", value: "Diploma" },
-  { key: "driverLicense", value: "Driver license" },
-  { key: "languageCertificate", value: "Language certificate" },
+  { key: "driver-license", value: "Driver license" },
+  { key: "language-certificate", value: "Language certificate" },
 ] as const;
 
 export const languageOptions = [

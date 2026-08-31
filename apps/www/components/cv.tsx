@@ -27,7 +27,7 @@ export function Cv({ current, disabled }: CvProps) {
   /** Uploads and extracts the selected PDF through Convex. */
   async function upload() {
     if (file?.type !== "application/pdf" || file.size > 5 * 1024 * 1024) {
-      toast.danger(t("cvInvalid"));
+      toast.danger(t("cv-invalid"));
       return;
     }
     setPending(true);
@@ -64,12 +64,12 @@ export function Cv({ current, disabled }: CvProps) {
     <Card aria-busy={disabled} inert={disabled}>
       <Card.Header>
         <Card.Title>{t("cv")}</Card.Title>
-        <Card.Description>{t("cvHelp")}</Card.Description>
+        <Card.Description>{t("cv-help")}</Card.Description>
       </Card.Header>
       <Card.Content>
         <Input
           accept="application/pdf"
-          aria-label={t("chooseCv")}
+          aria-label={t("choose-cv")}
           className="sr-only"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           ref={inputRef}
@@ -84,10 +84,10 @@ export function Cv({ current, disabled }: CvProps) {
         >
           <span className="min-w-0">
             <span className="block font-medium text-sm">
-              {file?.name ?? current?.cvFileName ?? t("chooseCv")}
+              {file?.name ?? current?.cvFileName ?? t("choose-cv")}
             </span>
             <span className="mt-1 block text-muted text-xs">
-              {t("cvLimit")}
+              {t("cv-limit")}
             </span>
           </span>
           <HugeiconsIcon
@@ -98,7 +98,7 @@ export function Cv({ current, disabled }: CvProps) {
         </Button>
       </Card.Content>
       <Card.Footer className="flex-wrap justify-between gap-4">
-        <p className="text-muted text-sm">{t("cvSaveHelp")}</p>
+        <p className="text-muted text-sm">{t("cv-save-help")}</p>
         <Button
           isDisabled={disabled || pending || !current || !file}
           isPending={pending}
