@@ -199,6 +199,7 @@ export function ApplicationSheet({
                   onChange={changeStatus}
                   placeholder={t(selectedStatus)}
                   value={selectedStatus}
+                  variant="secondary"
                 >
                   <Label>{t("nextStatus")}</Label>
                   <Select.Trigger>

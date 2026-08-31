@@ -70,12 +70,12 @@ export function CountryPicker({
         onChange(country ?? null);
       }}
       selectedKey={selected?.code ?? null}
+      variant="secondary"
     >
       <ComboBox.InputGroup>
         <Input
           id={id}
           placeholder={failed ? t("placesUnavailable") : t("chooseCountry")}
-          variant="secondary"
         />
         <ComboBox.Trigger />
       </ComboBox.InputGroup>
