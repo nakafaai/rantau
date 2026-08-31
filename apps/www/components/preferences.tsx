@@ -18,7 +18,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { cn } from "@repo/design-system/lib/utils";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ComponentProps } from "react";
@@ -48,26 +48,32 @@ function ActiveBadge({ active }: { active: boolean }) {
 function LanguageItems({ onNavigate }: { onNavigate?: () => void }) {
   const currentLocale = useLocale();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  return languages.map((language) => (
-    <DropdownMenuLinkItem
-      className="cursor-pointer"
-      closeOnClick
-      key={language.value}
-      render={
-        <Link
-          href={localizedPath(language.value, pathname)}
-          onClick={onNavigate}
-          prefetch
-          replace
-        />
-      }
-    >
-      <CountryFlag countryCode={language.countryCode} />
-      <span className="truncate">{language.label}</span>
-      <ActiveBadge active={currentLocale === language.value} />
-    </DropdownMenuLinkItem>
-  ));
+  return languages.map((language) => {
+    const basePath = localizedPath(language.value, pathname);
+    const query = searchParams.toString();
+    const href = query ? `${basePath}?${query}` : basePath;
+
+    return (
+      <DropdownMenuLinkItem
+        className="cursor-pointer"
+        closeOnClick
+        data-locale-switch=""
+        key={language.value}
+        onClick={(event) => {
+          event.preventDefault();
+          window.history.replaceState(null, "", href);
+          onNavigate?.();
+        }}
+        render={<Link href={href} prefetch replace />}
+      >
+        <CountryFlag countryCode={language.countryCode} />
+        <span className="truncate">{language.label}</span>
+        <ActiveBadge active={currentLocale === language.value} />
+      </DropdownMenuLinkItem>
+    );
+  });
 }
 
 /** Renders theme choices directly from the copied Nakafa theme registry. */

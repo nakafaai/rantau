@@ -1,6 +1,4 @@
-import { Tracker } from "@/components/tracker";
-
-/** Renders the route-owned application tracker workspace. */
+/** Marks the statically exported tracker route owned by the client workspace. */
 export default function Page() {
-  return <Tracker />;
+  return null;
 }

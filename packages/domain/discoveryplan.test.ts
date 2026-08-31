@@ -8,45 +8,58 @@ import { SearchIntent, SearchQuery } from "@repo/domain/search";
 import { Effect } from "effect";
 
 describe("discovery plan", () => {
-  it.effect("fans one country into diverse bounded retrieval lanes", () =>
+  it.effect("fans one city into focused initial and expansion lanes", () =>
     Effect.gen(function* () {
       const intent = SearchIntent.make({
-        country: "Indonesia",
         locale: "id",
         pathway: "job",
-        query: SearchQuery.make("barista\nshift"),
+        place: {
+          city: "Bandung",
+          country: "Indonesia",
+          countryCode: "ID",
+          level: "city",
+          region: "West Java",
+          regionCode: "JB",
+        },
+        query: SearchQuery.make("dokter\nspesialis"),
         workMode: "onsite",
       });
-      const lanes = discoveryLanes(intent);
+      const initial = discoveryLanes(intent);
+      const expansion = discoveryLanes(intent, "expansion");
+      const lanes = [...initial, ...expansion];
 
-      expect(lanes).toHaveLength(12);
+      expect(initial).toHaveLength(4);
+      expect(expansion).toHaveLength(4);
       expect(new Set(lanes.map(({ sourceQuery }) => sourceQuery)).size).toBe(
         lanes.length
       );
       expect(lanes.every(({ limit }) => limit === 15)).toBe(true);
-      expect(lanes.every(({ market }) => market === "Indonesia")).toBe(true);
       expect(
-        lanes.every(({ sourceQuery }) =>
-          sourceQuery.includes('"barista shift" "Indonesia" job onsite')
-        )
+        lanes.every(({ market }) => market === "Bandung, West Java, Indonesia")
       ).toBe(true);
-      expect(lanes[0]?.sourceQuery).toContain("-site:linkedin.com");
+      expect(initial[0]?.sourceQuery).toContain(
+        '"dokter spesialis" "Bandung" "West Java" "Indonesia" job onsite'
+      );
+      expect(initial[0]?.sourceQuery).toContain("-site:linkedin.com");
     })
   );
 
-  it.effect("distributes a worldwide search across twenty markets", () =>
+  it.effect("distributes global stages across twenty distinct markets", () =>
     Effect.gen(function* () {
-      const lanes = discoveryLanes(
-        SearchIntent.make({
-          locale: "en",
-          query: SearchQuery.make("nurse"),
-        })
-      );
+      const intent = SearchIntent.make({
+        locale: "en",
+        query: SearchQuery.make("nurse"),
+      });
+      const initial = discoveryLanes(intent);
+      const expansion = discoveryLanes(intent, "expansion");
+      const lanes = [...initial, ...expansion];
 
-      expect(lanes).toHaveLength(20);
+      expect(initial).toHaveLength(11);
+      expect(expansion).toHaveLength(9);
       expect(new Set(lanes.map(({ market }) => market)).size).toBe(20);
-      expect(lanes.every(({ limit }) => limit === 10)).toBe(true);
-      expect(lanes[0]?.sourceQuery).toContain('"nurse" "Australia"');
+      expect(lanes.every(({ limit }) => limit === 15)).toBe(true);
+      expect(initial[0]?.sourceQuery).toContain('"nurse" "Indonesia"');
+      expect(lanes.some(({ market }) => market === "Timor-Leste")).toBe(true);
       expect(SEARCH_RESULT_TARGET).toBe(50);
       expect(SEARCH_RESULT_LIMIT).toBe(100);
     })

@@ -30,8 +30,11 @@ import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { type MouseEvent, Suspense } from "react";
 import { Account } from "@/components/account";
+import { Profile } from "@/components/profile";
+import { Search } from "@/components/search";
+import { Tracker } from "@/components/tracker";
 import {
   type WorkspaceRoute,
   workspacePath,
@@ -47,29 +50,56 @@ const destinations = [
   route: WorkspaceRoute;
 }>;
 
-type ShellProps = Readonly<{ children: ReactNode }>;
-
 /** Renders the persistent Nakafa workspace around a route-owned page. */
-export function Shell({ children }: ShellProps) {
+export function Shell() {
   const t = useTranslations("common");
   const pathname = usePathname();
   const route = workspaceRoute(pathname);
 
   return (
     <SidebarProvider>
+      <WorkspaceFrame route={route} title={t(route)} />
+    </SidebarProvider>
+  );
+}
+
+/** Selects the current workspace view without remounting shared providers. */
+function WorkspacePage({ route }: Readonly<{ route: WorkspaceRoute }>) {
+  if (route === "profile") {
+    return <Profile />;
+  }
+  if (route === "applications") {
+    return <Tracker />;
+  }
+  return (
+    <Suspense>
+      <Search />
+    </Suspense>
+  );
+}
+
+type WorkspaceFrameProps = Readonly<{
+  route: WorkspaceRoute;
+  title: string;
+}>;
+
+/** Composes the responsive workspace body and sidebar without remounting them. */
+function WorkspaceFrame({ route, title }: WorkspaceFrameProps) {
+  return (
+    <>
       <SidebarInset>
         <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center border-b bg-background lg:hidden">
           <div className="flex w-full items-center gap-3 px-4">
             <SidebarTrigger />
-            <p className="truncate font-medium text-sm">{t(route)}</p>
+            <p className="truncate font-medium text-sm">{title}</p>
           </div>
         </header>
         <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-          {children}
+          <WorkspacePage route={route} />
         </div>
       </SidebarInset>
       <AppSidebar activeRoute={route} containerClassName="order-first" />
-    </SidebarProvider>
+    </>
   );
 }
 
@@ -84,9 +114,27 @@ function AppSidebar({ activeRoute, containerClassName }: AppSidebarProps) {
   const locale = useLocale() === "id" ? "id" : "en";
   const { setOpenMobile } = useSidebar();
 
-  /** Closes the mobile sheet after a destination is selected. */
-  function closeMobile() {
+  /** Pushes one semantic workspace link through the native history API. */
+  function navigate(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      (event.currentTarget.target && event.currentTarget.target !== "_self")
+    ) {
+      return;
+    }
+    event.preventDefault();
     setOpenMobile(false);
+    const url = new URL(event.currentTarget.href);
+    const destination = `${url.pathname}${url.search}${url.hash}`;
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (destination !== current) {
+      window.history.pushState(null, "", destination);
+    }
   }
 
   return (
@@ -98,7 +146,7 @@ function AppSidebar({ activeRoute, containerClassName }: AppSidebarProps) {
               render={
                 <Link
                   href={workspacePath(locale, "search")}
-                  onClick={closeMobile}
+                  onClick={navigate}
                 />
               }
               size="lg"
@@ -126,7 +174,7 @@ function AppSidebar({ activeRoute, containerClassName }: AppSidebarProps) {
                     render={
                       <Link
                         href={workspacePath(locale, route)}
-                        onClick={closeMobile}
+                        onClick={navigate}
                       />
                     }
                     tooltip={t(route)}
@@ -142,7 +190,7 @@ function AppSidebar({ activeRoute, containerClassName }: AppSidebarProps) {
       </SidebarContent>
       <SidebarFooter className="border-t">
         <SidebarMenu>
-          <Account />
+          <Account onNavigate={navigate} />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

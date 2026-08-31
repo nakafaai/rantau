@@ -1,9 +1,11 @@
+import { vWorkId } from "@convex-dev/workpool";
 import { legacyAuthTables } from "@repo/backend/convex/legacy";
 import {
   applicationStatusValidator,
   localeValidator,
   opportunityValidator,
   profileInputValidator,
+  searchLimitationValidator,
 } from "@repo/backend/convex/model";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -40,14 +42,18 @@ export default defineSchema({
     .index("by_cv", ["cvStorageId"])
     .index("by_user", ["userId"]),
   searches: defineTable({
+    city: v.optional(v.string()),
     completedAt: v.optional(v.number()),
     country: v.optional(v.string()),
+    countryCode: v.optional(v.string()),
     createdAt: v.number(),
     error: v.optional(v.string()),
     inputTokens: v.optional(v.number()),
     locale: localeValidator,
+    limitation: v.optional(searchLimitationValidator),
     model: v.optional(v.string()),
     outputTokens: v.optional(v.number()),
+    outcome: v.optional(v.union(v.literal("target_met"), v.literal("partial"))),
     pathway: v.optional(
       v.union(
         v.literal("job"),
@@ -58,12 +64,15 @@ export default defineSchema({
       )
     ),
     query: v.string(),
+    region: v.optional(v.string()),
+    regionCode: v.optional(v.string()),
     resultCount: v.optional(v.number()),
     status: v.union(
       v.literal("running"),
       v.literal("complete"),
       v.literal("failed")
     ),
+    stage: v.optional(v.union(v.literal("initial"), v.literal("expansion"))),
     threadId: v.optional(v.string()),
     targetCount: v.optional(v.number()),
     userId: v.id("users"),
@@ -75,11 +84,14 @@ export default defineSchema({
     completedAt: v.optional(v.number()),
     error: v.optional(v.string()),
     inputTokens: v.optional(v.number()),
+    limit: v.optional(v.number()),
+    limitation: v.optional(searchLimitationValidator),
     market: v.string(),
     outputTokens: v.optional(v.number()),
     resultCount: v.optional(v.number()),
     searchId: v.id("searches"),
     sourceQuery: v.optional(v.string()),
+    stage: v.optional(v.union(v.literal("initial"), v.literal("expansion"))),
     status: v.union(
       v.literal("queued"),
       v.literal("running"),
@@ -89,7 +101,7 @@ export default defineSchema({
     threadId: v.optional(v.string()),
     updatedAt: v.number(),
     userId: v.id("users"),
-    workId: v.optional(v.string()),
+    workId: v.optional(vWorkId),
   })
     .index("by_search", ["searchId"])
     .index("by_search_and_market", ["searchId", "market"]),

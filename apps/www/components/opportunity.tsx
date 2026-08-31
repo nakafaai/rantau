@@ -57,6 +57,7 @@ export function PathwayBadge({ record }: { record: OpportunityRecord }) {
 
 type OpportunitySheetProps = Readonly<{
   onOpenChange: (open: boolean) => void;
+  onOpenChangeComplete: (open: boolean) => void;
   open: boolean;
   record: OpportunityRecord | null;
 }>;
@@ -64,6 +65,7 @@ type OpportunitySheetProps = Readonly<{
 /** Shows one opportunity's source-backed detail in a wide Shadcn Sheet. */
 export function OpportunitySheet({
   onOpenChange,
+  onOpenChangeComplete,
   open,
   record,
 }: OpportunitySheetProps) {
@@ -93,7 +95,11 @@ export function OpportunitySheet({
   }
 
   return (
-    <Sheet onOpenChange={onOpenChange} open={open}>
+    <Sheet
+      onOpenChange={onOpenChange}
+      onOpenChangeComplete={onOpenChangeComplete}
+      open={open}
+    >
       <SheetContent className="sm:max-w-2xl">
         <SheetHeader className="border-b pr-12">
           <div className="mb-2 flex flex-wrap items-center gap-2">

@@ -33,6 +33,7 @@ import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import type { MouseEventHandler } from "react";
 import { PreferenceSubmenus } from "@/components/preferences";
 import { workspacePath } from "@/lib/locale";
 
@@ -48,8 +49,12 @@ function initials(name: string) {
     .join("");
 }
 
+type AccountProps = Readonly<{
+  onNavigate: MouseEventHandler<HTMLAnchorElement>;
+}>;
+
 /** Renders the Nakafa-style identity footer with preferences and sign out. */
-export function Account() {
+export function Account({ onNavigate }: AccountProps) {
   const account = useQuery(api.accounts.current);
   const t = useTranslations("common");
   const locale = useLocale() === "id" ? "id" : "en";
@@ -134,7 +139,7 @@ export function Account() {
               render={
                 <Link
                   href={workspacePath(locale, "profile")}
-                  onClick={closeMobile}
+                  onClick={onNavigate}
                 />
               }
             >

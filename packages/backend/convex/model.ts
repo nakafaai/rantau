@@ -16,6 +16,35 @@ export const workModeValidator = v.union(
   v.literal("remote")
 );
 
+export const searchLimitationValidator = v.union(
+  v.literal("deadline"),
+  v.literal("source_capacity"),
+  v.literal("source_exhausted")
+);
+
+export const placeScopeValidator = v.union(
+  v.object({
+    country: v.string(),
+    countryCode: v.string(),
+    level: v.literal("country"),
+  }),
+  v.object({
+    country: v.string(),
+    countryCode: v.string(),
+    level: v.literal("region"),
+    region: v.string(),
+    regionCode: v.string(),
+  }),
+  v.object({
+    city: v.string(),
+    country: v.string(),
+    countryCode: v.string(),
+    level: v.literal("city"),
+    region: v.string(),
+    regionCode: v.string(),
+  })
+);
+
 export const languageValidator = v.object({
   language: v.string(),
   level: v.string(),
@@ -90,6 +119,7 @@ export const opportunityValidator = v.object({
   location: v.string(),
   pathway: pathwayValidator,
   publishedAt: v.union(v.string(), v.null()),
+  region: v.optional(v.string()),
   requirements: v.array(requirementValidator),
   salary: v.union(v.string(), v.null()),
   source: sourceValidator,

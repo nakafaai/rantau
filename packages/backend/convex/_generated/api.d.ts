@@ -17,12 +17,17 @@ import type * as http from "../http.js";
 import type * as legacy from "../legacy.js";
 import type * as lib_discover from "../lib/discover.js";
 import type * as lib_guard from "../lib/guard.js";
+import type * as lib_searchqueue from "../lib/searchqueue.js";
+import type * as lib_searchsession from "../lib/searchsession.js";
 import type * as lib_searchwork from "../lib/searchwork.js";
 import type * as mail from "../mail.js";
 import type * as model from "../model.js";
 import type * as opportunities from "../opportunities.js";
 import type * as profiles from "../profiles.js";
 import type * as searches from "../searches.js";
+import type * as searchhistory from "../searchhistory.js";
+import type * as searchinput from "../searchinput.js";
+import type * as searchlane from "../searchlane.js";
 
 import type {
   ApiFromModules,
@@ -40,12 +45,17 @@ declare const fullApi: ApiFromModules<{
   legacy: typeof legacy;
   "lib/discover": typeof lib_discover;
   "lib/guard": typeof lib_guard;
+  "lib/searchqueue": typeof lib_searchqueue;
+  "lib/searchsession": typeof lib_searchsession;
   "lib/searchwork": typeof lib_searchwork;
   mail: typeof mail;
   model: typeof model;
   opportunities: typeof opportunities;
   profiles: typeof profiles;
   searches: typeof searches;
+  searchhistory: typeof searchhistory;
+  searchinput: typeof searchinput;
+  searchlane: typeof searchlane;
 }>;
 
 /**

@@ -1,4 +1,5 @@
 import { OpportunityPathway, WorkMode } from "@repo/domain/opportunity";
+import { PlaceScope } from "@repo/domain/place";
 import { Effect, Schema } from "effect";
 
 const MAX_QUERY_LENGTH = 400;
@@ -11,9 +12,9 @@ export const SearchQuery = Schema.String.pipe(
 export type SearchQuery = Schema.Schema.Type<typeof SearchQuery>;
 
 export const SearchIntent = Schema.Struct({
-  country: Schema.optional(Schema.String),
   locale: SearchLocale,
   pathway: Schema.optional(OpportunityPathway),
+  place: Schema.optional(PlaceScope),
   query: SearchQuery,
   workMode: Schema.optional(WorkMode),
 });
@@ -29,6 +30,9 @@ export class SearchIntentError extends Schema.TaggedError<SearchIntentError>()(
 export class SearchExecutionError extends Schema.TaggedError<SearchExecutionError>()(
   "SearchExecutionError",
   {
+    limitation: Schema.optional(
+      Schema.Literals(["deadline", "source_capacity", "source_exhausted"])
+    ),
     message: Schema.String,
     stage: Schema.Literals(["search", "analysis", "storage"]),
   }
@@ -37,7 +41,6 @@ export class SearchExecutionError extends Schema.TaggedError<SearchExecutionErro
 /** Normalizes and validates a candidate's free-form opportunity search. */
 export const makeSearchIntent = Effect.fn("search.makeIntent")(
   function* (input: {
-    country?: string;
     locale: "en" | "id";
     pathway?:
       | "apprenticeship"
@@ -46,12 +49,14 @@ export const makeSearchIntent = Effect.fn("search.makeIntent")(
       | "job"
       | "vocational";
     query: string;
+    place?: unknown;
     workMode?: "hybrid" | "onsite" | "remote";
   }) {
     const query = input.query.trim().replaceAll(/\s+/g, " ");
-    const country = input.country?.trim() || undefined;
-
-    if (query.length === 0 && !(country || input.pathway || input.workMode)) {
+    if (
+      query.length === 0 &&
+      !(input.place || input.pathway || input.workMode)
+    ) {
       return yield* Effect.fail(
         new SearchIntentError({
           message: "Add a query or choose at least one filter.",
@@ -67,12 +72,19 @@ export const makeSearchIntent = Effect.fn("search.makeIntent")(
       );
     }
 
-    return {
-      country,
+    return yield* Schema.decodeUnknownEffect(SearchIntent)({
       locale: input.locale,
       pathway: input.pathway,
-      query: SearchQuery.make(query || "work opportunities"),
+      place: input.place,
+      query: query || "work opportunities",
       workMode: input.workMode,
-    };
+    }).pipe(
+      Effect.mapError(
+        () =>
+          new SearchIntentError({
+            message: "The selected search filters are invalid.",
+          })
+      )
+    );
   }
 );

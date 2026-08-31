@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@convex-dev/auth": "2.0.0-alpha.1",
+    "@countrystatecity/countries-browser": "1.0.4",
     "@hugeicons/core-free-icons": "4.3.0",
     "@paper-design/shaders-react": "0.0.80",
     "@repo/backend": "workspace:*",

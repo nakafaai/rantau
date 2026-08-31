@@ -2,85 +2,178 @@
 
 import { Loading03Icon, Search02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { OpportunityPathway, WorkMode } from "@repo/domain/opportunity";
+import { makePlaceScope } from "@repo/domain/place";
+import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
-import { Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
 import { toast } from "sonner";
-import { Filters } from "@/components/filters";
+import { Filters, type FilterValue } from "@/components/filters";
 import { Results } from "@/components/results";
+import { SearchHistory } from "@/components/search-history";
+import { countryCodeFromName } from "@/lib/geography";
 
-/** Returns a selected form value or removes the neutral any option. */
-function selected(formData: FormData, name: string) {
-  const value = String(formData.get(name) ?? "");
-  return value === "any" || value === "" ? undefined : value;
+const OptionalPathway = Schema.Union([OpportunityPathway, Schema.Literal("")]);
+const OptionalWorkMode = Schema.Union([WorkMode, Schema.Literal("")]);
+const SearchFormState = Schema.Struct({
+  city: Schema.String,
+  country: Schema.String,
+  countryCode: Schema.String,
+  pathway: OptionalPathway,
+  query: Schema.String,
+  region: Schema.String,
+  regionCode: Schema.String,
+  workMode: OptionalWorkMode,
+});
+const searchFormSchema = Schema.toStandardSchemaV1(SearchFormState);
+type SearchFormValues = Schema.Schema.Type<typeof SearchFormState>;
+
+type SearchWorkspaceProps = Readonly<{
+  profile: Doc<"profiles"> | null;
+}>;
+
+/** Compares the submitted search snapshot with the editable form criteria. */
+function sameSearchCriteria(
+  current: SearchFormValues,
+  submitted: SearchFormValues
+) {
+  return (
+    current.city === submitted.city &&
+    current.country === submitted.country &&
+    current.countryCode === submitted.countryCode &&
+    current.pathway === submitted.pathway &&
+    current.query.trim() === submitted.query.trim() &&
+    current.region === submitted.region &&
+    current.regionCode === submitted.regionCode &&
+    current.workMode === submitted.workMode
+  );
 }
 
-/** Runs filtered discovery and renders one durable realtime search session. */
-export function Search() {
+/** Restores one durable search session into editable form values. */
+function sessionSearchValues(
+  session: Doc<"searches"> | null | undefined,
+  locale: string
+): SearchFormValues | null {
+  if (!session) {
+    return null;
+  }
+  return {
+    city: session.city ?? "",
+    country: session.country ?? "",
+    countryCode:
+      session.countryCode ??
+      countryCodeFromName(session.country ?? "", locale) ??
+      "",
+    pathway: session.pathway ?? "",
+    query: session.query,
+    region: session.region ?? "",
+    regionCode: session.regionCode ?? "",
+    workMode: session.workMode ?? "",
+  };
+}
+
+/** Projects saved profile preferences into initial search values. */
+function profileSearchValues(profile: Doc<"profiles"> | null, locale: string) {
+  const country = profile?.desiredLocations[0] ?? "";
+  return {
+    city: "",
+    country,
+    countryCode: countryCodeFromName(country, locale) ?? "",
+    pathway: profile?.pathways[0] ?? "",
+    query: profile?.desiredRoles[0] ?? "",
+    region: "",
+    regionCode: "",
+    workMode: profile?.workModes[0] ?? "",
+  } satisfies SearchFormValues;
+}
+
+/** Renders the hydrated search workspace after profile defaults are known. */
+function SearchWorkspace({ profile }: SearchWorkspaceProps) {
   const t = useTranslations("search");
   const common = useTranslations("common");
   const locale = useLocale() === "id" ? "id" : "en";
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const routeKey = searchParams.get("search");
   const startSearch = useMutation(api.opportunities.start);
-  const profile = useQuery(api.profiles.get);
-  const latest = useQuery(api.searches.latest);
-  const [activeSearchId, setActiveSearchId] = useState<Id<"searches"> | null>(
-    null
+  const latest = useQuery(api.searchhistory.latest);
+  const selected = useQuery(
+    api.searchhistory.byKey,
+    routeKey ? { searchKey: routeKey } : "skip"
   );
-  const searchId = activeSearchId ?? latest?._id;
-  const session = useQuery(api.searches.get, searchId ? { searchId } : "skip");
+  const session = routeKey
+    ? (selected ?? (latest?._id === routeKey ? latest : undefined))
+    : latest;
+  const searchId = session?._id;
   const opportunities = useQuery(
     api.opportunities.list,
     searchId ? { searchId } : "skip"
   );
-  const [submitting, setSubmitting] = useState(false);
-  const running = submitting || session?.status === "running";
-  const hydrating =
-    latest === undefined ||
-    profile === undefined ||
-    (Boolean(searchId) && session === undefined);
-  const disabled = running || hydrating;
+  const sessionLoading = routeKey
+    ? selected === undefined
+    : latest === undefined;
+  const running = session?.status === "running";
+  const sessionValues = sessionSearchValues(session, locale);
+  const profileValues = profileSearchValues(profile, locale);
 
-  /** Starts one validated search while Convex owns all background progress. */
-  async function submit(formData: FormData) {
-    const query = String(formData.get("query") ?? "").trim();
-    const country = selected(formData, "country");
-    const pathway = Option.getOrUndefined(
-      Schema.decodeUnknownOption(OpportunityPathway)(
-        selected(formData, "pathway")
-      )
-    );
-    const workMode = Option.getOrUndefined(
-      Schema.decodeUnknownOption(WorkMode)(selected(formData, "workMode"))
-    );
+  const form = useForm({
+    defaultValues: sessionValues ?? profileValues,
+    formId: searchId ?? "profile-search",
+    onSubmit: async ({ value }) => {
+      const placeOption = await Effect.runPromise(
+        makePlaceScope(value).pipe(Effect.option)
+      );
+      if (Option.isNone(placeOption)) {
+        toast.error(t("invalidPlace"));
+        return;
+      }
+      const place = placeOption.value;
+      const query = value.query.trim();
+      if (!(query || place || value.pathway || value.workMode)) {
+        toast.error(t("missing"));
+        return;
+      }
 
-    if (!(query || country || pathway || workMode)) {
-      toast.error(t("missing"));
-      return;
-    }
+      const started = await startSearch({
+        locale,
+        ...(value.pathway ? { pathway: value.pathway } : {}),
+        ...(place ? { place } : {}),
+        query,
+        ...(value.workMode ? { workMode: value.workMode } : {}),
+      }).then(
+        (result) => result,
+        () => null
+      );
+      if (!started) {
+        toast.error(common("error"));
+        return;
+      }
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("search", started.searchId);
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    validators: {
+      onChange: searchFormSchema,
+      onSubmit: searchFormSchema,
+    },
+  });
 
-    setSubmitting(true);
-    const started = await startSearch({
-      ...(country ? { country } : {}),
-      locale,
-      ...(pathway ? { pathway } : {}),
-      query,
-      ...(workMode ? { workMode } : {}),
-    }).then(
-      (value) => value,
-      () => null
-    );
-    setSubmitting(false);
-    if (!started) {
-      toast.error(common("error"));
-      return;
-    }
-    setActiveSearchId(started.searchId);
+  /** Synchronizes one committed filter value into the TanStack form. */
+  function changeFilters(filters: FilterValue) {
+    form.setFieldValue("city", filters.city);
+    form.setFieldValue("country", filters.country);
+    form.setFieldValue("countryCode", filters.countryCode);
+    form.setFieldValue("pathway", filters.pathway);
+    form.setFieldValue("region", filters.region);
+    form.setFieldValue("regionCode", filters.regionCode);
+    form.setFieldValue("workMode", filters.workMode);
   }
 
   return (
@@ -89,35 +182,102 @@ export function Search() {
         <div className="mx-auto w-full max-w-[90rem] px-4 py-3 sm:px-6">
           <h1 className="sr-only">{t("title")}</h1>
           <form
-            action={submit}
             className="space-y-3"
-            key={profile?.updatedAt ?? "search"}
+            onSubmit={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              form.handleSubmit();
+            }}
           >
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                className="flex-1 text-sm"
-                defaultValue={profile?.desiredRoles[0] ?? ""}
-                disabled={disabled}
-                maxLength={400}
-                name="query"
-                placeholder={t("placeholder")}
-              />
-              <Button className="shrink-0" disabled={disabled} type="submit">
-                <HugeIcons
-                  className={running ? "size-4 animate-spin" : "size-4"}
-                  icon={running ? Loading03Icon : Search02Icon}
-                />
-                {running ? t("working") : t("button")}
-              </Button>
+              <form.Field name="query">
+                {(field) => (
+                  <Input
+                    className="flex-1 text-sm sm:min-w-0"
+                    maxLength={400}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    placeholder={t("placeholder")}
+                    value={field.state.value}
+                  />
+                )}
+              </form.Field>
+              <form.Subscribe
+                selector={(state) => [state.canSubmit, state.isSubmitting]}
+              >
+                {([canSubmit, isSubmitting]) => (
+                  <Button
+                    className="shrink-0"
+                    disabled={!canSubmit || isSubmitting}
+                    type="submit"
+                  >
+                    <HugeIcons
+                      className={
+                        isSubmitting ? "size-4 animate-spin" : "size-4"
+                      }
+                      icon={isSubmitting ? Loading03Icon : Search02Icon}
+                    />
+                    {isSubmitting ? t("starting") : t("button")}
+                  </Button>
+                )}
+              </form.Subscribe>
             </div>
-            <Filters
-              defaults={{
-                country: profile?.desiredLocations[0],
-                pathway: profile?.pathways[0],
-                workMode: profile?.workModes[0],
-              }}
-              disabled={disabled}
-            />
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <form.Subscribe
+                selector={(state) => ({
+                  city: state.values.city,
+                  country: state.values.country,
+                  countryCode: state.values.countryCode,
+                  pathway: state.values.pathway,
+                  region: state.values.region,
+                  regionCode: state.values.regionCode,
+                  workMode: state.values.workMode,
+                })}
+              >
+                {(filters) => (
+                  <Filters
+                    disabled={false}
+                    onChange={changeFilters}
+                    value={filters}
+                  />
+                )}
+              </form.Subscribe>
+              <SearchHistory activeSearchId={searchId} />
+              <form.Subscribe
+                selector={(state) =>
+                  sessionValues !== null &&
+                  !sameSearchCriteria(state.values, sessionValues)
+                }
+              >
+                {(criteriaChanged) =>
+                  criteriaChanged ? (
+                    <span className="text-muted-foreground text-sm">
+                      {t("criteriaChanged")}
+                    </span>
+                  ) : null
+                }
+              </form.Subscribe>
+              {running ? (
+                <span className="inline-flex items-center gap-2 text-muted-foreground text-sm">
+                  <span className="size-2 animate-pulse rounded-full bg-primary" />
+                  {session.stage === "expansion"
+                    ? t("expandingResults")
+                    : t("streamingResults")}
+                </span>
+              ) : null}
+              {session?.outcome === "partial" ? (
+                <span className="text-muted-foreground text-sm">
+                  {session.limitation === "source_capacity"
+                    ? t("partialCapacity", {
+                        count: session.resultCount ?? 0,
+                      })
+                    : t("partialResults", {
+                        count: session.resultCount ?? 0,
+                      })}
+                </span>
+              ) : null}
+            </div>
           </form>
         </div>
       </header>
@@ -129,11 +289,28 @@ export function Search() {
         <Results
           failed={session?.status === "failed"}
           key={searchId ?? "latest"}
-          loading={hydrating || (Boolean(searchId) && !opportunities)}
+          loading={
+            sessionLoading || (Boolean(searchId) && opportunities === undefined)
+          }
           records={opportunities ?? []}
           running={running}
+          sourceCapacityReached={session?.limitation === "source_capacity"}
         />
       </div>
     </section>
+  );
+}
+
+/** Resolves profile defaults before mounting the controlled search form. */
+export function Search() {
+  const profile = useQuery(api.profiles.get);
+  if (profile === undefined) {
+    return <SearchWorkspace profile={null} />;
+  }
+  return (
+    <SearchWorkspace
+      key={`${profile?._id ?? "new"}-${profile?.updatedAt ?? 0}`}
+      profile={profile}
+    />
   );
 }

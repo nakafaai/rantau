@@ -51,6 +51,7 @@ export const ExtractedOpportunity = Schema.Struct({
   location: Schema.String,
   pathway: OpportunityPathway,
   publishedAt: Schema.NullOr(Schema.String),
+  region: Schema.optional(Schema.String),
   requirements: Schema.Array(OpportunityRequirement).check(
     Schema.isLengthBetween(0, 12)
   ),
@@ -152,6 +153,7 @@ export const bindOpportunities = Effect.fn("discovery.bindOpportunities")(
         location: candidate.location,
         pathway: candidate.pathway,
         publishedAt: candidate.publishedAt,
+        region: candidate.region,
         requirements: candidate.requirements,
         salary: candidate.salary,
         source: {
