@@ -19,7 +19,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
-import { readinessCounts } from "@repo/domain/readiness";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { CountryFlag } from "@/components/country-flag";
@@ -78,12 +77,9 @@ export function OpportunitySheet({
 
   const { opportunity: stored, readiness, hasProfile } = record;
   const { opportunity } = stored;
-  const counts = readinessCounts(readiness);
   let readinessText = t("requirementsUnknown");
-  if (counts.total > 0) {
-    readinessText = hasProfile
-      ? t("readinessCount", counts)
-      : t("profileNeeded", { count: counts.total });
+  if (readiness.length > 0) {
+    readinessText = hasProfile ? t("readinessCompared") : t("profileNeeded");
   }
 
   /** Saves the active source-backed opportunity. */
@@ -130,7 +126,7 @@ export function OpportunitySheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 space-y-7 overflow-y-auto px-4 pb-6">
+        <div className="min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain p-4">
           <p className="text-sm leading-relaxed">{opportunity.summary}</p>
 
           <section className="space-y-3">
@@ -155,7 +151,17 @@ export function OpportunitySheet({
                           : AlertCircleIcon
                       }
                     />
-                    <span className="leading-relaxed">{step.description}</span>
+                    <span className="min-w-0 flex-1 leading-relaxed">
+                      {step.description}
+                    </span>
+                    <Badge
+                      className="mt-0.5"
+                      variant={step.status === "ready" ? "outline" : "muted"}
+                    >
+                      {step.status === "ready"
+                        ? t("readyRequirement")
+                        : t("reviewRequirement")}
+                    </Badge>
                   </li>
                 ))}
               </ul>
@@ -220,7 +226,7 @@ export function OpportunitySheet({
           </section>
         </div>
 
-        <SheetFooter className="border-t sm:flex-row">
+        <SheetFooter className="border-t bg-muted/30 sm:flex-row">
           <Button
             nativeButton={false}
             render={

@@ -79,7 +79,7 @@ export function Profile() {
 
     if (decoded._tag === "None") {
       toast.error(common("error"));
-      return;
+      return false;
     }
     setPending(true);
     const saved = await saveProfile({
@@ -100,9 +100,10 @@ export function Profile() {
     setPending(false);
     if (!saved) {
       toast.error(common("error"));
-      return;
+      return false;
     }
     toast.success(t("saved"));
+    return true;
   }
 
   return (
@@ -113,7 +114,7 @@ export function Profile() {
           <ProfileForm
             current={current ?? null}
             disabled={current === undefined || account === undefined}
-            key={current?._id ?? "new"}
+            key={`${current?._id ?? "new"}-${current?.updatedAt ?? 0}`}
             onSubmit={submit}
             pending={pending}
           />

@@ -100,8 +100,10 @@
     "support": "Support available",
     "source": "Source",
     "readiness": "What to prepare",
-    "readinessCount": "{ready} of {total} required items confirmed from your profile.",
-    "profileNeeded": "Add your profile to check {count} required items.",
+    "readinessCompared": "Compared with your saved profile. Ready means matching details were found; review the remaining items before applying.",
+    "profileNeeded": "Save your profile to compare these requirements with your details.",
+    "readyRequirement": "Ready",
+    "reviewRequirement": "Review",
     "requirementsUnknown": "The source does not list enough requirements to assess yet.",
     "failed": "We couldn't finish this search. Adjust the query or filters and try again.",
     "noResults": "No direct opportunities matched this search. Try broader filters."
@@ -186,6 +188,7 @@
     "applicationCount": "{count, plural, one {# application} other {# applications}}",
     "empty": "No saved applications yet. Saved opportunities will appear here.",
     "notes": "Notes",
+    "notesHelp": "Only you can see these notes.",
     "saved": "Saved",
     "applied": "Applied",
     "interview": "Interview",
@@ -194,12 +197,18 @@
     "rejected": "Rejected",
     "withdrawn": "Withdrawn",
     "status": "Status",
+    "nextStatus": "Next status",
+    "statusHelp": "Choose the next stage that reflects what actually happened.",
     "update": "Update status",
     "updated": "Application updated",
+    "delete": "Delete",
+    "deleteTitle": "Delete this application?",
+    "deleteBody": "This removes the application and its private notes from Rantau. This cannot be undone.",
+    "deleted": "Application deleted",
+    "cancel": "Cancel",
     "mailTitle": "Application digest by email",
-    "mailBody": "Send the latest 10 saved applications to your account email.",
-    "mailProfile": "Save your profile before requesting an email digest.",
-    "mailButton": "Email my digest",
-    "mailSent": "Application digest sent"
+    "mailBody": "Send a summary of your latest 10 applications to your account email.",
+    "mailButton": "Send to my email",
+    "mailSent": "Summary queued for delivery to your account email"
   }
 }

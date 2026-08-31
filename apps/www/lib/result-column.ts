@@ -33,8 +33,8 @@ export function resultColumnClass(
     return "min-w-48 px-3";
   }
   if (columnId === "actions") {
-    const layer = region === "header" ? "z-30" : "z-20";
-    return `sticky right-0 ${layer} w-11 bg-background px-2 group-hover:bg-muted group-data-[state=selected]:bg-muted`;
+    const layer = region === "header" ? "z-40" : "z-20";
+    return `sticky right-0 ${layer} w-11 min-w-11 max-w-11 overflow-hidden bg-background px-2 shadow-[inset_0_-1px_0_var(--border)] group-hover:bg-muted group-data-[state=selected]:bg-muted`;
   }
   return "px-3";
 }

@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { useTranslations } from "next-intl";
+import { type FormEvent, useCallback, useRef, useState } from "react";
 import { CountryFlag } from "@/components/country-flag";
 import { countries, pathways, workModes } from "@/lib/options";
 import {
@@ -48,9 +49,22 @@ import {
 type ProfileFormProps = Readonly<{
   current: Doc<"profiles"> | null;
   disabled: boolean;
-  onSubmit: (formData: FormData) => Promise<void>;
+  onSubmit: (formData: FormData) => Promise<boolean>;
   pending: boolean;
 }>;
+
+/** Serializes successful form controls into a stable comparison value. */
+function profileFormSnapshot(form: HTMLFormElement) {
+  return JSON.stringify(
+    [...new FormData(form).entries()]
+      .map(([name, value]) => [name, String(value)] as const)
+      .sort(([leftName, leftValue], [rightName, rightValue]) =>
+        `${leftName}\u0000${leftValue}`.localeCompare(
+          `${rightName}\u0000${rightValue}`
+        )
+      )
+  );
+}
 
 /** Renders one consistent save footer for a Shadcn settings card. */
 function SettingsFooter({
@@ -86,13 +100,47 @@ export function ProfileForm({
   const selectedModes = new Set(current?.workModes ?? []);
   const selectedPathways = new Set(current?.pathways ?? []);
   const selectedSkills = new Set(current?.skills ?? []);
+  const knownSkills: ReadonlySet<string> = new Set(
+    skillOptions.map((skill) => skill.value)
+  );
+  const otherSkill = current?.skills.find((skill) => !knownSkills.has(skill));
+  const initialSnapshot = useRef("");
+  const [dirty, setDirty] = useState(false);
+  const setFormRef = useCallback((form: HTMLFormElement | null) => {
+    if (form) {
+      initialSnapshot.current = profileFormSnapshot(form);
+    }
+  }, []);
+
+  /** Recomputes dirty state after a native or Base UI form value changes. */
+  function trackChanges(event: FormEvent<HTMLFormElement>) {
+    const form = event.currentTarget;
+    queueMicrotask(() => {
+      setDirty(profileFormSnapshot(form) !== initialSnapshot.current);
+    });
+  }
+
+  /** Saves the complete profile without triggering React's form reset. */
+  async function submitProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const saved = await onSubmit(new FormData(form));
+    if (!saved) {
+      return;
+    }
+    initialSnapshot.current = profileFormSnapshot(form);
+    setDirty(false);
+  }
 
   return (
     <form
-      action={onSubmit}
-      aria-busy={disabled}
+      aria-busy={disabled || pending}
       className="space-y-6"
-      inert={disabled}
+      inert={disabled || pending}
+      onChange={trackChanges}
+      onInput={trackChanges}
+      onSubmit={submitProfile}
+      ref={setFormRef}
     >
       <Card>
         <CardHeader className="border-b">
@@ -170,7 +218,7 @@ export function ProfileForm({
           </FieldSet>
         </CardContent>
         <SettingsFooter
-          disabled={disabled || pending}
+          disabled={disabled || pending || !dirty}
           helper={t("preferencesSaveHelp")}
           label={t("save")}
         />
@@ -233,6 +281,7 @@ export function ProfileForm({
             <Field>
               <FieldLabel htmlFor="otherSkill">{t("otherSkill")}</FieldLabel>
               <Input
+                defaultValue={otherSkill ?? ""}
                 id="otherSkill"
                 name="otherSkill"
                 placeholder={t("skillPlaceholder")}
@@ -285,7 +334,7 @@ export function ProfileForm({
           </FieldSet>
         </CardContent>
         <SettingsFooter
-          disabled={disabled || pending}
+          disabled={disabled || pending || !dirty}
           helper={t("backgroundSaveHelp")}
           label={t("save")}
         />
@@ -344,7 +393,7 @@ export function ProfileForm({
           </Field>
         </CardContent>
         <SettingsFooter
-          disabled={disabled || pending}
+          disabled={disabled || pending || !dirty}
           helper={t("documentsSaveHelp")}
           label={t("save")}
         />
