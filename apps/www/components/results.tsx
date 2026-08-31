@@ -168,7 +168,7 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <TableHead
-                  className={resultColumnClass(header.column.id)}
+                  className={resultColumnClass(header.column.id, "header")}
                   key={header.id}
                 >
                   {header.isPlaceholder
@@ -186,7 +186,7 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
           {rows.map((row) => (
             <TableRow
               aria-selected={row.getIsSelected()}
-              className="h-14"
+              className="group h-14"
               data-state={row.getIsSelected() ? "selected" : undefined}
               key={row.id}
             >

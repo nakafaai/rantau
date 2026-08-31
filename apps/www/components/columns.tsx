@@ -7,6 +7,7 @@ import {
   MoreVerticalIcon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import {
@@ -17,6 +18,10 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  type RecommendationLevel,
+  recommendationLevel,
+} from "@repo/domain/rank";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
@@ -33,6 +38,14 @@ type ResultActions = Readonly<{
   onDetails: (record: OpportunityRecord) => void;
   onSave: (record: OpportunityRecord) => void;
 }>;
+
+const matchLevelClass: Record<RecommendationLevel, string> = {
+  excellent:
+    "border-emerald-600/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  fair: "border-amber-600/50 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  limited: "border-muted-foreground/40 bg-muted text-muted-foreground",
+  strong: "border-sky-600/50 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+};
 
 /** Renders a sortable table heading. */
 function SortButton({
@@ -85,11 +98,14 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
       },
       {
         accessorKey: "recommendation",
-        cell: ({ row }) => (
-          <span className="font-medium tabular-nums">
-            {row.original.recommendation}%
-          </span>
-        ),
+        cell: ({ row }) => {
+          const level = recommendationLevel(row.original.recommendation);
+          return (
+            <Badge className={matchLevelClass[level]} variant="outline">
+              {t(`matchLevel.${level}`)}
+            </Badge>
+          );
+        },
         header: ({ column }) => (
           <SortButton
             label={t("match")}

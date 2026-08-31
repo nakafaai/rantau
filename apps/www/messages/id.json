@@ -73,6 +73,12 @@
     "company": "Perusahaan",
     "location": "Lokasi",
     "match": "Kecocokan",
+    "matchLevel": {
+      "excellent": "Sangat cocok",
+      "strong": "Cocok",
+      "fair": "Cukup cocok",
+      "limited": "Kurang cocok"
+    },
     "salary": "Gaji",
     "notListed": "Tidak dicantumkan",
     "details": "Detail",

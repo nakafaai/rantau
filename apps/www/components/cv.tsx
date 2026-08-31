@@ -79,6 +79,7 @@ export function Cv({ current, disabled }: CvProps) {
       <CardContent>
         <Input
           accept="application/pdf"
+          aria-label={t("chooseCv")}
           className="sr-only"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           ref={inputRef}

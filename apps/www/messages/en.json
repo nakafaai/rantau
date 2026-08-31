@@ -73,6 +73,12 @@
     "company": "Company",
     "location": "Location",
     "match": "Match",
+    "matchLevel": {
+      "excellent": "Excellent match",
+      "strong": "Strong match",
+      "fair": "Possible match",
+      "limited": "Low match"
+    },
     "salary": "Salary",
     "notListed": "Not listed",
     "details": "Details",
