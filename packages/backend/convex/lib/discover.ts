@@ -11,6 +11,7 @@ import {
 } from "@repo/domain/discovery";
 import type { DiscoveryLane } from "@repo/domain/discoveryplan";
 import type { Opportunity } from "@repo/domain/opportunity";
+import { matchesPlaceScope, placeLabel } from "@repo/domain/place";
 import { SearchExecutionError, type SearchIntent } from "@repo/domain/search";
 import { gateway, jsonSchema } from "ai";
 import {
@@ -25,10 +26,10 @@ export const DISCOVERY_MODEL = "google/gemini-3.7-flash";
 
 const SOURCE_BATCH = 6;
 const FIRST_SOURCE_BATCH = 3;
-const SEARCH_RETRY_POLICY = {
-  schedule: Schedule.exponential("10 seconds").pipe(Schedule.jittered),
-  times: 3,
-} as const;
+const SEARCH_TIMEOUT_MS = 45_000;
+const SCRAPE_TIMEOUT_MS = 20_000;
+const SOURCE_CAPACITY_PATTERN =
+  /(?:Insufficient credits|Rate limit exceeded|"status":40[29])/u;
 const ANALYSIS_RETRY_POLICY = {
   schedule: Schedule.exponential("1 second").pipe(Schedule.jittered),
   times: 1,
@@ -54,6 +55,26 @@ export type DiscoveryRun = Readonly<{
 
 type OpportunityWriter = (opportunity: Opportunity) => Promise<boolean>;
 
+/** Serializes provider failures without discarding structured Convex details. */
+function errorDescription(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  try {
+    const serialized = JSON.stringify(error);
+    return serialized && serialized !== "{}"
+      ? `${message} ${serialized}`.slice(0, 500)
+      : message.slice(0, 500);
+  } catch {
+    return message.slice(0, 500);
+  }
+}
+
+/** Classifies a Firecrawl quota boundary that should stop adaptive expansion. */
+function sourceLimitation(description: string) {
+  return SOURCE_CAPACITY_PATTERN.test(description)
+    ? ("source_capacity" as const)
+    : undefined;
+}
+
 /** Builds an evidence-only prompt for one bounded source batch. */
 function analysisPrompt(
   intent: SearchIntent,
@@ -68,7 +89,7 @@ function analysisPrompt(
     .join("\n\n");
   const language = intent.locale === "id" ? "Bahasa Indonesia" : "English";
 
-  return `User search: ${intent.query}\nSearch market: ${market}\nCountry filter: ${intent.country ?? "Worldwide"}\nPathway: ${intent.pathway ?? "Any"}\nWork mode: ${intent.workMode ?? "Any"}\nOutput language: ${language}\n\nReturn every current, distinct opportunity supported by these sources, up to ${SOURCE_BATCH}. A valid opportunity has a specific role or program and a usable application route. Prefer employer, government, school, or program pages, but include a trustworthy marketplace listing when it represents a real current opening. Include city, country, and 2-letter ISO countryCode when supported. sourceIndex must identify the exact supplied source. Application steps must be the shortest truthful route. Exclude stale, unclear, duplicate, course-advertising, article, and search-result-list pages.\n\n${evidence}`;
+  return `User search: ${intent.query}\nSearch market: ${market}\nPlace filter: ${intent.place ? placeLabel(intent.place) : "Worldwide"}\nPathway: ${intent.pathway ?? "Any"}\nWork mode: ${intent.workMode ?? "Any"}\nOutput language: ${language}\n\nReturn every current, distinct opportunity supported by these sources, up to ${SOURCE_BATCH}. A valid opportunity has a specific role or program and a usable application route. It must satisfy the selected city, region, and country when a Place filter is present. Prefer employer, government, school, or program pages, but include a trustworthy marketplace listing when it represents a real current opening. Include city, administrative region, country, and 2-letter ISO countryCode when supported. sourceIndex must identify the exact supplied source. Application steps must be the shortest truthful route. Exclude stale, unclear, duplicate, course-advertising, article, and search-result-list pages.\n\n${evidence}`;
 }
 
 /** Splits source evidence into bounded Agent context batches. */
@@ -84,11 +105,14 @@ function batches(sources: readonly DiscoverySource[]) {
 /** Searches one market and decodes only readable source evidence. */
 function searchMarket(ctx: ActionCtx, lane: DiscoveryLane) {
   return Effect.tryPromise({
-    catch: () =>
-      new SearchExecutionError({
-        message: "The web search provider is unavailable.",
+    catch: (error) => {
+      const description = errorDescription(error);
+      return new SearchExecutionError({
+        limitation: sourceLimitation(description),
+        message: `Web search provider failure: ${description}`.slice(0, 500),
         stage: "search",
-      }),
+      });
+    },
     try: () =>
       firecrawl.search(ctx, lane.sourceQuery, {
         excludeDomains: ["linkedin.com", "indeed.com", "glassdoor.com"],
@@ -98,13 +122,12 @@ function searchMarket(ctx: ActionCtx, lane: DiscoveryLane) {
           formats: ["markdown"],
           maxAge: 3_600_000,
           onlyMainContent: true,
+          timeout: SCRAPE_TIMEOUT_MS,
         },
         sources: ["web"],
+        timeout: SEARCH_TIMEOUT_MS,
       }),
-  }).pipe(
-    Effect.retry(SEARCH_RETRY_POLICY),
-    Effect.flatMap(decodeDiscoverySources)
-  );
+  }).pipe(Effect.flatMap(decodeDiscoverySources));
 }
 
 /** Analyzes one evidence batch with an isolated Convex Agent thread. */
@@ -159,9 +182,15 @@ function analyzeBatch(
       sources,
       retrievedAt
     );
+    const { place } = intent;
+    const matchingOpportunities = place
+      ? opportunities.filter((opportunity) =>
+          matchesPlaceScope(place, opportunity)
+        )
+      : opportunities;
     return {
       inputTokens: generated.usage.inputTokens ?? 0,
-      opportunities,
+      opportunities: matchingOpportunities,
       outputTokens: generated.usage.outputTokens ?? 0,
       threadId: thread.threadId,
     };
@@ -184,7 +213,7 @@ function persistOpportunities(
           }),
         try: () => writeOpportunity(opportunity),
       }),
-    { concurrency: 1 }
+    { concurrency: 2 }
   ).pipe(Effect.map((persisted) => persisted.filter(Boolean).length));
 }
 
@@ -201,6 +230,7 @@ export const discoverLane = Effect.fn("opportunities.discoverLane")(function* (
   if (sources.length === 0) {
     return yield* Effect.fail(
       new SearchExecutionError({
+        limitation: "source_exhausted",
         message: `No readable opportunity pages were found in ${lane.market}.`,
         stage: "search",
       })
@@ -218,7 +248,7 @@ export const discoverLane = Effect.fn("opportunities.discoverLane")(function* (
         ),
         Effect.result
       ),
-    { concurrency: 1 }
+    { concurrency: 2 }
   );
   const completed = analyzedAndPersisted.flatMap((result) =>
     result._tag === "Success" ? [result.success] : []

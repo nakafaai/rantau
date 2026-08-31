@@ -14,6 +14,25 @@ export function workspacePath(locale: Locale, route: WorkspaceRoute) {
   return segment ? `/${locale}/${segment}/` : `/${locale}/`;
 }
 
+/** Reads a supported locale from the leading pathname segment. */
+export function localeFromPath(pathname: string) {
+  const candidate = pathname.split("/").find(Boolean) ?? "";
+  return isLocale(candidate) ? candidate : undefined;
+}
+
+/** Returns whether a pathname is one of Rantau's static workspace routes. */
+export function isWorkspacePath(pathname: string) {
+  if (pathname === "/") {
+    return true;
+  }
+  const locale = localeFromPath(pathname);
+  return locale
+    ? (["search", "profile", "applications"] as const).some(
+        (route) => workspacePath(locale, route) === pathname
+      )
+    : false;
+}
+
 /** Reads the workspace route represented by a clean public pathname. */
 export function workspaceRoute(pathname: string): WorkspaceRoute {
   const segmentsInPath = pathname.split("/").filter(Boolean);

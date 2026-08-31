@@ -1,4 +1,5 @@
 import type { Opportunity } from "@repo/domain/opportunity";
+import { type PlaceScope, placeTerms } from "@repo/domain/place";
 
 type RankProfile = Readonly<{
   desiredLocations: readonly string[];
@@ -9,8 +10,8 @@ type RankProfile = Readonly<{
 }>;
 
 type RankIntent = Readonly<{
-  country?: string;
   pathway?: Opportunity["pathway"];
+  place?: PlaceScope;
   query: string;
   workMode?: Opportunity["workMode"];
 }>;
@@ -44,6 +45,7 @@ export function recommendationScore(
     opportunity.summary,
     opportunity.location,
     opportunity.city,
+    opportunity.region,
     opportunity.country,
     opportunity.employmentType,
   ]
@@ -55,11 +57,11 @@ export function recommendationScore(
   if (includesTerm(searchable, terms(intent.query))) {
     score += 30;
   }
-  if (
-    intent.country &&
-    searchable.includes(intent.country.toLocaleLowerCase())
-  ) {
-    score += 15;
+  if (intent.place) {
+    const matches = placeTerms(intent.place).filter((term) =>
+      searchable.includes(term.toLocaleLowerCase())
+    ).length;
+    score += Math.round((matches / placeTerms(intent.place).length) * 15);
   }
   if (intent.pathway === opportunity.pathway) {
     score += 10;

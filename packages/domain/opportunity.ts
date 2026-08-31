@@ -69,6 +69,7 @@ export const Opportunity = Schema.Struct({
   location: Schema.String,
   pathway: OpportunityPathway,
   publishedAt: Schema.NullOr(Schema.String),
+  region: Schema.optional(Schema.String),
   requirements: Schema.Array(OpportunityRequirement),
   salary: Schema.NullOr(Schema.String),
   source: SourceEvidence,

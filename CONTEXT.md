@@ -16,6 +16,14 @@ The ordered preparation needed before Direct Apply, including documents, languag
 
 What a person describes in natural language about role, place, work mode, pathway, experience, and constraints.
 
+## Place Scope
+
+A country with an optional administrative region and city that narrows a Search Intent. Each narrower place belongs to the broader place selected before it.
+
+## Search Session
+
+A person-owned, durable search that preserves its Search Intent, progress, quality outcome, and streamed Opportunities. A previous Search Session can be reopened without starting the search again.
+
 ## Candidate Profile
 
 The person-owned facts used for personalization, including skills, languages, experience, education, preferred places, and pathway preferences.

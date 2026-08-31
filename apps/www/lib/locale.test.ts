@@ -1,6 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   alternatePath,
+  isWorkspacePath,
+  localeFromPath,
   localizedPath,
   workspacePath,
   workspaceRoute,
@@ -17,6 +19,22 @@ describe("static locale paths", () => {
     expect(workspaceRoute("/id/profile/")).toBe("profile");
     expect(workspaceRoute("/en/applications/")).toBe("applications");
     expect(workspaceRoute("/")).toBe("search");
+  });
+
+  it("reads only supported leading locale segments", () => {
+    expect(localeFromPath("/id/profile/")).toBe("id");
+    expect(localeFromPath("/en/applications/")).toBe("en");
+    expect(localeFromPath("/profile/")).toBeUndefined();
+    expect(localeFromPath("/")).toBeUndefined();
+  });
+
+  it("recognizes only clean static workspace paths", () => {
+    expect(isWorkspacePath("/")).toBe(true);
+    expect(isWorkspacePath("/id/")).toBe(true);
+    expect(isWorkspacePath("/en/profile/")).toBe(true);
+    expect(isWorkspacePath("/id/applications/")).toBe(true);
+    expect(isWorkspacePath("/id/unknown/")).toBe(false);
+    expect(isWorkspacePath("/assets/icon.svg")).toBe(false);
   });
 
   it("preserves the route when switching language", () => {

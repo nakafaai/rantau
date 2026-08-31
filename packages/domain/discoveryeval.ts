@@ -2,50 +2,83 @@ import {
   type Opportunity,
   opportunityFingerprint,
 } from "@repo/domain/opportunity";
+import { matchesPlaceScope, PlaceScope } from "@repo/domain/place";
 import { Effect, HashSet, Schema } from "effect";
 
 export const DiscoveryEvaluationCase = Schema.Struct({
-  country: Schema.String,
-  minimumCountryMatchRate: Schema.Number,
+  minimumDirectSourceRate: Schema.Number,
   minimumDistinctRate: Schema.Number,
+  minimumGeographicMatchRate: Schema.Number,
   minimumResults: Schema.Int,
   name: Schema.String,
+  place: PlaceScope,
   query: Schema.String,
 });
 export type DiscoveryEvaluationCase = Schema.Schema.Type<
   typeof DiscoveryEvaluationCase
 >;
 
+const COUNTRY_CASES = [
+  ["Brunei Darussalam", "BN", "registered nurse"],
+  ["Cambodia", "KH", "accountant"],
+  ["Indonesia", "ID", "doctor"],
+  ["Laos", "LA", "hotel receptionist"],
+  ["Malaysia", "MY", "software engineer"],
+  ["Myanmar", "MM", "civil engineer"],
+  ["Philippines", "PH", "customer support"],
+  ["Singapore", "SG", "data analyst"],
+  ["Thailand", "TH", "chef"],
+  ["Timor-Leste", "TL", "project officer"],
+  ["Vietnam", "VN", "mechanical engineer"],
+] as const;
+
 export const DISCOVERY_EVALUATION_CASES = [
-  {
-    country: "Indonesia",
-    minimumCountryMatchRate: 0.8,
+  ...COUNTRY_CASES.map(([country, countryCode, query]) => ({
+    minimumDirectSourceRate: 0.5,
     minimumDistinctRate: 0.9,
+    minimumGeographicMatchRate: 0.8,
     minimumResults: 50,
-    name: "Indonesian hospitality",
-    query: "barista",
-  },
+    name: `${country} broad recall`,
+    place: { country, countryCode, level: "country" as const },
+    query,
+  })),
   {
-    country: "Germany",
-    minimumCountryMatchRate: 0.8,
+    minimumDirectSourceRate: 0.5,
     minimumDistinctRate: 0.9,
+    minimumGeographicMatchRate: 0.8,
     minimumResults: 50,
-    name: "German healthcare",
+    name: "Bavaria healthcare recall",
+    place: {
+      country: "Germany",
+      countryCode: "DE",
+      level: "region",
+      region: "Bavaria",
+      regionCode: "BY",
+    },
     query: "nurse",
   },
   {
-    country: "Singapore",
-    minimumCountryMatchRate: 0.8,
+    minimumDirectSourceRate: 0.5,
     minimumDistinctRate: 0.9,
+    minimumGeographicMatchRate: 0.8,
     minimumResults: 50,
-    name: "Singapore technology",
-    query: "software engineer",
+    name: "Bandung healthcare recall",
+    place: {
+      city: "Bandung",
+      country: "Indonesia",
+      countryCode: "ID",
+      level: "city",
+      region: "West Java",
+      regionCode: "JB",
+    },
+    query: "doctor",
   },
 ] as const satisfies readonly DiscoveryEvaluationCase[];
 
 export const DiscoveryEvaluationReport = Schema.Struct({
-  countryMatchRate: Schema.Number,
+  directSourceRate: Schema.Number,
   distinctRate: Schema.Number,
+  geographicMatchRate: Schema.Number,
   passed: Schema.Boolean,
   sourceBoundRate: Schema.Number,
   total: Schema.Int,
@@ -65,26 +98,29 @@ export const evaluateDiscoveryResults = Effect.fn("discovery.evaluateResults")(
     const uniqueOpportunities = HashSet.fromIterable(
       opportunities.map(opportunityFingerprint)
     );
-    const country = evaluation.country.toLocaleLowerCase();
-    const countryMatches = opportunities.filter((opportunity) =>
-      [opportunity.country, opportunity.location]
-        .filter((value): value is string => Boolean(value))
-        .some((value) => value.toLocaleLowerCase().includes(country))
+    const geographicMatches = opportunities.filter((opportunity) =>
+      matchesPlaceScope(evaluation.place, opportunity)
     ).length;
     const sourceBound = opportunities.filter(
       (opportunity) => opportunity.directApplyUrl === opportunity.source.url
     ).length;
-    const countryMatchRate = countryMatches / denominator;
+    const directSources = opportunities.filter(
+      (opportunity) => opportunity.source.kind !== "aggregator"
+    ).length;
+    const directSourceRate = directSources / denominator;
     const distinctRate = HashSet.size(uniqueOpportunities) / denominator;
+    const geographicMatchRate = geographicMatches / denominator;
     const sourceBoundRate = sourceBound / denominator;
 
     return DiscoveryEvaluationReport.make({
-      countryMatchRate,
+      directSourceRate,
       distinctRate,
+      geographicMatchRate,
       passed:
         total >= evaluation.minimumResults &&
-        countryMatchRate >= evaluation.minimumCountryMatchRate &&
+        geographicMatchRate >= evaluation.minimumGeographicMatchRate &&
         distinctRate >= evaluation.minimumDistinctRate &&
+        directSourceRate >= evaluation.minimumDirectSourceRate &&
         sourceBoundRate === 1,
       sourceBoundRate,
       total,

@@ -6,16 +6,24 @@ describe("makeSearchIntent", () => {
   it.effect("normalizes useful queries", () =>
     Effect.gen(function* () {
       const intent = yield* makeSearchIntent({
-        country: "Japan",
         locale: "id",
         pathway: "job",
+        place: {
+          country: "Japan",
+          countryCode: "JP",
+          level: "country",
+        },
         query: "  kerja   perawat di Jepang  ",
         workMode: "onsite",
       });
       expect(intent).toEqual({
-        country: "Japan",
         locale: "id",
         pathway: "job",
+        place: {
+          country: "Japan",
+          countryCode: "JP",
+          level: "country",
+        },
         query: "kerja perawat di Jepang",
         workMode: "onsite",
       });
@@ -25,15 +33,23 @@ describe("makeSearchIntent", () => {
   it.effect("accepts structured filters without a free-form query", () =>
     Effect.gen(function* () {
       const intent = yield* makeSearchIntent({
-        country: "Germany",
         locale: "en",
         pathway: "ausbildung",
+        place: {
+          country: "Germany",
+          countryCode: "DE",
+          level: "country",
+        },
         query: "",
       });
       expect(intent).toEqual({
-        country: "Germany",
         locale: "en",
         pathway: "ausbildung",
+        place: {
+          country: "Germany",
+          countryCode: "DE",
+          level: "country",
+        },
         query: "work opportunities",
         workMode: undefined,
       });

@@ -34,8 +34,12 @@ function opportunity(overrides: Partial<Opportunity> = {}): Opportunity {
 describe("recommendationScore", () => {
   it("ranks explicit and saved preferences above unrelated work", () => {
     const intent = {
-      country: "Germany",
       pathway: "job" as const,
+      place: {
+        country: "Germany",
+        countryCode: "DE",
+        level: "country" as const,
+      },
       query: "nurse",
       workMode: "onsite" as const,
     };

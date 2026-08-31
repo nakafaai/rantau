@@ -6,14 +6,16 @@ import {
 import type { Opportunity } from "@repo/domain/opportunity";
 import { Effect, Array as EffectArray } from "effect";
 
-const [evaluation] = DISCOVERY_EVALUATION_CASES;
+const evaluation = DISCOVERY_EVALUATION_CASES.find(
+  ({ place }) => place.countryCode === "ID" && place.level === "country"
+);
 
 /** Creates one source-backed evaluation fixture. */
 function opportunity(index: number): Opportunity {
   const url = `https://employer.example/jobs/${index}`;
   return {
     applicationSteps: ["Apply"],
-    company: "Example Coffee",
+    company: "Example Health",
     country: "Indonesia",
     countryCode: "ID",
     deadline: null,
@@ -26,28 +28,33 @@ function opportunity(index: number): Opportunity {
     salary: null,
     source: {
       kind: "employer",
-      name: "Example Coffee",
+      name: "Example Health",
       retrievedAt: "2026-08-30T00:00:00.000Z",
       url,
     },
-    summary: "Current barista role.",
+    summary: "Current doctor role.",
     support: [],
-    title: `Barista ${index}`,
+    title: `Doctor ${index}`,
     workMode: "onsite",
   };
 }
 
 describe("discovery evaluation", () => {
-  it.effect("passes fifty distinct country-matched source-backed results", () =>
+  it.effect("passes fifty distinct place-matched direct results", () =>
     Effect.gen(function* () {
+      expect(evaluation).toBeDefined();
+      if (!evaluation) {
+        return;
+      }
       const report = yield* evaluateDiscoveryResults(
         evaluation,
         EffectArray.makeBy(50, opportunity)
       );
 
       expect(report).toEqual({
-        countryMatchRate: 1,
+        directSourceRate: 1,
         distinctRate: 1,
+        geographicMatchRate: 1,
         passed: true,
         sourceBoundRate: 1,
         total: 50,
@@ -57,16 +64,22 @@ describe("discovery evaluation", () => {
 
   it.effect("fails sparse, duplicated, mismatched, or unbound results", () =>
     Effect.gen(function* () {
+      expect(evaluation).toBeDefined();
+      if (!evaluation) {
+        return;
+      }
       const first = opportunity(1);
       const mirrorUrl = "https://marketplace.example/jobs/1";
       const report = yield* evaluateDiscoveryResults(evaluation, [
         first,
         {
           ...first,
-          company: "Different Coffee",
+          company: "Different Health",
           country: "Germany",
+          countryCode: "DE",
           directApplyUrl: "https://different.example/apply",
           location: "Berlin, Germany",
+          source: { ...first.source, kind: "aggregator" },
         },
         {
           ...first,
@@ -76,8 +89,9 @@ describe("discovery evaluation", () => {
       ]);
 
       expect(report).toEqual({
-        countryMatchRate: 2 / 3,
+        directSourceRate: 2 / 3,
         distinctRate: 2 / 3,
+        geographicMatchRate: 2 / 3,
         passed: false,
         sourceBoundRate: 2 / 3,
         total: 3,
@@ -87,11 +101,16 @@ describe("discovery evaluation", () => {
 
   it.effect("reports stable zero rates for an empty capture", () =>
     Effect.gen(function* () {
+      expect(evaluation).toBeDefined();
+      if (!evaluation) {
+        return;
+      }
       const report = yield* evaluateDiscoveryResults(evaluation, []);
 
       expect(report).toEqual({
-        countryMatchRate: 0,
+        directSourceRate: 0,
         distinctRate: 0,
+        geographicMatchRate: 0,
         passed: false,
         sourceBoundRate: 0,
         total: 0,

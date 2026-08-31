@@ -6,24 +6,24 @@ import {
   mutation,
   query,
 } from "@repo/backend/convex/_generated/server";
-import {
-  type DiscoveryRun,
-  discoverLane,
-} from "@repo/backend/convex/lib/discover";
+import { discoverLane } from "@repo/backend/convex/lib/discover";
 import { requireUserId } from "@repo/backend/convex/lib/guard";
+import { enqueueDiscoveryStage } from "@repo/backend/convex/lib/searchqueue";
+import { searchPlace } from "@repo/backend/convex/lib/searchsession";
 import {
+  DISCOVERY_LANE_TIMEOUT_MS,
+  type DiscoveryLaneResult,
   discoveryLaneResultValidator,
   SEARCH_TIMEOUT_MS,
-  searchWork,
 } from "@repo/backend/convex/lib/searchwork";
 import {
   pathwayValidator,
+  placeScopeValidator,
   readinessStepValidator,
   workModeValidator,
 } from "@repo/backend/convex/model";
 import schema from "@repo/backend/convex/schema";
 import {
-  discoveryLanes,
   SEARCH_RESULT_LIMIT,
   SEARCH_RESULT_TARGET,
 } from "@repo/domain/discoveryplan";
@@ -32,6 +32,7 @@ import { recommendationScore } from "@repo/domain/rank";
 import { buildReadinessPlan } from "@repo/domain/readiness";
 import {
   makeSearchIntent,
+  SearchExecutionError,
   SearchIntent,
   SearchQuery,
 } from "@repo/domain/search";
@@ -91,9 +92,9 @@ function storedOpportunity(opportunity: Opportunity) {
 /** Creates one search and atomically hands every regional lane to Workpool. */
 export const start = mutation({
   args: {
-    country: v.optional(v.string()),
     locale: v.union(v.literal("en"), v.literal("id")),
     pathway: v.optional(pathwayValidator),
+    place: v.optional(placeScopeValidator),
     query: v.string(),
     workMode: v.optional(workModeValidator),
   },
@@ -117,12 +118,23 @@ export const start = mutation({
 
     const createdAt = Date.now();
     const searchId = await ctx.db.insert("searches", {
-      country: intent.country,
+      city: intent.place?.level === "city" ? intent.place.city : undefined,
+      country: intent.place?.country,
+      countryCode: intent.place?.countryCode,
       createdAt,
       locale: intent.locale,
       pathway: intent.pathway,
       query: intent.query,
+      region:
+        intent.place?.level === "region" || intent.place?.level === "city"
+          ? intent.place.region
+          : undefined,
+      regionCode:
+        intent.place?.level === "region" || intent.place?.level === "city"
+          ? intent.place.regionCode
+          : undefined,
       resultCount: 0,
+      stage: "initial",
       status: "running",
       targetCount: SEARCH_RESULT_TARGET,
       userId,
@@ -130,50 +142,7 @@ export const start = mutation({
     });
 
     await Effect.runPromise(
-      Effect.forEach(
-        discoveryLanes(intent),
-        (lane) =>
-          Effect.gen(function* () {
-            const laneId = yield* Effect.promise(() =>
-              ctx.db.insert("searchLanes", {
-                market: lane.market,
-                searchId,
-                sourceQuery: lane.sourceQuery,
-                status: "queued",
-                updatedAt: createdAt,
-                userId,
-              })
-            );
-            const workId = yield* Effect.promise(() =>
-              searchWork.enqueueAction(
-                ctx,
-                internal.opportunities.executeLane,
-                {
-                  country: intent.country,
-                  laneId,
-                  limit: lane.limit,
-                  locale: intent.locale,
-                  market: lane.market,
-                  pathway: intent.pathway,
-                  query: intent.query,
-                  searchId,
-                  sourceQuery: lane.sourceQuery,
-                  userId,
-                  workMode: intent.workMode,
-                },
-                {
-                  context: { laneId, searchId, userId },
-                  onComplete: internal.searches.finishLane,
-                  retry: false,
-                }
-              )
-            );
-            yield* Effect.promise(() =>
-              ctx.db.patch("searchLanes", laneId, { workId })
-            );
-          }),
-        { concurrency: 1, discard: true }
-      )
+      enqueueDiscoveryStage(ctx, searchId, userId, intent, "initial", createdAt)
     );
     await ctx.scheduler.runAfter(SEARCH_TIMEOUT_MS, internal.searches.expire, {
       searchId,
@@ -187,40 +156,33 @@ export const start = mutation({
 /** Executes one isolated regional lane whose completion Workpool guarantees. */
 export const executeLane = internalAction({
   args: {
-    country: v.optional(v.string()),
     laneId: v.id("searchLanes"),
-    limit: v.number(),
-    locale: v.union(v.literal("en"), v.literal("id")),
-    market: v.string(),
-    pathway: v.optional(pathwayValidator),
-    query: v.string(),
     searchId: v.id("searches"),
-    sourceQuery: v.string(),
     userId: v.id("users"),
-    workMode: v.optional(workModeValidator),
   },
   returns: discoveryLaneResultValidator,
-  handler: async (ctx, args): Promise<DiscoveryRun> => {
-    await ctx.runMutation(internal.searches.markLaneRunning, {
+  handler: async (ctx, args): Promise<DiscoveryLaneResult> => {
+    const input = await ctx.runQuery(internal.searchinput.laneInput, args);
+    await ctx.runMutation(internal.searchinput.markLaneRunning, {
       laneId: args.laneId,
       searchId: args.searchId,
       userId: args.userId,
     });
     const intent = SearchIntent.make({
-      country: args.country,
-      locale: args.locale,
-      pathway: args.pathway,
-      query: SearchQuery.make(args.query),
-      workMode: args.workMode,
+      locale: input.locale,
+      pathway: input.pathway,
+      place: input.place,
+      query: SearchQuery.make(input.query),
+      workMode: input.workMode,
     });
     return Effect.runPromise(
       discoverLane(
         ctx,
         intent,
         {
-          limit: args.limit,
-          market: args.market,
-          sourceQuery: args.sourceQuery,
+          limit: input.limit,
+          market: input.market,
+          sourceQuery: input.sourceQuery,
         },
         args.userId,
         (opportunity): Promise<boolean> =>
@@ -229,6 +191,32 @@ export const executeLane = internalAction({
             searchId: args.searchId,
             userId: args.userId,
           })
+      ).pipe(
+        Effect.timeoutOrElse({
+          duration: DISCOVERY_LANE_TIMEOUT_MS,
+          orElse: () =>
+            Effect.fail(
+              new SearchExecutionError({
+                limitation: "deadline",
+                message: `Opportunity discovery in ${input.market} exceeded its lane deadline.`,
+                stage: "analysis",
+              })
+            ),
+        }),
+        Effect.match({
+          onFailure: (error) => ({
+            error: error.message,
+            kind: "failed" as const,
+            limitation:
+              error._tag === "SearchExecutionError"
+                ? error.limitation
+                : "source_exhausted",
+          }),
+          onSuccess: (result) => ({
+            ...result,
+            kind: "success" as const,
+          }),
+        })
       )
     );
   },
@@ -279,8 +267,8 @@ export const list = query({
         recommendation: recommendationScore(
           opportunity.opportunity,
           {
-            country: searchRecord.country,
             pathway: searchRecord.pathway,
+            place: searchPlace(searchRecord),
             query: searchRecord.query,
             workMode: searchRecord.workMode,
           },

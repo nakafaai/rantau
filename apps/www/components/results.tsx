@@ -45,6 +45,7 @@ type ResultsProps = Readonly<{
   loading: boolean;
   records: readonly OpportunityRecord[];
   running: boolean;
+  sourceCapacityReached: boolean;
 }>;
 
 /** Renders stable table rows while the first realtime records arrive. */
@@ -67,7 +68,13 @@ function LoadingRows({
 }
 
 /** Renders a full-height results table with realtime rows and stable pagination. */
-export function Results({ failed, loading, records, running }: ResultsProps) {
+export function Results({
+  failed,
+  loading,
+  records,
+  running,
+  sourceCapacityReached,
+}: ResultsProps) {
   "use no memo";
 
   const t = useTranslations("search");
@@ -75,6 +82,7 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
   const save = useSaveApplication();
   const saveMany = useSaveApplications();
   const [activeId, setActiveId] = useState<Id<"opportunities"> | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 50,
@@ -88,7 +96,10 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
     data.find((record) => record.opportunity._id === activeId) ?? null;
   const showDetails = useCallback(
     /** Opens one row without duplicating its realtime record in local state. */
-    (record: OpportunityRecord) => setActiveId(record.opportunity._id),
+    (record: OpportunityRecord) => {
+      setActiveId(record.opportunity._id);
+      setDetailsOpen(true);
+    },
     []
   );
   const saveOne = useCallback(
@@ -137,6 +148,13 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
     : 0;
   const loadingRows =
     running || loading ? Math.max(LOADING_ROW_COUNT - rows.length, 0) : 0;
+  let emptyMessage = t("noResults");
+  if (failed) {
+    emptyMessage = t("failed");
+  }
+  if (sourceCapacityReached) {
+    emptyMessage = t("failedCapacity");
+  }
 
   /** Saves every unsaved selected page row through one Convex mutation. */
   async function saveSelected() {
@@ -213,7 +231,7 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
                   className="h-24 text-center"
                   colSpan={columns.length}
                 >
-                  {failed ? t("failed") : t("noResults")}
+                  {emptyMessage}
                 </TableCell>
               </TableRow>
             )}
@@ -246,12 +264,13 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
       />
 
       <OpportunitySheet
-        onOpenChange={(open) => {
+        onOpenChange={setDetailsOpen}
+        onOpenChangeComplete={(open) => {
           if (!open) {
             setActiveId(null);
           }
         }}
-        open={active !== null}
+        open={detailsOpen}
         record={active}
       />
     </div>

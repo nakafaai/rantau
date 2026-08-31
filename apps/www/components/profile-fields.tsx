@@ -36,7 +36,8 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { useTranslations } from "next-intl";
 import { CountryFlag } from "@/components/country-flag";
-import { countries, pathways, workModes } from "@/lib/options";
+import { CountryPicker } from "@/components/country-picker";
+import { pathways, workModes } from "@/lib/options";
 import {
   documentOptions,
   languageOptions,
@@ -80,7 +81,6 @@ export const PreferencesCard = withProfileForm({
   props: { disabled: false },
   render: ({ disabled, form }) => {
     const t = useTranslations("profile");
-    const common = useTranslations("common");
 
     return (
       <Card>
@@ -109,23 +109,14 @@ export const PreferencesCard = withProfileForm({
               {(field) => (
                 <Field>
                   <FieldLabel htmlFor={field.name}>{t("locations")}</FieldLabel>
-                  <Select
-                    name={field.name}
-                    onValueChange={(value) => field.handleChange(value ?? "")}
+                  <CountryPicker
+                    disabled={disabled}
+                    id={field.name}
+                    onChange={(country) =>
+                      field.handleChange(country?.name ?? "")
+                    }
                     value={field.state.value}
-                  >
-                    <SelectTrigger className="w-full" id={field.name}>
-                      <SelectValue placeholder={t("locationsPlaceholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countries.map((country) => (
-                        <SelectItem key={country.code} value={country.value}>
-                          <CountryFlag countryCode={country.code} />
-                          {common(`countries.${country.code}`)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </Field>
               )}
             </form.Field>

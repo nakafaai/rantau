@@ -1,6 +1,4 @@
-import { Search } from "@/components/search";
-
-/** Renders the route-owned opportunity search workspace. */
+/** Marks the statically exported search route owned by the client workspace. */
 export default function Page() {
-  return <Search />;
+  return null;
 }

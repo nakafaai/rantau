@@ -4,7 +4,13 @@ export default defineConfig({
   test: {
     coverage: {
       enabled: true,
-      include: ["convex/cv.ts", "convex/profiles.ts", "convex/searches.ts"],
+      include: [
+        "convex/cv.ts",
+        "convex/profiles.ts",
+        "convex/searches.ts",
+        "convex/searchhistory.ts",
+        "convex/searchlane.ts",
+      ],
       provider: "istanbul",
       reporter: ["text", "json-summary"],
       thresholds: {
