@@ -2,6 +2,7 @@
 
 import { Form } from "@heroui/react";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { Cv } from "@/components/cv";
 import {
   BackgroundCard,
   DocumentsCard,
@@ -39,12 +40,15 @@ export function ProfileForm({ current, disabled, onSubmit }: ProfileFormProps) {
         <Form
           action={() => form.handleSubmit()}
           aria-busy={disabled || isSubmitting}
-          className="space-y-6"
+          className="grid items-start gap-4 lg:grid-cols-2"
           inert={disabled || isSubmitting}
         >
           <PreferencesCard disabled={disabled} form={form} />
           <BackgroundCard disabled={disabled} form={form} />
-          <DocumentsCard disabled={disabled} form={form} />
+          <div className="grid items-start gap-4">
+            <DocumentsCard disabled={disabled} form={form} />
+            <Cv current={current} disabled={disabled} />
+          </div>
         </Form>
       )}
     </form.Subscribe>

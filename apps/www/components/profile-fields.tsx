@@ -44,13 +44,12 @@ export const PreferencesCard = withProfileForm({
     const t = useTranslations("profile");
 
     return (
-      <Card>
+      <Card className="lg:col-span-2">
         <Card.Header>
           <Card.Title>{t("preferences")}</Card.Title>
-          <Card.Description>{t("preferencesHelp")}</Card.Description>
         </Card.Header>
-        <Card.Content className="gap-6">
-          <FieldGroup>
+        <Card.Content className="gap-4">
+          <div className="grid gap-4 lg:grid-cols-2">
             <form.Field name="role">
               {(field) => (
                 <TextField name={field.name}>
@@ -81,59 +80,59 @@ export const PreferencesCard = withProfileForm({
                 </div>
               )}
             </form.Field>
-          </FieldGroup>
+          </div>
 
-          <form.Field mode="array" name="pathways">
-            {(field) => (
-              <CheckboxGroup
-                className="gap-3"
-                name={field.name}
-                onChange={(values) =>
-                  field.handleChange(selectKnown(values, pathways))
-                }
-                value={field.state.value}
-                variant="secondary"
-              >
-                <Label>{t("pathways")}</Label>
-                {pathways.map((pathway) => (
-                  <Checkbox key={pathway} value={pathway}>
-                    <Checkbox.Content>
-                      <Checkbox.Control>
-                        <Checkbox.Indicator />
-                      </Checkbox.Control>
-                      {t(pathway)}
-                    </Checkbox.Content>
-                  </Checkbox>
-                ))}
-              </CheckboxGroup>
-            )}
-          </form.Field>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <form.Field mode="array" name="pathways">
+              {(field) => (
+                <CheckboxGroup
+                  name={field.name}
+                  onChange={(values) =>
+                    field.handleChange(selectKnown(values, pathways))
+                  }
+                  value={field.state.value}
+                  variant="secondary"
+                >
+                  <Label>{t("pathways")}</Label>
+                  {pathways.map((pathway) => (
+                    <Checkbox key={pathway} value={pathway}>
+                      <Checkbox.Content>
+                        <Checkbox.Control>
+                          <Checkbox.Indicator />
+                        </Checkbox.Control>
+                        {t(pathway)}
+                      </Checkbox.Content>
+                    </Checkbox>
+                  ))}
+                </CheckboxGroup>
+              )}
+            </form.Field>
 
-          <form.Field mode="array" name="workModes">
-            {(field) => (
-              <CheckboxGroup
-                className="gap-3"
-                name={field.name}
-                onChange={(values) =>
-                  field.handleChange(selectKnown(values, workModes))
-                }
-                value={field.state.value}
-                variant="secondary"
-              >
-                <Label>{t("workModes")}</Label>
-                {workModes.map((mode) => (
-                  <Checkbox key={mode} value={mode}>
-                    <Checkbox.Content>
-                      <Checkbox.Control>
-                        <Checkbox.Indicator />
-                      </Checkbox.Control>
-                      {t(mode)}
-                    </Checkbox.Content>
-                  </Checkbox>
-                ))}
-              </CheckboxGroup>
-            )}
-          </form.Field>
+            <form.Field mode="array" name="workModes">
+              {(field) => (
+                <CheckboxGroup
+                  name={field.name}
+                  onChange={(values) =>
+                    field.handleChange(selectKnown(values, workModes))
+                  }
+                  value={field.state.value}
+                  variant="secondary"
+                >
+                  <Label>{t("workModes")}</Label>
+                  {workModes.map((mode) => (
+                    <Checkbox key={mode} value={mode}>
+                      <Checkbox.Content>
+                        <Checkbox.Control>
+                          <Checkbox.Indicator />
+                        </Checkbox.Control>
+                        {t(mode)}
+                      </Checkbox.Content>
+                    </Checkbox>
+                  ))}
+                </CheckboxGroup>
+              )}
+            </form.Field>
+          </div>
         </Card.Content>
         <SettingsFooter
           disabled={disabled}
@@ -159,7 +158,7 @@ export const BackgroundCard = withProfileForm({
           <Card.Title>{t("background")}</Card.Title>
           <Card.Description>{t("backgroundHelp")}</Card.Description>
         </Card.Header>
-        <Card.Content className="gap-6">
+        <Card.Content className="gap-4">
           <Fieldset>
             <Fieldset.Legend>{t("experienceTitle")}</Fieldset.Legend>
             <FieldGroup>
@@ -207,7 +206,6 @@ export const BackgroundCard = withProfileForm({
           <form.Field mode="array" name="skills">
             {(field) => (
               <CheckboxGroup
-                className="gap-3"
                 name={field.name}
                 onChange={(values) => field.handleChange(values)}
                 value={field.state.value}
@@ -343,11 +341,10 @@ export const DocumentsCard = withProfileForm({
           <Card.Title>{t("documents")}</Card.Title>
           <Card.Description>{t("documentsHelp")}</Card.Description>
         </Card.Header>
-        <Card.Content className="gap-6">
+        <Card.Content className="gap-4">
           <form.Field mode="array" name="documents">
             {(field) => (
               <CheckboxGroup
-                className="gap-3"
                 name={field.name}
                 onChange={(values) => field.handleChange(values)}
                 value={field.state.value}
