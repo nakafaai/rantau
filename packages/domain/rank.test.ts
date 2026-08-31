@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Opportunity } from "@repo/domain/opportunity";
-import { recommendationScore } from "@repo/domain/rank";
+import { recommendationLevel, recommendationScore } from "@repo/domain/rank";
 
 /** Builds a complete source-backed opportunity for ranking tests. */
 function opportunity(overrides: Partial<Opportunity> = {}): Opportunity {
@@ -86,5 +86,18 @@ describe("recommendationScore", () => {
     );
 
     expect(sparse).toBe(10);
+  });
+});
+
+describe("recommendationLevel", () => {
+  it("maps boundary scores into an ordered match hierarchy", () => {
+    expect(recommendationLevel(100)).toBe("excellent");
+    expect(recommendationLevel(85)).toBe("excellent");
+    expect(recommendationLevel(84)).toBe("strong");
+    expect(recommendationLevel(70)).toBe("strong");
+    expect(recommendationLevel(69)).toBe("fair");
+    expect(recommendationLevel(55)).toBe("fair");
+    expect(recommendationLevel(54)).toBe("limited");
+    expect(recommendationLevel(0)).toBe("limited");
   });
 });

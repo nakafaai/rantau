@@ -1,5 +1,10 @@
-/** Returns responsive minimum widths and visibility for one result column. */
-export function resultColumnClass(columnId: string) {
+type ResultColumnRegion = "body" | "header";
+
+/** Returns responsive width, spacing, and pinning for one result column. */
+export function resultColumnClass(
+  columnId: string,
+  region: ResultColumnRegion = "body"
+) {
   if (columnId === "select") {
     return "w-11 px-3";
   }
@@ -28,7 +33,8 @@ export function resultColumnClass(columnId: string) {
     return "min-w-48 px-3";
   }
   if (columnId === "actions") {
-    return "w-12 px-2";
+    const layer = region === "header" ? "z-30" : "z-20";
+    return `sticky right-0 ${layer} w-12 border-l bg-background px-2 group-hover:bg-muted/50 group-data-[state=selected]:bg-muted`;
   }
   return "px-3";
 }

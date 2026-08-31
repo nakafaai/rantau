@@ -15,6 +15,8 @@ type RankIntent = Readonly<{
   workMode?: Opportunity["workMode"];
 }>;
 
+export type RecommendationLevel = "excellent" | "strong" | "fair" | "limited";
+
 const TERM_SEPARATOR = /[^\p{L}\p{N}]+/u;
 
 /** Returns normalized terms that are meaningful for recommendation matching. */
@@ -104,4 +106,18 @@ export function recommendationScore(
   }
 
   return Math.min(100, score);
+}
+
+/** Projects a numeric recommendation into a stable user-facing hierarchy. */
+export function recommendationLevel(score: number): RecommendationLevel {
+  if (score >= 85) {
+    return "excellent";
+  }
+  if (score >= 70) {
+    return "strong";
+  }
+  if (score >= 55) {
+    return "fair";
+  }
+  return "limited";
 }

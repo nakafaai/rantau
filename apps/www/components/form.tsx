@@ -198,6 +198,7 @@ export function ProfileForm({
                 <FieldLabel htmlFor="experience">{t("experience")}</FieldLabel>
                 <NumberField
                   defaultValue={current?.experienceYears ?? 0}
+                  id="experience"
                   max={80}
                   min={0}
                   name="experience"
@@ -205,7 +206,7 @@ export function ProfileForm({
                 >
                   <NumberFieldGroup>
                     <NumberFieldDecrement />
-                    <NumberFieldInput id="experience" />
+                    <NumberFieldInput />
                     <NumberFieldIncrement />
                   </NumberFieldGroup>
                 </NumberField>
