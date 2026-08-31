@@ -95,9 +95,6 @@ export function CountryPicker({
             >
               <CountryFlag countryCode={country.code} />
               <span className="min-w-0 flex-1 truncate">{country.label}</span>
-              {country.group === "asean" ? (
-                <span className="text-muted text-xs">ASEAN</span>
-              ) : null}
               <ListBox.ItemIndicator />
             </ListBox.Item>
           ))}
