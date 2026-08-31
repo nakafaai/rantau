@@ -78,6 +78,7 @@ export function Filters({ onChange, value }: FiltersProps) {
                   }
                   placeholder={t("anyPathway")}
                   value={draft.pathway || null}
+                  variant="secondary"
                 >
                   <Label>{t("pathway")}</Label>
                   <Select.Trigger>
@@ -110,6 +111,7 @@ export function Filters({ onChange, value }: FiltersProps) {
                   }
                   placeholder={t("anyWorkMode")}
                   value={draft.workMode || null}
+                  variant="secondary"
                 >
                   <Label>{t("workMode")}</Label>
                   <Select.Trigger>

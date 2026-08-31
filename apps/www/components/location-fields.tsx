@@ -151,6 +151,7 @@ export function LocationFields({ onChange, value }: LocationFieldsProps) {
           });
         }}
         selectedKey={selectedRegion?.code ?? null}
+        variant="secondary"
       >
         <Label>{t("region")}</Label>
         <ComboBox.InputGroup>
@@ -159,7 +160,6 @@ export function LocationFields({ onChange, value }: LocationFieldsProps) {
             placeholder={
               regionsLoading ? t("loadingPlaces") : t("chooseRegion")
             }
-            variant="secondary"
           />
           <ComboBox.Trigger />
         </ComboBox.InputGroup>
@@ -193,13 +193,13 @@ export function LocationFields({ onChange, value }: LocationFieldsProps) {
           onChange({ ...value, city: city?.name ?? "" });
         }}
         selectedKey={selectedCity?.id ?? null}
+        variant="secondary"
       >
         <Label>{t("city")}</Label>
         <ComboBox.InputGroup>
           <Input
             id="search-city"
             placeholder={citiesLoading ? t("loadingPlaces") : t("chooseCity")}
-            variant="secondary"
           />
           <ComboBox.Trigger />
         </ComboBox.InputGroup>

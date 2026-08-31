@@ -5,21 +5,21 @@ interface ThemeDefinition {
   readonly value: string;
 }
 
-const LIGHT_SHADER_COLOR = "rgb(222, 54, 67)";
+const SKY_SHADER_COLOR = "rgb(125, 211, 252)";
 
 /** Selectable HeroUI appearances and the shader color owned by each theme. */
 export const themes = [
   {
     value: "light",
-    shaderColor: LIGHT_SHADER_COLOR,
+    shaderColor: SKY_SHADER_COLOR,
   },
   {
     value: "dark",
-    shaderColor: "rgb(246, 116, 126)",
+    shaderColor: SKY_SHADER_COLOR,
   },
   {
     value: "system",
-    shaderColor: LIGHT_SHADER_COLOR,
+    shaderColor: SKY_SHADER_COLOR,
   },
 ] as const satisfies readonly ThemeDefinition[];
 
@@ -39,5 +39,5 @@ export const concreteThemeValues = ["light", "dark"];
 export function getThemeShaderColor(resolvedTheme: string | undefined) {
   const definition = themes.find((theme) => theme.value === resolvedTheme);
 
-  return definition?.shaderColor ?? LIGHT_SHADER_COLOR;
+  return definition?.shaderColor ?? SKY_SHADER_COLOR;
 }

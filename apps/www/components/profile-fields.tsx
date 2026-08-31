@@ -190,6 +190,7 @@ export const BackgroundCard = withProfileForm({
                     onChange={field.handleChange}
                     step={0.5}
                     value={field.state.value ?? undefined}
+                    variant="secondary"
                   >
                     <Label>{t("experience")}</Label>
                     <NumberField.Group>
@@ -257,6 +258,7 @@ export const BackgroundCard = withProfileForm({
                         }
                         placeholder={t("languagePlaceholder")}
                         value={field.state.value || null}
+                        variant="secondary"
                       >
                         <Select.Trigger>
                           <Select.Value />
@@ -290,6 +292,7 @@ export const BackgroundCard = withProfileForm({
                         }
                         placeholder={t("levelPlaceholder")}
                         value={field.state.value || null}
+                        variant="secondary"
                       >
                         <Select.Trigger>
                           <Select.Value />
@@ -398,6 +401,7 @@ export const DocumentsCard = withProfileForm({
                 }}
                 placeholder={t("unsure")}
                 value={field.state.value || null}
+                variant="secondary"
               >
                 <Select.Trigger>
                   <Select.Value />
