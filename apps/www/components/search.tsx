@@ -95,7 +95,7 @@ export function Search() {
           >
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input
-                className="flex-1"
+                className="flex-1 text-sm"
                 defaultValue={profile?.desiredRoles[0] ?? ""}
                 disabled={disabled}
                 maxLength={400}
