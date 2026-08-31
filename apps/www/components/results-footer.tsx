@@ -82,11 +82,12 @@ export function ResultsFooter({
           {t("saveSelected", { count: selectedCount })}
         </Button>
       ) : null}
-      <div className="ml-auto flex flex-wrap items-center justify-end gap-6">
-        <div className="flex items-center gap-2">
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:ml-auto lg:w-auto lg:flex-nowrap lg:justify-end lg:gap-4">
+        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start">
+          <span className="whitespace-nowrap">{t("rowsPerPage")}</span>
           <Select
             aria-label={t("rowsPerPage")}
-            className="w-24"
+            className="w-20"
             onChange={(value) => {
               if (value !== null) {
                 onPageSizeChange(Number(value));
@@ -96,7 +97,7 @@ export function ResultsFooter({
             value={String(pageSize)}
           >
             <Label className="sr-only">{t("rowsPerPage")}</Label>
-            <Select.Trigger className="h-9">
+            <Select.Trigger>
               <Select.Value />
               <Select.Indicator />
             </Select.Trigger>
@@ -115,11 +116,11 @@ export function ResultsFooter({
               </ListBox>
             </Select.Popover>
           </Select>
-          <span className="hidden whitespace-nowrap lg:inline">
-            {t("rowsPerPage")}
-          </span>
         </div>
-        <Pagination size="sm">
+        <Pagination
+          className="w-full flex-row gap-3 sm:w-auto sm:gap-4"
+          size="sm"
+        >
           <Pagination.Summary className="hidden whitespace-nowrap sm:block">
             {t("page", {
               current: pageIndex + 1,
@@ -154,7 +155,7 @@ type TableFooterContentProps = Readonly<{ children: ReactNode }>;
 /** Provides the responsive content row inside a native HeroUI table footer. */
 function TableFooterContent({ children }: TableFooterContentProps) {
   return (
-    <div className="flex w-full flex-wrap items-center gap-x-6 gap-y-3 text-muted text-sm">
+    <div className="flex w-full flex-col gap-3 text-muted text-sm lg:flex-row lg:items-center">
       {children}
     </div>
   );

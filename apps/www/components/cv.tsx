@@ -104,6 +104,7 @@ export function Cv({ current, disabled }: CvProps) {
           isPending={pending}
           onPress={upload}
           size="sm"
+          type="button"
         >
           <HugeiconsIcon
             className="size-4"

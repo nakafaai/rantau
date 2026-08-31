@@ -6,7 +6,6 @@ import { ProfileInput } from "@repo/domain/profile";
 import { useQuery } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { Cv } from "@/components/cv";
 import { ProfileForm } from "@/components/form";
 import { Header } from "@/components/header";
 import { useSaveProfile } from "@/hooks/profile";
@@ -105,14 +104,13 @@ export function Profile() {
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <Header title={t("title")} />
       <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]">
-        <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+        <div className="mx-auto w-full max-w-[90rem] px-4 py-4 sm:px-6 sm:py-6">
           <ProfileForm
             current={current ?? null}
             disabled={current === undefined || account === undefined}
             key={`${current?._id ?? "new"}-${current?.updatedAt ?? 0}`}
             onSubmit={submit}
           />
-          <Cv current={current ?? null} disabled={current === undefined} />
         </div>
       </div>
     </section>

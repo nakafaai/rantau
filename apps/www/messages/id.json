@@ -53,7 +53,6 @@
     "missing": "Tulis pencarian atau pilih setidaknya satu filter.",
     "invalidPlace": "Pilih lokasi lengkap dari pilihan yang tersedia.",
     "country": "Negara",
-    "countryHelp": "Negara ASEAN tampil lebih dulu, kemudian seluruh negara yang tersedia.",
     "region": "Provinsi, negara bagian, atau wilayah",
     "regionShort": "Wilayah",
     "city": "Kota",
@@ -131,7 +130,6 @@
   "profile": {
     "title": "Profil & CV",
     "preferences": "Preferensi pencarian",
-    "preferencesHelp": "Pilih yang penting agar pencarian berikutnya lebih terarah.",
     "preferencesSaveHelp": "Menjadi pilihan awal di Cari kerja.",
     "roles": "Pekerjaan yang dicari",
     "rolesPlaceholder": "Posisi atau jenis pekerjaan",

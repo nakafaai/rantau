@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  ComboBox,
-  Description,
-  EmptyState,
-  Input,
-  Label,
-  ListBox,
-} from "@heroui/react";
+import { ComboBox, EmptyState, Input, Label, ListBox } from "@heroui/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -143,7 +136,6 @@ export function LocationFields({ onChange, value }: LocationFieldsProps) {
           }
           value={value.country}
         />
-        <Description>{t("countryHelp")}</Description>
       </div>
 
       <ComboBox
