@@ -63,7 +63,11 @@ export function Filters({ defaults, disabled }: FiltersProps) {
         <DropdownMenuTrigger
           disabled={disabled}
           render={
-            <Button className="rounded-full" size="sm" variant="outline" />
+            <Button
+              className="rounded-full text-sm"
+              size="sm"
+              variant="outline"
+            />
           }
         >
           <HugeIcons className="size-4" icon={FilterAddIcon} />
@@ -201,7 +205,7 @@ function FilterChip({ children, icon, label, onClear, value }: ChipProps) {
       <DropdownMenuTrigger
         render={
           <Button
-            className="max-w-full gap-1.5 rounded-full border-dashed"
+            className="max-w-full gap-1.5 rounded-full border-dashed text-sm"
             size="sm"
             variant="outline"
           />
