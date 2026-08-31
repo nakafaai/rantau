@@ -1,31 +1,26 @@
 "use client";
 
+import type { Key } from "@heroui/react";
+import {
+  Button,
+  buttonVariants,
+  Description,
+  Drawer,
+  Form,
+  Label,
+  Link,
+  ListBox,
+  Select,
+  TextArea,
+  toast,
+} from "@heroui/react";
 import {
   ArrowUpRight01Icon,
   Building02Icon,
   MapsLocation01Icon,
   MoreVerticalIcon,
-  UnfoldMoreIcon,
 } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@repo/design-system/components/ui/sheet";
-import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ApplicationStatus,
   nextApplicationStatuses,
@@ -33,7 +28,6 @@ import {
 import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import { DeleteApplicationDialog } from "@/components/application-delete";
 import { ApplicationStatusBadge } from "@/components/application-status";
 import { CountryFlag } from "@/components/country-flag";
@@ -72,7 +66,7 @@ export function ApplicationSheet({
       Schema.decodeUnknownOption(ApplicationStatus)(formData.get("status"))
     );
     if (!parsedStatus) {
-      toast.error(common("error"));
+      toast.danger(common("error"));
       return;
     }
     setUpdatePending(true);
@@ -87,14 +81,14 @@ export function ApplicationSheet({
     );
     setUpdatePending(false);
     if (!updated) {
-      toast.error(common("error"));
+      toast.danger(common("error"));
       return;
     }
     setSelectedStatus(nextApplicationStatuses(parsedStatus)[0] ?? parsedStatus);
     toast.success(t("updated"));
   }
 
-  /** Removes one owned application and lets Convex reconcile the realtime list. */
+  /** Removes one owned application and reports whether Convex accepted it. */
   async function deleteApplication() {
     setDeletePending(true);
     const deleted = await remove({
@@ -105,14 +99,15 @@ export function ApplicationSheet({
     );
     setDeletePending(false);
     if (!deleted) {
-      toast.error(common("error"));
-      return;
+      toast.danger(common("error"));
+      return false;
     }
     toast.success(t("deleted"));
+    return true;
   }
 
-  /** Accepts only domain-valid application statuses from the radio menu. */
-  function changeStatus(value: string) {
+  /** Accepts only domain-valid application statuses from HeroUI Select. */
+  function changeStatus(value: Key | null) {
     const decoded = Option.getOrUndefined(
       Schema.decodeUnknownOption(ApplicationStatus)(value)
     );
@@ -121,153 +116,163 @@ export function ApplicationSheet({
     }
   }
 
+  const availableStatuses = next.length ? next : [record.application.status];
+
   return (
-    <Sheet>
-      <SheetTrigger
-        render={
-          <Button
-            aria-label={search("actions")}
-            className="ml-auto"
-            size="icon-sm"
-            variant="ghost"
-          />
-        }
+    <Drawer>
+      <Button
+        aria-label={search("actions")}
+        className="ml-auto"
+        isIconOnly
+        size="sm"
+        variant="tertiary"
       >
-        <HugeIcons className="size-4" icon={MoreVerticalIcon} />
-      </SheetTrigger>
-      <SheetContent className="sm:max-w-lg">
-        <SheetHeader className="border-b pr-12">
-          <ApplicationStatusBadge status={record.application.status} />
-          <SheetTitle>{opportunity.title}</SheetTitle>
-          <SheetDescription className="flex min-w-0 items-center gap-1.5">
-            <CountryFlag countryCode={opportunity.countryCode} />
-            <span className="truncate">
-              {opportunity.company} · {applicationLocation(record)}
-            </span>
-          </SheetDescription>
-        </SheetHeader>
-        <form action={update} className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain p-4">
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                className="min-w-0"
-                nativeButton={false}
-                render={
-                  <a
+        <HugeiconsIcon
+          className="size-4"
+          icon={MoreVerticalIcon}
+          strokeWidth={2}
+        />
+      </Button>
+      <Drawer.Backdrop>
+        <Drawer.Content placement="right">
+          <Drawer.Dialog className="w-full max-w-xl sm:w-[36rem]">
+            <Drawer.CloseTrigger />
+            <Form action={update} className="flex min-h-0 flex-1 flex-col">
+              <Drawer.Header className="pe-8">
+                <ApplicationStatusBadge status={record.application.status} />
+                <Drawer.Heading>{opportunity.title}</Drawer.Heading>
+                <div className="flex min-w-0 items-center gap-1.5 text-muted text-sm">
+                  <CountryFlag countryCode={opportunity.countryCode} />
+                  <span className="truncate">
+                    {opportunity.company} · {applicationLocation(record)}
+                  </span>
+                </div>
+              </Drawer.Header>
+              <Drawer.Body className="space-y-6">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Link
                     aria-label={opportunity.company}
+                    className={buttonVariants({ variant: "secondary" })}
                     href={opportunity.source.url}
                     rel="noreferrer"
                     target="_blank"
-                  />
-                }
-                variant="outline"
-              >
-                <HugeIcons className="size-4" icon={Building02Icon} />
-                <span className="truncate">{opportunity.company}</span>
-                <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
-              </Button>
-              <Button
-                className="min-w-0"
-                nativeButton={false}
-                render={
-                  <a
+                  >
+                    <HugeiconsIcon
+                      className="size-4"
+                      icon={Building02Icon}
+                      strokeWidth={2}
+                    />
+                    <span className="truncate">{opportunity.company}</span>
+                    <HugeiconsIcon
+                      className="size-4"
+                      icon={ArrowUpRight01Icon}
+                      strokeWidth={2}
+                    />
+                  </Link>
+                  <Link
                     aria-label={applicationLocation(record)}
+                    className={buttonVariants({ variant: "secondary" })}
                     href={applicationMapsUrl(record)}
                     rel="noreferrer"
                     target="_blank"
-                  />
-                }
-                variant="outline"
-              >
-                <HugeIcons className="size-4" icon={MapsLocation01Icon} />
-                <span className="truncate">{applicationLocation(record)}</span>
-                <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <label className="font-medium text-sm" htmlFor={statusId}>
-                {t("nextStatus")}
-              </label>
-              <p className="text-muted-foreground text-sm">{t("statusHelp")}</p>
-              <input name="status" type="hidden" value={selectedStatus} />
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  disabled={next.length === 0}
-                  render={
-                    <Button
-                      className="w-full justify-between"
-                      id={statusId}
-                      type="button"
-                      variant="outline"
-                    />
-                  }
-                >
-                  {t(selectedStatus)}
-                  <HugeIcons className="size-4" icon={UnfoldMoreIcon} />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuRadioGroup
-                    onValueChange={changeStatus}
-                    value={selectedStatus}
                   >
-                    {(next.length ? next : [record.application.status]).map(
-                      (statusOption) => (
-                        <DropdownMenuRadioItem
+                    <HugeiconsIcon
+                      className="size-4"
+                      icon={MapsLocation01Icon}
+                      strokeWidth={2}
+                    />
+                    <span className="truncate">
+                      {applicationLocation(record)}
+                    </span>
+                    <HugeiconsIcon
+                      className="size-4"
+                      icon={ArrowUpRight01Icon}
+                      strokeWidth={2}
+                    />
+                  </Link>
+                </div>
+
+                <Select
+                  id={statusId}
+                  isDisabled={next.length === 0}
+                  name="status"
+                  onChange={changeStatus}
+                  placeholder={t(selectedStatus)}
+                  value={selectedStatus}
+                >
+                  <Label>{t("nextStatus")}</Label>
+                  <Select.Trigger>
+                    <Select.Value />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                  <Description>{t("statusHelp")}</Description>
+                  <Select.Popover>
+                    <ListBox>
+                      {availableStatuses.map((statusOption) => (
+                        <ListBox.Item
+                          id={statusOption}
                           key={statusOption}
-                          value={statusOption}
+                          textValue={t(statusOption)}
                         >
                           {t(statusOption)}
-                        </DropdownMenuRadioItem>
-                      )
-                    )}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="space-y-2">
-              <label className="font-medium text-sm" htmlFor={notesId}>
-                {t("notes")}
-              </label>
-              <p className="text-muted-foreground text-sm">{t("notesHelp")}</p>
-              <Textarea
-                defaultValue={record.application.notes}
-                id={notesId}
-                maxLength={2000}
-                name="notes"
-              />
-            </div>
-          </div>
-          <SheetFooter className="border-t bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
-            <DeleteApplicationDialog
-              disabled={deletePending || updatePending}
-              onDelete={deleteApplication}
-            />
-            <div className="flex flex-col-reverse gap-2 sm:flex-row">
-              <Button
-                nativeButton={false}
-                render={
-                  <a
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
+                      ))}
+                    </ListBox>
+                  </Select.Popover>
+                </Select>
+
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={notesId}>{t("notes")}</Label>
+                  <TextArea
+                    aria-describedby={`${notesId}-help`}
+                    defaultValue={record.application.notes}
+                    id={notesId}
+                    maxLength={2000}
+                    name="notes"
+                    rows={6}
+                    variant="secondary"
+                  />
+                  <Description id={`${notesId}-help`}>
+                    {t("notesHelp")}
+                  </Description>
+                </div>
+              </Drawer.Body>
+              <Drawer.Footer className="flex-wrap justify-between">
+                <DeleteApplicationDialog
+                  disabled={deletePending || updatePending}
+                  onDelete={deleteApplication}
+                />
+                <div className="ml-auto flex flex-wrap gap-2">
+                  <Link
                     aria-label={search("apply")}
+                    className={buttonVariants({ variant: "secondary" })}
                     href={opportunity.directApplyUrl}
                     rel="noreferrer"
                     target="_blank"
-                  />
-                }
-                variant="outline"
-              >
-                {search("apply")}
-                <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
-              </Button>
-              <Button
-                disabled={deletePending || updatePending || next.length === 0}
-                type="submit"
-              >
-                {t("update")}
-              </Button>
-            </div>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+                  >
+                    {search("apply")}
+                    <HugeiconsIcon
+                      className="size-4"
+                      icon={ArrowUpRight01Icon}
+                      strokeWidth={2}
+                    />
+                  </Link>
+                  <Button
+                    isDisabled={
+                      deletePending || updatePending || next.length === 0
+                    }
+                    isPending={updatePending}
+                    type="submit"
+                  >
+                    {t("update")}
+                  </Button>
+                </div>
+              </Drawer.Footer>
+            </Form>
+          </Drawer.Dialog>
+        </Drawer.Content>
+      </Drawer.Backdrop>
+    </Drawer>
   );
 }

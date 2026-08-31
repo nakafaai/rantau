@@ -1,24 +1,21 @@
 "use client";
 
 import { useAuthActions, useAuthSignInApi } from "@convex-dev/auth/react";
-import { ArrowRight01Icon, Loading03Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@repo/design-system/components/ui/dialog";
-import {
-  Field,
-  FieldDescription,
+  Button,
+  Description,
   FieldError,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
+  Form,
+  Input,
+  Label,
+  Modal,
+  Spinner,
+  TextField,
+  toast,
+} from "@heroui/react";
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   IdentityPassword,
   MAXIMUM_PASSWORD_LENGTH,
@@ -27,7 +24,6 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { authErrorKey, authResultKey } from "@/lib/auth";
 
 const PasswordUpgrade = Schema.Struct({ newPassword: IdentityPassword });
@@ -58,7 +54,7 @@ export function Rekey({ email, onOpenChange, open, password }: RekeyProps) {
             password,
           });
           if (!migration.success) {
-            toast.error(t(authResultKey(migration.error)));
+            toast.danger(t(authResultKey(migration.error)));
             return;
           }
 
@@ -67,7 +63,7 @@ export function Rekey({ email, onOpenChange, open, password }: RekeyProps) {
             password: value.newPassword,
           });
           if (!result.success) {
-            toast.error(t(authResultKey(result.error)));
+            toast.danger(t(authResultKey(result.error)));
             return;
           }
 
@@ -78,7 +74,9 @@ export function Rekey({ email, onOpenChange, open, password }: RekeyProps) {
           Effect.catchTag("UnknownError", (error) =>
             Effect.sync(() => {
               const errorKey = authErrorKey(error);
-              toast.error(errorKey === "error" ? common("error") : t(errorKey));
+              toast.danger(
+                errorKey === "error" ? common("error") : t(errorKey)
+              );
             })
           )
         )
@@ -87,63 +85,88 @@ export function Rekey({ email, onOpenChange, open, password }: RekeyProps) {
   });
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("upgradeTitle")}</DialogTitle>
-          <DialogDescription>{t("upgradeDescription")}</DialogDescription>
-        </DialogHeader>
-        <form
-          action={() => form.handleSubmit()}
-          className="flex flex-col gap-4"
-        >
-          <form.Field name="newPassword">
-            {(field) => {
-              const isInvalid =
-                Boolean(field.state.meta.isTouched) &&
-                Boolean(!field.state.meta.isValid);
-              return (
-                <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name}>
-                    {t("newPassword")}
-                  </FieldLabel>
-                  <Input
-                    aria-invalid={isInvalid}
-                    autoComplete="new-password"
-                    id={field.name}
-                    maxLength={MAXIMUM_PASSWORD_LENGTH}
-                    minLength={MINIMUM_PASSWORD_LENGTH}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    required
-                    type="password"
-                    value={field.state.value}
-                  />
-                  {isInvalid ? (
-                    <FieldError>{t("passwordRule")}</FieldError>
+    <Modal.Backdrop isOpen={open} onOpenChange={onOpenChange}>
+      <Modal.Container>
+        <Modal.Dialog className="sm:max-w-md">
+          <Modal.CloseTrigger />
+          <Modal.Header>
+            <Modal.Heading>{t("upgradeTitle")}</Modal.Heading>
+            <p className="text-muted text-sm">{t("upgradeDescription")}</p>
+          </Modal.Header>
+          <Modal.Body>
+            <Form
+              className="flex flex-col gap-4"
+              id="password-upgrade"
+              onSubmit={(event) => {
+                event.preventDefault();
+                form.handleSubmit();
+              }}
+            >
+              <form.Field name="newPassword">
+                {(field) => {
+                  const isInvalid =
+                    Boolean(field.state.meta.isTouched) &&
+                    Boolean(!field.state.meta.isValid);
+                  return (
+                    <TextField
+                      isInvalid={isInvalid}
+                      isRequired
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={field.handleChange}
+                      type="password"
+                      value={field.state.value}
+                    >
+                      <Label>{t("newPassword")}</Label>
+                      <Input
+                        autoComplete="new-password"
+                        id={field.name}
+                        maxLength={MAXIMUM_PASSWORD_LENGTH}
+                        minLength={MINIMUM_PASSWORD_LENGTH}
+                        type="password"
+                        variant="secondary"
+                      />
+                      {isInvalid ? (
+                        <FieldError>{t("passwordRule")}</FieldError>
+                      ) : (
+                        <Description>{t("passwordRule")}</Description>
+                      )}
+                    </TextField>
+                  );
+                }}
+              </form.Field>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button slot="close" variant="secondary">
+              {common("cancel")}
+            </Button>
+            <form.Subscribe
+              selector={(state) => [state.isValid, state.isSubmitting]}
+            >
+              {([isValid, isSubmitting]) => (
+                <Button
+                  form="password-upgrade"
+                  isDisabled={!isValid || isSubmitting}
+                  isPending={isSubmitting}
+                  type="submit"
+                >
+                  {isSubmitting ? (
+                    <Spinner color="current" size="sm" />
                   ) : (
-                    <FieldDescription>{t("passwordRule")}</FieldDescription>
+                    <HugeiconsIcon
+                      className="size-4"
+                      icon={ArrowRight01Icon}
+                      strokeWidth={2}
+                    />
                   )}
-                </Field>
-              );
-            }}
-          </form.Field>
-          <form.Subscribe
-            selector={(state) => [state.isValid, state.isSubmitting]}
-          >
-            {([isValid, isSubmitting]) => (
-              <Button disabled={!isValid || isSubmitting} type="submit">
-                {t("upgrade")}
-                <HugeIcons
-                  className={isSubmitting ? "animate-spin" : undefined}
-                  icon={isSubmitting ? Loading03Icon : ArrowRight01Icon}
-                />
-              </Button>
-            )}
-          </form.Subscribe>
-        </form>
-      </DialogContent>
-    </Dialog>
+                  {t("upgrade")}
+                </Button>
+              )}
+            </form.Subscribe>
+          </Modal.Footer>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }

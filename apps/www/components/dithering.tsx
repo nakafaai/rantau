@@ -4,7 +4,7 @@ import { Dithering, type DitheringProps } from "@paper-design/shaders-react";
 import { getThemeShaderColor } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "next-themes";
 
-/** Renders the exact theme-aware dithering field used by Nakafa auth. */
+/** Renders the theme-aware dithering field used by Rantau authentication. */
 export function FeaturesDithering({ ...props }: DitheringProps) {
   const { resolvedTheme } = useTheme();
   const colorFront = getThemeShaderColor(resolvedTheme);

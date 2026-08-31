@@ -1,18 +1,13 @@
 "use client";
 
 import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@repo/design-system/components/ui/combobox";
-import {
-  Field,
-  FieldDescription,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
+  ComboBox,
+  Description,
+  EmptyState,
+  Input,
+  Label,
+  ListBox,
+} from "@heroui/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -33,7 +28,6 @@ export type PlaceDraft = Readonly<{
 }>;
 
 type LocationFieldsProps = Readonly<{
-  disabled: boolean;
   onChange: (value: PlaceDraft) => void;
   value: PlaceDraft;
 }>;
@@ -49,11 +43,7 @@ type CityState = Readonly<{
 }>;
 
 /** Renders dependent country, region, and city comboboxes. */
-export function LocationFields({
-  disabled,
-  onChange,
-  value,
-}: LocationFieldsProps) {
+export function LocationFields({ onChange, value }: LocationFieldsProps) {
   const t = useTranslations("search");
   const locale = useLocale();
   const [regionState, setRegionState] = useState<RegionState>({
@@ -136,11 +126,11 @@ export function LocationFields({
 
   return (
     <div className="space-y-4">
-      <Field>
-        <FieldLabel htmlFor="search-country">{t("country")}</FieldLabel>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="search-country">{t("country")}</Label>
         <CountryPicker
           code={value.countryCode}
-          disabled={disabled}
+          disabled={false}
           id="search-country"
           onChange={(country) =>
             onChange({
@@ -153,75 +143,91 @@ export function LocationFields({
           }
           value={value.country}
         />
-        <FieldDescription>{t("countryHelp")}</FieldDescription>
-      </Field>
+        <Description>{t("countryHelp")}</Description>
+      </div>
 
-      <Field>
-        <FieldLabel htmlFor="search-region">{t("region")}</FieldLabel>
-        <Combobox
-          autoHighlight
-          disabled={disabled || !value.countryCode || regionsLoading}
-          items={regions}
-          itemToStringValue={(region: RegionOption) => region.label}
-          onValueChange={(region) =>
-            onChange({
-              ...value,
-              city: "",
-              region: region?.name ?? "",
-              regionCode: region?.code ?? "",
-            })
-          }
-          value={selectedRegion ?? null}
-        >
-          <ComboboxInput
+      <ComboBox
+        fullWidth
+        isDisabled={!value.countryCode || regionsLoading}
+        onSelectionChange={(key) => {
+          const region = regions.find((option) => option.code === key);
+          onChange({
+            ...value,
+            city: "",
+            region: region?.name ?? "",
+            regionCode: region?.code ?? "",
+          });
+        }}
+        selectedKey={selectedRegion?.code ?? null}
+      >
+        <Label>{t("region")}</Label>
+        <ComboBox.InputGroup>
+          <Input
             id="search-region"
             placeholder={
               regionsLoading ? t("loadingPlaces") : t("chooseRegion")
             }
-            showClear
+            variant="secondary"
           />
-          <ComboboxContent>
-            <ComboboxEmpty>{t("noPlaces")}</ComboboxEmpty>
-            <ComboboxList>
-              {(region) => (
-                <ComboboxItem key={region.code} value={region}>
-                  {region.label}
-                </ComboboxItem>
-              )}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-      </Field>
+          <ComboBox.Trigger />
+        </ComboBox.InputGroup>
+        <ComboBox.Popover>
+          <ListBox
+            renderEmptyState={() => (
+              <EmptyState className="p-4 text-muted text-sm">
+                {t("noPlaces")}
+              </EmptyState>
+            )}
+          >
+            {regions.map((region) => (
+              <ListBox.Item
+                id={region.code}
+                key={region.code}
+                textValue={region.label}
+              >
+                {region.label}
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            ))}
+          </ListBox>
+        </ComboBox.Popover>
+      </ComboBox>
 
-      <Field>
-        <FieldLabel htmlFor="search-city">{t("city")}</FieldLabel>
-        <Combobox
-          autoHighlight
-          disabled={disabled || !value.regionCode || citiesLoading}
-          items={cities}
-          itemToStringValue={(city: CityOption) => city.label}
-          onValueChange={(city) =>
-            onChange({ ...value, city: city?.name ?? "" })
-          }
-          value={selectedCity ?? null}
-        >
-          <ComboboxInput
+      <ComboBox
+        fullWidth
+        isDisabled={!value.regionCode || citiesLoading}
+        onSelectionChange={(key) => {
+          const city = cities.find((option) => option.id === key);
+          onChange({ ...value, city: city?.name ?? "" });
+        }}
+        selectedKey={selectedCity?.id ?? null}
+      >
+        <Label>{t("city")}</Label>
+        <ComboBox.InputGroup>
+          <Input
             id="search-city"
             placeholder={citiesLoading ? t("loadingPlaces") : t("chooseCity")}
-            showClear
+            variant="secondary"
           />
-          <ComboboxContent>
-            <ComboboxEmpty>{t("noPlaces")}</ComboboxEmpty>
-            <ComboboxList>
-              {(city) => (
-                <ComboboxItem key={city.id} value={city}>
-                  {city.label}
-                </ComboboxItem>
-              )}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-      </Field>
+          <ComboBox.Trigger />
+        </ComboBox.InputGroup>
+        <ComboBox.Popover>
+          <ListBox
+            renderEmptyState={() => (
+              <EmptyState className="p-4 text-muted text-sm">
+                {t("noPlaces")}
+              </EmptyState>
+            )}
+          >
+            {cities.map((city) => (
+              <ListBox.Item id={city.id} key={city.id} textValue={city.label}>
+                {city.label}
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            ))}
+          </ListBox>
+        </ComboBox.Popover>
+      </ComboBox>
     </div>
   );
 }

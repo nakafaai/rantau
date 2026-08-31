@@ -1,4 +1,11 @@
-/** Marks the statically exported search route owned by the client workspace. */
+import { Suspense } from "react";
+import { Search } from "@/components/search";
+
+/** Renders the route-owned search workspace. */
 export default function Page() {
-  return null;
+  return (
+    <Suspense>
+      <Search />
+    </Suspense>
+  );
 }

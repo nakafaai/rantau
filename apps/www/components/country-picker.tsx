@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@repo/design-system/components/ui/combobox";
+import { ComboBox, EmptyState, Input, ListBox } from "@heroui/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -69,33 +62,47 @@ export function CountryPicker({
   );
 
   return (
-    <Combobox
-      autoHighlight
-      disabled={disabled}
-      items={countries}
-      itemToStringValue={(country: CountryOption) => country.label}
-      onValueChange={onChange}
-      value={selected ?? null}
+    <ComboBox
+      fullWidth
+      isDisabled={disabled}
+      onSelectionChange={(key) => {
+        const country = countries.find((option) => option.code === key);
+        onChange(country ?? null);
+      }}
+      selectedKey={selected?.code ?? null}
     >
-      <ComboboxInput
-        id={id}
-        placeholder={failed ? t("placesUnavailable") : t("chooseCountry")}
-        showClear
-      />
-      <ComboboxContent>
-        <ComboboxEmpty>{t("noPlaces")}</ComboboxEmpty>
-        <ComboboxList>
-          {(country) => (
-            <ComboboxItem key={country.code} value={country}>
+      <ComboBox.InputGroup>
+        <Input
+          id={id}
+          placeholder={failed ? t("placesUnavailable") : t("chooseCountry")}
+          variant="secondary"
+        />
+        <ComboBox.Trigger />
+      </ComboBox.InputGroup>
+      <ComboBox.Popover>
+        <ListBox
+          renderEmptyState={() => (
+            <EmptyState className="p-4 text-muted text-sm">
+              {t("noPlaces")}
+            </EmptyState>
+          )}
+        >
+          {countries.map((country) => (
+            <ListBox.Item
+              id={country.code}
+              key={country.code}
+              textValue={country.label}
+            >
               <CountryFlag countryCode={country.code} />
               <span className="min-w-0 flex-1 truncate">{country.label}</span>
               {country.group === "asean" ? (
-                <span className="text-muted-foreground text-xs">ASEAN</span>
+                <span className="text-muted text-xs">ASEAN</span>
               ) : null}
-            </ComboboxItem>
-          )}
-        </ComboboxList>
-      </ComboboxContent>
-    </Combobox>
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </ComboBox.Popover>
+    </ComboBox>
   );
 }

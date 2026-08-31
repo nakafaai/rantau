@@ -1,11 +1,11 @@
 "use client";
 
+import { toast } from "@heroui/react";
 import { api } from "@repo/backend/convex/_generated/api";
 import { ProfileInput } from "@repo/domain/profile";
 import { useQuery } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { Cv } from "@/components/cv";
 import { ProfileForm } from "@/components/form";
 import { Header } from "@/components/header";
@@ -75,7 +75,7 @@ export function Profile() {
     );
 
     if (decoded._tag === "None") {
-      toast.error(common("error"));
+      toast.danger(common("error"));
       return false;
     }
     const saved = await saveProfile({
@@ -94,7 +94,7 @@ export function Profile() {
       () => false
     );
     if (!saved) {
-      toast.error(common("error"));
+      toast.danger(common("error"));
       return false;
     }
     toast.success(t("saved"));

@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@repo/design-system/components/ui/hover-card";
-import { cn } from "@repo/design-system/lib/utils";
+import { buttonVariants, cn, Link, Tooltip } from "@heroui/react";
 import Image from "next/image";
 import { createContext, use, useState } from "react";
 
@@ -43,7 +38,7 @@ export function Source({ children, href }: SourceProps) {
 
   return (
     <SourceContext.Provider value={{ domain, href }}>
-      <HoverCard>{children}</HoverCard>
+      <Tooltip delay={150}>{children}</Tooltip>
     </SourceContext.Provider>
   );
 }
@@ -53,20 +48,19 @@ type SourceTriggerProps = Readonly<{
   label?: React.ReactNode;
 }>;
 
-/** Renders the compact Nakafa-style source chip. */
+/** Renders the source as a native HeroUI tertiary action. */
 export function SourceTrigger({ className, label }: SourceTriggerProps) {
   const { domain, href } = useSource();
   const [failed, setFailed] = useState(false);
   const icon = faviconUrl(href);
 
   return (
-    <HoverCardTrigger
+    <Link
       className={cn(
-        "inline-flex h-6 max-w-52 items-center gap-1.5 overflow-hidden rounded-full border bg-muted/50 pr-2 pl-1 text-muted-foreground text-xs no-underline transition-colors hover:bg-muted hover:text-foreground",
+        buttonVariants({ size: "sm", variant: "tertiary" }),
+        "h-7 max-w-56 gap-1.5 overflow-hidden px-2 text-muted text-xs no-underline hover:no-underline",
         className
       )}
-      closeDelay={0}
-      delay={150}
       href={href}
       rel="noopener noreferrer"
       target="_blank"
@@ -83,7 +77,7 @@ export function SourceTrigger({ className, label }: SourceTriggerProps) {
         />
       )}
       <span className="truncate">{label ?? domain.replace("www.", "")}</span>
-    </HoverCardTrigger>
+    </Link>
   );
 }
 
@@ -102,14 +96,9 @@ export function SourceContent({
   const { domain, href } = useSource();
 
   return (
-    <HoverCardContent className="w-80 p-0 shadow-xs">
-      <a
-        className="flex flex-col gap-2 p-3"
-        href={href}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        <div className="flex items-center gap-2 text-primary text-sm">
+    <Tooltip.Content className="w-80 max-w-[min(20rem,calc(100vw-2rem))] p-3">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2 text-link text-sm">
           <Image
             alt=""
             className="size-4 rounded-full"
@@ -122,14 +111,10 @@ export function SourceContent({
         </div>
         <p className="line-clamp-2 font-medium text-sm">{title}</p>
         {description ? (
-          <p className="line-clamp-2 text-muted-foreground text-sm">
-            {description}
-          </p>
+          <p className="line-clamp-2 text-muted text-sm">{description}</p>
         ) : null}
-        {kind ? (
-          <p className="text-muted-foreground text-xs capitalize">{kind}</p>
-        ) : null}
-      </a>
-    </HoverCardContent>
+        {kind ? <p className="text-muted text-xs capitalize">{kind}</p> : null}
+      </div>
+    </Tooltip.Content>
   );
 }

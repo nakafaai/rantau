@@ -10,13 +10,20 @@
     "doctor": "pnpm dlx react-doctor@0.9.12",
     "start": "npx serve out -l 3000",
     "test": "vitest run --passWithNoTests",
+    "test:e2e": "playwright test",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@convex-dev/auth": "2.0.0-alpha.1",
     "@countrystatecity/countries-browser": "1.0.4",
+    "@heroui/react": "3.2.4",
+    "@heroui/styles": "3.2.4",
     "@hugeicons/core-free-icons": "4.3.0",
+    "@hugeicons/react": "1.1.10",
     "@paper-design/shaders-react": "0.0.80",
+    "@react-aria/i18n": "3.13.1",
+    "@react-aria/ssr": "3.10.1",
+    "@react-aria/utils": "3.34.1",
     "@repo/backend": "workspace:*",
     "@repo/design-system": "workspace:*",
     "@repo/domain": "workspace:*",
@@ -29,11 +36,13 @@
     "next-intl": "4.13.7",
     "next-themes": "0.4.6",
     "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "sonner": "2.0.8"
+    "react-aria": "3.51.0",
+    "react-aria-components": "1.20.0",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
+    "@playwright/test": "1.62.1",
     "@tailwindcss/postcss": "4.3.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",

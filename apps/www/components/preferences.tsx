@@ -1,154 +1,137 @@
 "use client";
 
+import type { Key } from "@heroui/react";
+import { Button, Dropdown, Label } from "@heroui/react";
 import { PaintBoardIcon, TranslateIcon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLinkItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
-import { cn } from "@repo/design-system/lib/utils";
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import type { ComponentProps } from "react";
 import { CountryFlag } from "@/components/country-flag";
 import { localizedPath } from "@/lib/locale";
 
-const BASE_THEMES_COUNT = 3;
 const languages = [
   { countryCode: "GB", label: "English", value: "en" },
   { countryCode: "ID", label: "Bahasa Indonesia", value: "id" },
 ] as const;
 
-/** Shows one selected option without changing the menu label layout. */
-function ActiveBadge({ active }: { active: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "ml-auto size-2 rounded-full bg-primary opacity-0 transition-opacity",
-        active && "opacity-100"
-      )}
-    />
-  );
-}
-
 /** Renders locale choices and preserves the active workspace destination. */
-function LanguageItems({ onNavigate }: { onNavigate?: () => void }) {
+function LanguageMenu({ onNavigate }: { onNavigate?: () => void }) {
   const currentLocale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
 
-  return languages.map((language) => {
+  /** Switches locale through Next navigation without a document reload. */
+  function selectLanguage(key: Key) {
+    const language = languages.find((option) => option.value === key);
+    if (!language) {
+      return;
+    }
     const basePath = localizedPath(language.value, pathname);
     const query = searchParams.toString();
-    const href = query ? `${basePath}?${query}` : basePath;
-
-    return (
-      <DropdownMenuLinkItem
-        className="cursor-pointer"
-        closeOnClick
-        data-locale-switch=""
-        key={language.value}
-        onClick={(event) => {
-          event.preventDefault();
-          window.history.replaceState(null, "", href);
-          onNavigate?.();
-        }}
-        render={<Link href={href} prefetch replace />}
-      >
-        <CountryFlag countryCode={language.countryCode} />
-        <span className="truncate">{language.label}</span>
-        <ActiveBadge active={currentLocale === language.value} />
-      </DropdownMenuLinkItem>
-    );
-  });
-}
-
-/** Renders theme choices directly from the copied Nakafa theme registry. */
-function ThemeItems() {
-  const { theme: currentTheme, setTheme } = useTheme();
+    router.replace(query ? `${basePath}?${query}` : basePath, {
+      scroll: false,
+    });
+    onNavigate?.();
+  }
 
   return (
-    <>
-      <DropdownMenuGroup>
-        {themeOptions.slice(0, BASE_THEMES_COUNT).map((theme) => (
-          <DropdownMenuItem
-            className="cursor-pointer"
-            key={theme.value}
-            onClick={() => setTheme(theme.value)}
-          >
-            <HugeIcons className="size-4" icon={theme.icon} />
-            <span className="truncate capitalize">{theme.value}</span>
-            <ActiveBadge active={currentTheme === theme.value} />
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup>
-        {themeOptions.slice(BASE_THEMES_COUNT).map((theme) => (
-          <DropdownMenuItem
-            className="cursor-pointer"
-            key={theme.value}
-            onClick={() => setTheme(theme.value)}
-          >
-            <HugeIcons className="size-4" icon={theme.icon} />
-            <span className="truncate capitalize">{theme.value}</span>
-            <ActiveBadge active={currentTheme === theme.value} />
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuGroup>
-    </>
+    <Dropdown.Menu
+      onAction={selectLanguage}
+      selectedKeys={new Set([currentLocale])}
+      selectionMode="single"
+    >
+      {languages.map((language) => (
+        <Dropdown.Item
+          id={language.value}
+          key={language.value}
+          textValue={language.label}
+        >
+          <CountryFlag countryCode={language.countryCode} />
+          <Label>{language.label}</Label>
+          <Dropdown.ItemIndicator type="dot" />
+        </Dropdown.Item>
+      ))}
+    </Dropdown.Menu>
   );
 }
 
-/** Renders Nakafa-style preference submenus inside the account dropdown. */
+/** Renders HeroUI light, dark, and system appearance choices. */
+function ThemeMenu() {
+  const { theme: currentTheme, setTheme } = useTheme();
+
+  /** Applies one known HeroUI appearance. */
+  function selectTheme(key: Key) {
+    const theme = themeOptions.find((option) => option.value === key);
+    if (theme) {
+      setTheme(theme.value);
+    }
+  }
+
+  return (
+    <Dropdown.Menu
+      onAction={selectTheme}
+      selectedKeys={currentTheme ? new Set([currentTheme]) : new Set()}
+      selectionMode="single"
+    >
+      {themeOptions.map((theme) => (
+        <Dropdown.Item
+          id={theme.value}
+          key={theme.value}
+          textValue={theme.value}
+        >
+          <HugeiconsIcon className="size-4" icon={theme.icon} strokeWidth={2} />
+          <Label className="capitalize">{theme.value}</Label>
+          <Dropdown.ItemIndicator type="dot" />
+        </Dropdown.Item>
+      ))}
+    </Dropdown.Menu>
+  );
+}
+
+/** Renders HeroUI preference submenus inside the account dropdown. */
 export function PreferenceSubmenus({
   onNavigate,
   side,
 }: {
   onNavigate?: () => void;
-  side: ComponentProps<typeof DropdownMenuSubContent>["side"];
+  side: "right" | "top";
 }) {
   const t = useTranslations("common");
 
   return (
-    <DropdownMenuGroup>
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="cursor-pointer">
-          <HugeIcons className="size-4" icon={TranslateIcon} />
-          <span className="truncate">{t("language")}</span>
-        </DropdownMenuSubTrigger>
-        <DropdownMenuSubContent side={side}>
-          <DropdownMenuGroup>
-            <LanguageItems onNavigate={onNavigate} />
-          </DropdownMenuGroup>
-        </DropdownMenuSubContent>
-      </DropdownMenuSub>
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="cursor-pointer">
-          <HugeIcons className="size-4" icon={PaintBoardIcon} />
-          <span className="truncate">{t("theme")}</span>
-        </DropdownMenuSubTrigger>
-        <DropdownMenuSubContent
-          className="max-h-[min(var(--available-height),24rem)]"
-          side={side}
-        >
-          <ThemeItems />
-        </DropdownMenuSubContent>
-      </DropdownMenuSub>
-    </DropdownMenuGroup>
+    <>
+      <Dropdown.SubmenuTrigger>
+        <Dropdown.Item id="language-menu" textValue={t("language")}>
+          <HugeiconsIcon
+            className="size-4"
+            icon={TranslateIcon}
+            strokeWidth={2}
+          />
+          <Label>{t("language")}</Label>
+          <Dropdown.SubmenuIndicator />
+        </Dropdown.Item>
+        <Dropdown.Popover placement={side}>
+          <LanguageMenu onNavigate={onNavigate} />
+        </Dropdown.Popover>
+      </Dropdown.SubmenuTrigger>
+      <Dropdown.SubmenuTrigger>
+        <Dropdown.Item id="theme-menu" textValue={t("theme")}>
+          <HugeiconsIcon
+            className="size-4"
+            icon={PaintBoardIcon}
+            strokeWidth={2}
+          />
+          <Label>{t("theme")}</Label>
+          <Dropdown.SubmenuIndicator />
+        </Dropdown.Item>
+        <Dropdown.Popover placement={side}>
+          <ThemeMenu />
+        </Dropdown.Popover>
+      </Dropdown.SubmenuTrigger>
+    </>
   );
 }
 
@@ -158,36 +141,31 @@ export function AuthPreferences() {
 
   return (
     <div className="flex items-center gap-1">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button variant="ghost">
-              <HugeIcons className="size-4" icon={TranslateIcon} />
-              <span className="truncate">{t("language")}</span>
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end">
-          <DropdownMenuGroup>
-            <LanguageItems />
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button aria-label={t("theme")} size="icon" variant="ghost">
-              <HugeIcons className="size-4" icon={PaintBoardIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent
-          align="end"
-          className="max-h-[min(var(--available-height),24rem)]"
-        >
-          <ThemeItems />
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Dropdown>
+        <Button variant="ghost">
+          <HugeiconsIcon
+            className="size-4"
+            icon={TranslateIcon}
+            strokeWidth={2}
+          />
+          <span className="truncate">{t("language")}</span>
+        </Button>
+        <Dropdown.Popover placement="bottom end">
+          <LanguageMenu />
+        </Dropdown.Popover>
+      </Dropdown>
+      <Dropdown>
+        <Button aria-label={t("theme")} isIconOnly variant="ghost">
+          <HugeiconsIcon
+            className="size-4"
+            icon={PaintBoardIcon}
+            strokeWidth={2}
+          />
+        </Button>
+        <Dropdown.Popover placement="bottom end">
+          <ThemeMenu />
+        </Dropdown.Popover>
+      </Dropdown>
     </div>
   );
 }

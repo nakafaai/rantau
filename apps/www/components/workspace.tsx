@@ -2,11 +2,12 @@
 
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { Auth } from "@/components/auth";
 import { Shell } from "@/components/shell";
 
 /** Chooses the authenticated route-owned workspace after the auth handshake. */
-export function Workspace() {
+export function Workspace({ children }: Readonly<{ children: ReactNode }>) {
   const t = useTranslations("common");
 
   return (
@@ -23,7 +24,7 @@ export function Workspace() {
         <Auth />
       </Unauthenticated>
       <Authenticated>
-        <Shell />
+        <Shell>{children}</Shell>
       </Authenticated>
     </>
   );

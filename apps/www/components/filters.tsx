@@ -1,25 +1,16 @@
 "use client";
 
-import { Cancel01Icon, FilterAddIcon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
+  Button,
+  Chip,
+  Drawer,
+  Label,
+  Link,
+  ListBox,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@repo/design-system/components/ui/sheet";
+} from "@heroui/react";
+import { Cancel01Icon, FilterAddIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { CountryFlag } from "@/components/country-flag";
@@ -33,7 +24,6 @@ export type FilterValue = PlaceDraft &
   }>;
 
 type FiltersProps = Readonly<{
-  disabled: boolean;
   onChange: (value: FilterValue) => void;
   value: FilterValue;
 }>;
@@ -42,7 +32,7 @@ type Pathway = (typeof pathways)[number];
 type WorkMode = (typeof workModes)[number];
 
 /** Renders advanced filters with a committed chip summary. */
-export function Filters({ disabled, onChange, value }: FiltersProps) {
+export function Filters({ onChange, value }: FiltersProps) {
   const t = useTranslations("search");
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -63,108 +53,133 @@ export function Filters({ disabled, onChange, value }: FiltersProps) {
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2">
-      <Sheet onOpenChange={changeOpen} open={open}>
-        <SheetTrigger
-          disabled={disabled}
-          render={
-            <Button className="rounded-full" size="sm" variant="outline" />
-          }
-        >
-          <HugeIcons className="size-4" icon={FilterAddIcon} />
-          {t("addFilter")}
-        </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-md">
-          <SheetHeader className="shrink-0 border-b pr-12">
-            <SheetTitle>{t("advancedFilters")}</SheetTitle>
-            <SheetDescription>{t("advancedFiltersHelp")}</SheetDescription>
-          </SheetHeader>
-          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4">
-            <LocationFields
-              disabled={disabled}
-              onChange={(place) => setDraft({ ...draft, ...place })}
-              value={draft}
-            />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel>{t("pathway")}</FieldLabel>
+      <Button onPress={() => changeOpen(true)} size="sm" variant="tertiary">
+        <HugeiconsIcon
+          className="size-4"
+          icon={FilterAddIcon}
+          strokeWidth={2}
+        />
+        {t("addFilter")}
+      </Button>
+      <Drawer.Backdrop isOpen={open} onOpenChange={changeOpen}>
+        <Drawer.Content placement="right">
+          <Drawer.Dialog className="w-full sm:max-w-md">
+            <Drawer.CloseTrigger />
+            <Drawer.Header>
+              <Drawer.Heading>{t("advancedFilters")}</Drawer.Heading>
+              <p className="text-muted text-sm">{t("advancedFiltersHelp")}</p>
+            </Drawer.Header>
+            <Drawer.Body className="space-y-6">
+              <LocationFields
+                onChange={(place) => setDraft({ ...draft, ...place })}
+                value={draft}
+              />
+              <div className="grid gap-4 sm:grid-cols-2">
                 <Select
-                  onValueChange={(pathway) =>
-                    setDraft({ ...draft, pathway: pathway ?? "" })
+                  fullWidth
+                  onChange={(key) =>
+                    setDraft({
+                      ...draft,
+                      pathway:
+                        pathways.find((pathway) => pathway === key) ?? "",
+                    })
                   }
+                  placeholder={t("anyPathway")}
                   value={draft.pathway || null}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("anyPathway")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {pathways.map((pathway) => (
-                      <SelectItem key={pathway} value={pathway}>
-                        {t(pathway)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                  <Label>{t("pathway")}</Label>
+                  <Select.Trigger>
+                    <Select.Value />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                  <Select.Popover>
+                    <ListBox>
+                      {pathways.map((pathway) => (
+                        <ListBox.Item
+                          id={pathway}
+                          key={pathway}
+                          textValue={t(pathway)}
+                        >
+                          {t(pathway)}
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
+                      ))}
+                    </ListBox>
+                  </Select.Popover>
                 </Select>
-              </Field>
-              <Field>
-                <FieldLabel>{t("workMode")}</FieldLabel>
                 <Select
-                  onValueChange={(workMode) =>
-                    setDraft({ ...draft, workMode: workMode ?? "" })
+                  fullWidth
+                  onChange={(key) =>
+                    setDraft({
+                      ...draft,
+                      workMode:
+                        workModes.find((workMode) => workMode === key) ?? "",
+                    })
                   }
+                  placeholder={t("anyWorkMode")}
                   value={draft.workMode || null}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("anyWorkMode")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {workModes.map((workMode) => (
-                      <SelectItem key={workMode} value={workMode}>
-                        {t(workMode)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                  <Label>{t("workMode")}</Label>
+                  <Select.Trigger>
+                    <Select.Value />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                  <Select.Popover>
+                    <ListBox>
+                      {workModes.map((workMode) => (
+                        <ListBox.Item
+                          id={workMode}
+                          key={workMode}
+                          textValue={t(workMode)}
+                        >
+                          {t(workMode)}
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
+                      ))}
+                    </ListBox>
+                  </Select.Popover>
                 </Select>
-              </Field>
-            </div>
-            <p className="text-muted-foreground text-sm">
-              {t.rich("geographyAttribution", {
-                link: (children) => (
-                  <a
-                    className="underline underline-offset-4"
-                    href="https://github.com/dr5hn/countrystatecity-npm"
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    {children}
-                  </a>
-                ),
-              })}
-            </p>
-          </div>
-          <SheetFooter className="shrink-0 flex-row justify-between border-t">
-            <Button
-              onClick={() =>
-                setDraft({
-                  city: "",
-                  country: "",
-                  countryCode: "",
-                  pathway: "",
-                  region: "",
-                  regionCode: "",
-                  workMode: "",
-                })
-              }
-              type="button"
-              variant="ghost"
-            >
-              {t("clearAll")}
-            </Button>
-            <Button onClick={apply} type="button">
-              {t("applyFilters")}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+              </div>
+              <p className="text-muted text-sm">
+                {t.rich("geographyAttribution", {
+                  link: (children) => (
+                    <Link
+                      href="https://github.com/dr5hn/countrystatecity-npm"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      {children}
+                      <Link.Icon />
+                    </Link>
+                  ),
+                })}
+              </p>
+            </Drawer.Body>
+            <Drawer.Footer className="justify-between">
+              <Button
+                onPress={() =>
+                  setDraft({
+                    city: "",
+                    country: "",
+                    countryCode: "",
+                    pathway: "",
+                    region: "",
+                    regionCode: "",
+                    workMode: "",
+                  })
+                }
+                type="button"
+                variant="tertiary"
+              >
+                {t("clearAll")}
+              </Button>
+              <Button onPress={apply} type="button">
+                {t("applyFilters")}
+              </Button>
+            </Drawer.Footer>
+          </Drawer.Dialog>
+        </Drawer.Content>
+      </Drawer.Backdrop>
 
       {value.country ? (
         <FilterChip
@@ -234,20 +249,25 @@ function FilterChip({
   value: string;
 }>) {
   return (
-    <div className="flex h-8 max-w-full items-center gap-1.5 whitespace-nowrap rounded-full border border-dashed px-2.5 text-sm">
+    <Chip className="max-w-full gap-1.5" size="sm" variant="secondary">
       {icon}
-      <span className="shrink-0 text-muted-foreground">{label}</span>
-      <span className="max-w-40 truncate">{value}</span>
+      <span className="shrink-0 text-muted">{label}</span>
+      <Chip.Label className="max-w-40 truncate">{value}</Chip.Label>
       <Button
         aria-label={`${label}: ${value}`}
-        className="-mr-1 size-6 rounded-full"
-        onClick={onClear}
-        size="icon-xs"
+        className="-me-1 size-6 min-w-6 rounded-full"
+        isIconOnly
+        onPress={onClear}
+        size="sm"
         type="button"
         variant="ghost"
       >
-        <HugeIcons className="size-3.5" icon={Cancel01Icon} />
+        <HugeiconsIcon
+          className="size-3.5"
+          icon={Cancel01Icon}
+          strokeWidth={2}
+        />
       </Button>
-    </div>
+    </Chip>
   );
 }
