@@ -13,7 +13,7 @@
 - **AI model:** `google/gemini-3.7-flash` through Vercel AI Gateway
 - **Interface:** HeroUI v3 with React Aria, Tailwind CSS 4, Hugeicons, TanStack Table, and TanStack Form
 - **Started:** 2026-08-30T04:20:15Z
-- **Last updated:** 2026-08-31T17:55:51Z
+- **Last updated:** 2026-08-31T19:41:47Z
 
 ## Log
 
@@ -110,3 +110,11 @@ Added indexed, paginated search history and a typed country, region, and city hi
 Migrated the complete interface from Shadcn and Base UI to native HeroUI v3 compound components, removed the legacy primitive layer and direct Base UI and Radix dependencies, and added desktop and mobile Playwright coverage. Follow-up releases tightened the full-width profile grid, table footer alignment, country-picker copy, and fixed action surfaces (`apps/www/components`, `packages/design-system/styles/globals.css`, `apps/www/e2e/auth.e2e.ts`).
 
 PRs #34 through #49 are merged. Exact-head CI for PR #49 passed Verify and React Doctor. The final local gates pass formatting, Effect source checks, repository policy, all package typechecks, 103 Vitest tests with 100 percent configured coverage, the static Next.js build, four Playwright checks, React Doctor at 100 out of 100, and HeroUI Doctor. Production is published from merge commit `09c50252d0ca6bc2b551b2a3610ef8962e725919` through Convex Static Hosting.
+
+### 2026-08-31 - HeroUI Sky production release
+
+Adopted the official HeroUI Sky preset semantic palette across light and dark appearances, including its accent, surfaces, fields, states, charts, and shader color. Applied HeroUI's documented `secondary` field variant at Card and Drawer composition boundaries, with variant ownership on the compound ComboBox root. Dark fields now remain visually distinct from their containing surfaces without custom component imitation CSS (`packages/design-system/styles/globals.css`, `packages/design-system/lib/theme/registry.ts`, `apps/www/components`).
+
+PR #53 exact head `fa503967dda13db9ab888b19c016c677de2ae038` passed Verify and React Doctor, then merged as `b73a46b07a975da2640015cc2c574cc0cb128593`. Local verification passed formatting, Effect source checks, repository policy, all package typechecks, 103 Vitest tests with full configured coverage, the static Next.js production build, four desktop and mobile Playwright checks, React Doctor at 100 out of 100, and HeroUI Doctor for the web app.
+
+Deployed the merged commit to `dusty-toad-573` with static deployment `d62dbe64-a0d3-42ca-a8ec-5c66583998a3`. Production browser checks confirmed distinct dark Card and field layers, zero document overflow at 1440 and 390 pixel viewports, a 40 pixel mobile results footer, and no browser warnings or errors. The published Sky CSS asset matches the merged local artifact byte for byte at SHA-256 `ba0e110371fefba8c5926bbde03f155cf40228b611886526b0550603858cc244`; canonical workspace routes return 200, the legacy Indonesian `index.html` route redirects with 308, and an unknown route returns 404.
