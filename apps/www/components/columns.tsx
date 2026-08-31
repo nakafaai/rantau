@@ -1,23 +1,13 @@
 "use client";
 
+import { Button, Checkbox, Chip, Dropdown, Label, Link } from "@heroui/react";
 import {
-  ArrowUpDownIcon,
   ArrowUpRight01Icon,
   Bookmark01Icon,
   MoreVerticalIcon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
-import { Badge } from "@repo/design-system/components/ui/badge";
-import { Button } from "@repo/design-system/components/ui/button";
-import { Checkbox } from "@repo/design-system/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLinkItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   type RecommendationLevel,
   recommendationLevel,
@@ -39,31 +29,15 @@ type ResultActions = Readonly<{
   onSave: (record: OpportunityRecord) => void;
 }>;
 
-const matchLevelClass: Record<RecommendationLevel, string> = {
-  excellent:
-    "border-emerald-600/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  fair: "border-amber-600/50 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-  limited: "border-muted-foreground/40 bg-muted text-muted-foreground",
-  strong: "border-sky-600/50 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+const matchLevelColor: Record<
+  RecommendationLevel,
+  "accent" | "default" | "success" | "warning"
+> = {
+  excellent: "success",
+  fair: "warning",
+  limited: "default",
+  strong: "accent",
 };
-
-/** Renders a sortable table heading. */
-function SortButton({
-  label,
-  onClick,
-}: Readonly<{ label: string; onClick: () => void }>) {
-  return (
-    <Button
-      className="-ml-2 w-auto justify-start whitespace-nowrap"
-      onClick={onClick}
-      size="sm"
-      variant="ghost"
-    >
-      <span>{label}</span>
-      <HugeIcons className="size-4" icon={ArrowUpDownIcon} />
-    </Button>
-  );
-}
 
 /** Builds the search-specific TanStack column contract. */
 export function useResultColumns({ onDetails, onSave }: ResultActions) {
@@ -79,20 +53,34 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
         cell: ({ row }) => (
           <Checkbox
             aria-label={t("selectRow")}
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(Boolean(value))}
-          />
+            isSelected={row.getIsSelected()}
+            onChange={(value) => row.toggleSelected(value)}
+            slot="selection"
+            variant="secondary"
+          >
+            <Checkbox.Content>
+              <Checkbox.Control>
+                <Checkbox.Indicator />
+              </Checkbox.Control>
+            </Checkbox.Content>
+          </Checkbox>
         ),
         enableSorting: false,
         header: ({ table }) => (
           <Checkbox
             aria-label={t("selectPage")}
-            checked={table.getIsAllPageRowsSelected()}
-            indeterminate={table.getIsSomePageRowsSelected()}
-            onCheckedChange={(value) =>
-              table.toggleAllPageRowsSelected(Boolean(value))
-            }
-          />
+            isIndeterminate={table.getIsSomePageRowsSelected()}
+            isSelected={table.getIsAllPageRowsSelected()}
+            onChange={(value) => table.toggleAllPageRowsSelected(value)}
+            slot="selection"
+            variant="secondary"
+          >
+            <Checkbox.Content>
+              <Checkbox.Control>
+                <Checkbox.Indicator />
+              </Checkbox.Control>
+            </Checkbox.Content>
+          </Checkbox>
         ),
         id: "select",
       },
@@ -101,17 +89,12 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
         cell: ({ row }) => {
           const level = recommendationLevel(row.original.recommendation);
           return (
-            <Badge className={matchLevelClass[level]} variant="outline">
+            <Chip color={matchLevelColor[level]} size="sm" variant="soft">
               {t(`matchLevel.${level}`)}
-            </Badge>
+            </Chip>
           );
         },
-        header: ({ column }) => (
-          <SortButton
-            label={t("match")}
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          />
-        ),
+        header: t("match"),
       },
       {
         accessorFn: (record) => record.opportunity.opportunity.title,
@@ -119,19 +102,20 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
           const { opportunity } = row.original.opportunity;
           return (
             <div>
-              <a
+              <Link
                 className="inline-flex items-center gap-1.5 font-medium hover:underline"
                 href={opportunity.directApplyUrl}
                 rel="noreferrer"
                 target="_blank"
               >
                 {opportunity.title}
-                <HugeIcons
+                <HugeiconsIcon
                   className="size-4 shrink-0"
                   icon={ArrowUpRight01Icon}
+                  strokeWidth={2}
                 />
-              </a>
-              <p className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-muted-foreground text-xs">
+              </Link>
+              <p className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-muted text-xs">
                 <span className="shrink-0">{opportunity.employmentType}</span>
                 <span aria-hidden="true" className="md:hidden">
                   ·
@@ -156,15 +140,19 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
       {
         accessorFn: (record) => record.opportunity.opportunity.company,
         cell: ({ row }) => (
-          <a
+          <Link
             className="inline-flex items-center gap-1.5 font-medium hover:underline"
             href={row.original.opportunity.opportunity.source.url}
             rel="noreferrer"
             target="_blank"
           >
             <span>{row.original.opportunity.opportunity.company}</span>
-            <HugeIcons className="size-4 shrink-0" icon={ArrowUpRight01Icon} />
-          </a>
+            <HugeiconsIcon
+              className="size-4 shrink-0"
+              icon={ArrowUpRight01Icon}
+              strokeWidth={2}
+            />
+          </Link>
         ),
         header: t("company"),
         id: "company",
@@ -172,7 +160,7 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
       {
         accessorFn: locationLabel,
         cell: ({ row }) => (
-          <a
+          <Link
             className="inline-flex items-center gap-1.5 hover:underline"
             href={mapsUrl(row.original)}
             rel="noreferrer"
@@ -182,8 +170,12 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
               countryCode={row.original.opportunity.opportunity.countryCode}
             />
             <span>{locationLabel(row.original)}</span>
-            <HugeIcons className="size-4 shrink-0" icon={ArrowUpRight01Icon} />
-          </a>
+            <HugeiconsIcon
+              className="size-4 shrink-0"
+              icon={ArrowUpRight01Icon}
+              strokeWidth={2}
+            />
+          </Link>
         ),
         header: t("location"),
         id: "location",
@@ -234,47 +226,68 @@ export function useResultColumns({ onDetails, onSave }: ResultActions) {
       },
       {
         cell: ({ row }) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  aria-label={t("actions")}
-                  className="ml-auto"
-                  size="icon-sm"
-                  variant="ghost"
-                />
-              }
+          <Dropdown>
+            <Button
+              aria-label={t("actions")}
+              className="ml-auto"
+              isIconOnly
+              size="sm"
+              variant="tertiary"
             >
-              <HugeIcons className="size-4" icon={MoreVerticalIcon} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={() => onDetails(row.original)}>
-                <HugeIcons className="size-4" icon={ViewIcon} />
-                {t("details")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={row.original.isSaved}
-                onClick={() => onSave(row.original)}
+              <HugeiconsIcon
+                className="size-4"
+                icon={MoreVerticalIcon}
+                strokeWidth={2}
+              />
+            </Button>
+            <Dropdown.Popover placement="bottom end">
+              <Dropdown.Menu
+                onAction={(key) => {
+                  if (key === "details") {
+                    onDetails(row.original);
+                  }
+                  if (key === "save") {
+                    onSave(row.original);
+                  }
+                }}
               >
-                <HugeIcons className="size-4" icon={Bookmark01Icon} />
-                {row.original.isSaved ? t("saved") : t("save")}
-              </DropdownMenuItem>
-              <DropdownMenuLinkItem
-                closeOnClick
-                render={
-                  <a
-                    aria-label={t("apply")}
-                    href={row.original.opportunity.opportunity.directApplyUrl}
-                    rel="noreferrer"
-                    target="_blank"
+                <Dropdown.Item id="details" textValue={t("details")}>
+                  <HugeiconsIcon
+                    className="size-4"
+                    icon={ViewIcon}
+                    strokeWidth={2}
                   />
-                }
-              >
-                <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
-                {t("apply")}
-              </DropdownMenuLinkItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <Label>{t("details")}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item
+                  id="save"
+                  isDisabled={row.original.isSaved}
+                  textValue={row.original.isSaved ? t("saved") : t("save")}
+                >
+                  <HugeiconsIcon
+                    className="size-4"
+                    icon={Bookmark01Icon}
+                    strokeWidth={2}
+                  />
+                  <Label>{row.original.isSaved ? t("saved") : t("save")}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item
+                  href={row.original.opportunity.opportunity.directApplyUrl}
+                  id="apply"
+                  rel="noreferrer"
+                  target="_blank"
+                  textValue={t("apply")}
+                >
+                  <HugeiconsIcon
+                    className="size-4"
+                    icon={ArrowUpRight01Icon}
+                    strokeWidth={2}
+                  />
+                  <Label>{t("apply")}</Label>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
         ),
         enableSorting: false,
         header: () => <span className="sr-only">{t("actions")}</span>,

@@ -1,15 +1,7 @@
 "use client";
 
+import { EmptyState, Skeleton, Table, toast } from "@heroui/react";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import {
   flexRender,
   getCoreRowModel,
@@ -22,7 +14,6 @@ import {
 } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { useResultColumns } from "@/components/columns";
 import { OpportunitySheet } from "@/components/opportunity";
 import { ResultsFooter } from "@/components/results-footer";
@@ -54,16 +45,16 @@ function LoadingRows({
   count,
 }: Readonly<{ columns: readonly string[]; count: number }>) {
   return LOADING_ROW_KEYS.slice(0, count).map((rowKey) => (
-    <TableRow className="h-14 hover:bg-transparent" key={rowKey}>
+    <Table.Row className="h-16" id={`loading-${rowKey}`} key={rowKey}>
       {columns.map((columnId, columnIndex) => (
-        <TableCell
+        <Table.Cell
           className={resultColumnClass(columnId)}
           key={`${rowKey}-${columnId}`}
         >
           <Skeleton className={columnIndex === 1 ? "h-4 w-3/4" : "h-4 w-2/3"} />
-        </TableCell>
+        </Table.Cell>
       ))}
-    </TableRow>
+    </Table.Row>
   ));
 }
 
@@ -112,7 +103,7 @@ export function Results({
         await save({ opportunityId: record.opportunity._id });
         toast.success(t("saved"));
       } catch {
-        toast.error(common("error"));
+        toast.danger(common("error"));
       }
     },
     [common, save, t]
@@ -148,6 +139,7 @@ export function Results({
     : 0;
   const loadingRows =
     running || loading ? Math.max(LOADING_ROW_COUNT - rows.length, 0) : 0;
+  const [activeSort] = sorting;
   let emptyMessage = t("noResults");
   if (failed) {
     emptyMessage = t("failed");
@@ -168,56 +160,92 @@ export function Results({
       setSelection({});
       toast.success(t("selectedSaved", { count: selected.length }));
     } catch {
-      toast.error(common("error"));
+      toast.danger(common("error"));
     }
   }
 
   return (
-    <div
+    <Table
       aria-busy={loading || running}
-      className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border"
+      className="min-h-0 w-full min-w-0 flex-1 grid-rows-[minmax(0,1fr)_auto]"
     >
-      <div className="relative min-h-0 flex-1">
-        <Table
-          className="min-w-full table-auto"
-          containerClassName="h-full min-h-0 overflow-x-auto overflow-y-scroll overscroll-contain [scrollbar-width:thin]"
+      <Table.ScrollContainer className="h-full min-h-0 overflow-auto overscroll-contain [container-type:inline-size]">
+        <Table.Content
+          aria-label={t("title")}
+          className={
+            rows.length || loadingRows
+              ? "min-w-[112rem] table-auto"
+              : "h-full min-w-full table-auto"
+          }
+          onSortChange={(descriptor) =>
+            setSorting([
+              {
+                desc: descriptor.direction === "descending",
+                id: String(descriptor.column),
+              },
+            ])
+          }
+          sortDescriptor={
+            activeSort
+              ? {
+                  column: activeSort.id,
+                  direction: activeSort.desc ? "descending" : "ascending",
+                }
+              : undefined
+          }
         >
-          <TableHeader className="sticky top-0 z-30 bg-background">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    className={resultColumnClass(header.column.id, "header")}
-                    key={header.id}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
+          <Table.Header>
+            {table.getHeaderGroups()[0]?.headers.map((header) => (
+              <Table.Column
+                allowsSorting={header.column.id === "recommendation"}
+                className={resultColumnClass(header.column.id, "header")}
+                id={header.column.id}
+                isRowHeader={header.column.id === "role"}
+                key={header.id}
+              >
+                {({ sortDirection }) => {
+                  if (header.isPlaceholder) {
+                    return null;
+                  }
+                  const content = flexRender(
+                    header.column.columnDef.header,
+                    header.getContext()
+                  );
+                  if (header.column.id !== "recommendation") {
+                    return content;
+                  }
+                  return (
+                    <Table.SortableColumnHeader sortDirection={sortDirection}>
+                      {content}
+                    </Table.SortableColumnHeader>
+                  );
+                }}
+              </Table.Column>
             ))}
-          </TableHeader>
-          <TableBody>
+          </Table.Header>
+          <Table.Body
+            renderEmptyState={() => (
+              <EmptyState className="sticky left-0 flex h-full min-h-40 w-[100cqw] flex-col items-center justify-center gap-4 px-6 text-center text-muted text-sm">
+                {emptyMessage}
+              </EmptyState>
+            )}
+          >
             {rows.map((row) => (
-              <TableRow
-                aria-selected={row.getIsSelected()}
-                className="group h-14"
-                data-state={row.getIsSelected() ? "selected" : undefined}
+              <Table.Row
+                className="group h-16"
+                data-selected={row.getIsSelected() || undefined}
+                id={row.id}
                 key={row.id}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell
+                  <Table.Cell
                     className={resultColumnClass(cell.column.id)}
                     key={cell.id}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+                  </Table.Cell>
                 ))}
-              </TableRow>
+              </Table.Row>
             ))}
             {loadingRows ? (
               <LoadingRows
@@ -225,54 +253,37 @@ export function Results({
                 count={loadingRows}
               />
             ) : null}
-            {rows.length || loadingRows ? null : (
-              <TableRow>
-                <TableCell
-                  className="h-24 text-center"
-                  colSpan={columns.length}
-                >
-                  {emptyMessage}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-11 z-40 w-px bg-border"
-          data-slot="results-action-divider"
-        />
-      </div>
+          </Table.Body>
+        </Table.Content>
+      </Table.ScrollContainer>
 
-      <ResultsFooter
-        canNext={table.getCanNextPage()}
-        canPrevious={table.getCanPreviousPage()}
-        currentPage={pagination.pageIndex + 1}
-        failed={failed}
-        from={pageStart}
-        hasRows={rows.length > 0}
-        onNext={() => table.nextPage()}
-        onPageSizeChange={(pageSize) => table.setPageSize(pageSize)}
-        onPrevious={() => table.previousPage()}
-        onSaveSelected={saveSelected}
-        pageCount={Math.max(table.getPageCount(), 1)}
-        pageSize={pagination.pageSize}
-        selectedCount={selected.length}
-        to={pageEnd}
-        total={records.length}
-        working={running || loading}
-      />
+      <Table.Footer>
+        <ResultsFooter
+          canNext={table.getCanNextPage()}
+          canPrevious={table.getCanPreviousPage()}
+          failed={failed}
+          loading={loading}
+          onNext={() => table.nextPage()}
+          onPageSizeChange={(size) => table.setPageSize(size)}
+          onPrevious={() => table.previousPage()}
+          onSaveSelected={saveSelected}
+          pageCount={table.getPageCount()}
+          pageEnd={pageEnd}
+          pageIndex={pagination.pageIndex}
+          pageSize={pagination.pageSize}
+          pageStart={pageStart}
+          running={running}
+          selectedCount={selected.length}
+          total={records.length}
+          visibleRows={rows.length}
+        />
+      </Table.Footer>
 
       <OpportunitySheet
         onOpenChange={setDetailsOpen}
-        onOpenChangeComplete={(open) => {
-          if (!open) {
-            setActiveId(null);
-          }
-        }}
         open={detailsOpen}
         record={active}
       />
-    </div>
+    </Table>
   );
 }

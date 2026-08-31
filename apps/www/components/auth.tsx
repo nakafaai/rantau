@@ -1,18 +1,21 @@
 "use client";
 
 import { useAuthActions, useAuthSignInApi } from "@convex-dev/auth/react";
-import { ArrowRight01Icon, Loading03Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Field,
-  FieldDescription,
+  Button,
+  Card,
+  Description,
   FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
+  Form,
+  Input,
+  Label,
+  Spinner,
+  TextField,
+  toast,
+} from "@heroui/react";
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   IdentityEmail,
   IdentityName,
@@ -26,7 +29,6 @@ import { useForm } from "@tanstack/react-form";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import { FeaturesDithering } from "@/components/dithering";
 import { AuthPreferences } from "@/components/preferences";
 import { Rekey } from "@/components/rekey";
@@ -57,7 +59,7 @@ const defaultValues: AuthFormValues = {
   password: "",
 };
 
-/** Renders Nakafa's exact auth composition with Convex email/password access. */
+/** Renders Rantau's native HeroUI auth composition with Convex access. */
 export function Auth() {
   const t = useTranslations("auth");
   const common = useTranslations("common");
@@ -114,7 +116,7 @@ export function Auth() {
             return;
           }
           if (!result.success) {
-            toast.error(t(authResultKey(result.error)));
+            toast.danger(t(authResultKey(result.error)));
             return;
           }
           await setSession(result.tokens);
@@ -122,7 +124,9 @@ export function Auth() {
           Effect.catchTag("UnknownError", (error) =>
             Effect.sync(() => {
               const errorKey = authErrorKey(error);
-              toast.error(errorKey === "error" ? common("error") : t(errorKey));
+              toast.danger(
+                errorKey === "error" ? common("error") : t(errorKey)
+              );
             })
           )
         )
@@ -138,196 +142,192 @@ export function Auth() {
             <AuthPreferences />
           </div>
 
-          <div className="flex flex-1 flex-col items-center justify-center gap-6">
-            <div className="flex flex-col items-center">
-              <h1 className="font-semibold text-2xl">{common("brand")}</h1>
-              <p className="text-muted-foreground">{common("tagline")}</p>
-            </div>
+          <div className="flex flex-1 items-center justify-center">
+            <Card className="w-full max-w-sm">
+              <Card.Header className="items-center text-center">
+                <Card.Title className="text-2xl">{common("brand")}</Card.Title>
+                <Card.Description>{common("tagline")}</Card.Description>
+              </Card.Header>
+              <Card.Content>
+                <Form
+                  className="flex flex-col gap-4"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    form.handleSubmit();
+                  }}
+                >
+                  <div className="flex flex-col gap-4">
+                    <form.Subscribe selector={(state) => state.values.flow}>
+                      {(flow) =>
+                        flow === "signUp" ? (
+                          <form.Field name="name">
+                            {(field) => {
+                              const isInvalid =
+                                Boolean(field.state.meta.isTouched) &&
+                                Boolean(!field.state.meta.isValid);
+                              const errorId = `${field.name}-error`;
+                              return (
+                                <TextField
+                                  isInvalid={isInvalid}
+                                  isRequired
+                                  name={field.name}
+                                  onBlur={field.handleBlur}
+                                  onChange={field.handleChange}
+                                  value={field.state.value}
+                                >
+                                  <Label>{t("name")}</Label>
+                                  <Input
+                                    autoComplete="name"
+                                    id={field.name}
+                                    maxLength={MAXIMUM_NAME_LENGTH}
+                                    variant="secondary"
+                                  />
+                                  {isInvalid ? (
+                                    <FieldError id={errorId}>
+                                      {t("nameInvalid")}
+                                    </FieldError>
+                                  ) : null}
+                                </TextField>
+                              );
+                            }}
+                          </form.Field>
+                        ) : null
+                      }
+                    </form.Subscribe>
 
-            <div className="w-full max-w-sm">
-              <form
-                action={() => form.handleSubmit()}
-                className="flex flex-col gap-4"
-              >
-                <FieldGroup>
-                  <form.Subscribe selector={(state) => state.values.flow}>
-                    {(flow) =>
-                      flow === "signUp" ? (
-                        <form.Field name="name">
+                    <form.Field name="email">
+                      {(field) => {
+                        const isInvalid =
+                          Boolean(field.state.meta.isTouched) &&
+                          Boolean(!field.state.meta.isValid);
+                        const errorId = `${field.name}-error`;
+                        return (
+                          <TextField
+                            isInvalid={isInvalid}
+                            isRequired
+                            name={field.name}
+                            onBlur={field.handleBlur}
+                            onChange={field.handleChange}
+                            type="email"
+                            value={field.state.value}
+                          >
+                            <Label>{t("email")}</Label>
+                            <Input
+                              autoComplete="email"
+                              id={field.name}
+                              maxLength={MAXIMUM_EMAIL_LENGTH}
+                              type="email"
+                              variant="secondary"
+                            />
+                            {isInvalid ? (
+                              <FieldError id={errorId}>
+                                {t("emailInvalid")}
+                              </FieldError>
+                            ) : null}
+                          </TextField>
+                        );
+                      }}
+                    </form.Field>
+
+                    <form.Subscribe selector={(state) => state.values.flow}>
+                      {(flow) => (
+                        <form.Field name="password">
                           {(field) => {
                             const isInvalid =
                               Boolean(field.state.meta.isTouched) &&
                               Boolean(!field.state.meta.isValid);
                             const errorId = `${field.name}-error`;
+                            const helpId = `${field.name}-help`;
                             return (
-                              <Field data-invalid={isInvalid}>
-                                <FieldLabel htmlFor={field.name}>
-                                  {t("name")}
-                                </FieldLabel>
+                              <TextField
+                                isInvalid={isInvalid}
+                                isRequired
+                                name={field.name}
+                                onBlur={field.handleBlur}
+                                onChange={field.handleChange}
+                                type="password"
+                                value={field.state.value}
+                              >
+                                <Label>{t("password")}</Label>
                                 <Input
-                                  aria-describedby={
-                                    isInvalid ? errorId : undefined
+                                  autoComplete={
+                                    flow === "signUp"
+                                      ? "new-password"
+                                      : "current-password"
                                   }
-                                  aria-invalid={isInvalid}
-                                  autoComplete="name"
                                   id={field.name}
-                                  maxLength={MAXIMUM_NAME_LENGTH}
-                                  name={field.name}
-                                  onBlur={field.handleBlur}
-                                  onChange={(event) =>
-                                    field.handleChange(event.target.value)
-                                  }
-                                  required
-                                  value={field.state.value}
+                                  maxLength={MAXIMUM_PASSWORD_LENGTH}
+                                  minLength={MINIMUM_PASSWORD_LENGTH}
+                                  type="password"
+                                  variant="secondary"
                                 />
                                 {isInvalid ? (
                                   <FieldError id={errorId}>
-                                    {t("nameInvalid")}
+                                    {t("passwordRule")}
                                   </FieldError>
                                 ) : null}
-                              </Field>
+                                {!isInvalid && flow === "signUp" ? (
+                                  <Description id={helpId}>
+                                    {t("passwordRule")}
+                                  </Description>
+                                ) : null}
+                              </TextField>
                             );
                           }}
                         </form.Field>
-                      ) : null
-                    }
-                  </form.Subscribe>
+                      )}
+                    </form.Subscribe>
+                  </div>
 
-                  <form.Field name="email">
-                    {(field) => {
-                      const isInvalid =
-                        Boolean(field.state.meta.isTouched) &&
-                        Boolean(!field.state.meta.isValid);
-                      const errorId = `${field.name}-error`;
-                      return (
-                        <Field data-invalid={isInvalid}>
-                          <FieldLabel htmlFor={field.name}>
-                            {t("email")}
-                          </FieldLabel>
-                          <Input
-                            aria-describedby={isInvalid ? errorId : undefined}
-                            aria-invalid={isInvalid}
-                            autoComplete="email"
-                            id={field.name}
-                            maxLength={MAXIMUM_EMAIL_LENGTH}
-                            name={field.name}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                            required
-                            type="email"
-                            value={field.state.value}
-                          />
-                          {isInvalid ? (
-                            <FieldError id={errorId}>
-                              {t("emailInvalid")}
-                            </FieldError>
-                          ) : null}
-                        </Field>
-                      );
-                    }}
-                  </form.Field>
-
-                  <form.Subscribe selector={(state) => state.values.flow}>
-                    {(flow) => (
-                      <form.Field name="password">
-                        {(field) => {
-                          const isInvalid =
-                            Boolean(field.state.meta.isTouched) &&
-                            Boolean(!field.state.meta.isValid);
-                          const errorId = `${field.name}-error`;
-                          const helpId = `${field.name}-help`;
-                          let describedBy: string | undefined;
-                          if (isInvalid) {
-                            describedBy = errorId;
-                          } else if (flow === "signUp") {
-                            describedBy = helpId;
+                  <form.Subscribe
+                    selector={(state) => [state.isValid, state.isSubmitting]}
+                  >
+                    {([isValid, isSubmitting]) => (
+                      <Button
+                        className="w-full"
+                        isDisabled={!isValid || isSubmitting}
+                        isPending={isSubmitting}
+                        type="submit"
+                      >
+                        <form.Subscribe selector={(state) => state.values.flow}>
+                          {(flow) =>
+                            flow === "signUp" ? t("signUp") : t("signIn")
                           }
-                          return (
-                            <Field data-invalid={isInvalid}>
-                              <FieldLabel htmlFor={field.name}>
-                                {t("password")}
-                              </FieldLabel>
-                              <Input
-                                aria-describedby={describedBy}
-                                aria-invalid={isInvalid}
-                                autoComplete={
-                                  flow === "signUp"
-                                    ? "new-password"
-                                    : "current-password"
-                                }
-                                id={field.name}
-                                maxLength={MAXIMUM_PASSWORD_LENGTH}
-                                minLength={MINIMUM_PASSWORD_LENGTH}
-                                name={field.name}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                                required
-                                type="password"
-                                value={field.state.value}
-                              />
-                              {isInvalid ? (
-                                <FieldError id={errorId}>
-                                  {t("passwordRule")}
-                                </FieldError>
-                              ) : null}
-                              {!isInvalid && flow === "signUp" ? (
-                                <FieldDescription id={helpId}>
-                                  {t("passwordRule")}
-                                </FieldDescription>
-                              ) : null}
-                            </Field>
-                          );
-                        }}
-                      </form.Field>
+                        </form.Subscribe>
+                        {isSubmitting ? (
+                          <Spinner color="current" size="sm" />
+                        ) : (
+                          <HugeiconsIcon
+                            className="size-4"
+                            icon={ArrowRight01Icon}
+                            strokeWidth={2}
+                          />
+                        )}
+                      </Button>
                     )}
                   </form.Subscribe>
-                </FieldGroup>
-
-                <form.Subscribe
-                  selector={(state) => [state.isValid, state.isSubmitting]}
-                >
-                  {([isValid, isSubmitting]) => (
+                </Form>
+              </Card.Content>
+              <Card.Footer>
+                <form.Subscribe selector={(state) => state.values.flow}>
+                  {(flow) => (
                     <Button
-                      className="w-full"
-                      disabled={!isValid || isSubmitting}
-                      type="submit"
+                      className="h-auto w-full text-muted"
+                      onPress={() =>
+                        form.setFieldValue(
+                          "flow",
+                          flow === "signUp" ? "signIn" : "signUp"
+                        )
+                      }
+                      variant="tertiary"
                     >
-                      <form.Subscribe selector={(state) => state.values.flow}>
-                        {(flow) =>
-                          flow === "signUp" ? t("signUp") : t("signIn")
-                        }
-                      </form.Subscribe>
-                      <HugeIcons
-                        className={isSubmitting ? "animate-spin" : undefined}
-                        icon={isSubmitting ? Loading03Icon : ArrowRight01Icon}
-                      />
+                      {flow === "signUp" ? t("existing") : t("new")}{" "}
+                      {flow === "signUp" ? t("signIn") : t("signUp")}
                     </Button>
                   )}
                 </form.Subscribe>
-              </form>
-
-              <form.Subscribe selector={(state) => state.values.flow}>
-                {(flow) => (
-                  <Button
-                    className="mt-4 h-auto w-full p-0 text-muted-foreground"
-                    onClick={() =>
-                      form.setFieldValue(
-                        "flow",
-                        flow === "signUp" ? "signIn" : "signUp"
-                      )
-                    }
-                    variant="link"
-                  >
-                    {flow === "signUp" ? t("existing") : t("new")}{" "}
-                    {flow === "signUp" ? t("signIn") : t("signUp")}
-                  </Button>
-                )}
-              </form.Subscribe>
-            </div>
+              </Card.Footer>
+            </Card>
           </div>
         </div>
 

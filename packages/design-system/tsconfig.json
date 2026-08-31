@@ -7,5 +7,5 @@
       "@repo/design-system/*": ["./*"]
     }
   },
-  "include": ["components/**/*.tsx", "lib/**/*.ts"]
+  "include": ["lib/**/*.ts", "providers/**/*.tsx"]
 }

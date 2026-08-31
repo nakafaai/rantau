@@ -1,4 +1,4 @@
-import { cn } from "@repo/design-system/lib/utils";
+import { cn } from "@heroui/react";
 import auFlag from "country-flag-icons/string/3x2/AU";
 import caFlag from "country-flag-icons/string/3x2/CA";
 import deFlag from "country-flag-icons/string/3x2/DE";

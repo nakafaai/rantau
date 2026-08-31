@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { Effect, Schema } from "effect";
 import ts from "typescript";
@@ -14,15 +14,41 @@ const SKIPPED_PARTS = new Set([
   "node_modules",
   "out",
 ]);
-const SHADCN_CONFIGS = [
-  "apps/www/components.json",
-  "packages/design-system/components.json",
-] as const;
 const EXTENSION_PATTERN = /\.d\.ts$|\.[^.]+$/u;
 const FINAL_TEST_PATTERN = /\.test\.ts$/u;
 const RUNNABLE_TEST_PATTERN = /\.test\.tsx?$/u;
 const JAVASCRIPT_PATTERN = /\.(?:c|m)?js$/u;
 const WORD_SEPARATOR_PATTERN = /[._-]+/u;
+const PACKAGE_MANIFESTS = [
+  "package.json",
+  "apps/www/package.json",
+  "packages/backend/package.json",
+  "packages/design-system/package.json",
+  "packages/domain/package.json",
+] as const;
+const FORBIDDEN_UI_PATHS = [
+  "components.json",
+  "apps/www/components.json",
+  "apps/www/components/ui",
+  "packages/design-system/components.json",
+  "packages/design-system/components/ui",
+] as const;
+const FORBIDDEN_UI_DEPENDENCIES = [
+  "@base-ui/react",
+  "@radix-ui/",
+  "radix-ui",
+  "sonner",
+] as const;
+const PackageManifest = Schema.Struct({
+  dependencies: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  devDependencies: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  optionalDependencies: Schema.optional(
+    Schema.Record(Schema.String, Schema.String)
+  ),
+  peerDependencies: Schema.optional(
+    Schema.Record(Schema.String, Schema.String)
+  ),
+});
 
 class QualityError extends Schema.TaggedError<QualityError>()("QualityError", {
   violations: Schema.Array(Schema.String),
@@ -193,13 +219,18 @@ function moduleViolations(filePath: string, source: string) {
     FINAL_TEST_PATTERN.test(filePath) && modules.includes("vitest")
       ? [`${filePath} must import test APIs from @effect/vitest`]
       : [];
-  const radix = modules
+  const legacyUi = modules
     .filter(
       (specifier) =>
-        specifier === "radix-ui" || specifier.startsWith("@radix-ui/")
+        specifier === "radix-ui" ||
+        specifier.startsWith("@radix-ui/") ||
+        specifier === "@base-ui/react" ||
+        specifier.startsWith("@base-ui/") ||
+        specifier === "sonner" ||
+        specifier.startsWith("@repo/design-system/components/")
     )
     .map((specifier) => `${filePath} imports forbidden ${specifier}`);
-  return [...relative, ...rawVitest, ...radix];
+  return [...relative, ...rawVitest, ...legacyUi];
 }
 
 /** Enforces TypeScript ownership for tests and framework-only JavaScript. */
@@ -224,13 +255,60 @@ function pathViolations(files: readonly string[]) {
   });
 }
 
-/** Verifies that every Shadcn workspace selects Base Nova and Hugeicons. */
-function shadcnConfigViolations(configPath: string, source: string) {
-  return source.includes('"style": "base-nova"') &&
-    source.includes('"iconLibrary": "hugeicons"')
-    ? []
-    : [`${configPath} must use Shadcn base-nova with Hugeicons`];
+/** Reads and validates one workspace manifest through Effect Schema. */
+const readManifest = Effect.fn("quality.readManifest")(function* (
+  filePath: string
+) {
+  const source = yield* Effect.tryPromise({
+    catch: () => new QualityError({ violations: [`Cannot read ${filePath}`] }),
+    try: () => readFile(filePath, "utf8"),
+  });
+  return yield* Schema.decodeUnknownEffect(
+    Schema.fromJsonString(PackageManifest)
+  )(source).pipe(
+    Effect.mapError(
+      () => new QualityError({ violations: [`Cannot decode ${filePath}`] })
+    )
+  );
+});
+
+/** Rejects direct legacy UI dependencies while permitting transitive internals. */
+function manifestViolations(
+  filePath: string,
+  manifest: Schema.Schema.Type<typeof PackageManifest>
+) {
+  const dependencyNames = [
+    ...Object.keys(manifest.dependencies ?? {}),
+    ...Object.keys(manifest.devDependencies ?? {}),
+    ...Object.keys(manifest.optionalDependencies ?? {}),
+    ...Object.keys(manifest.peerDependencies ?? {}),
+  ];
+  return dependencyNames.flatMap((dependency) =>
+    FORBIDDEN_UI_DEPENDENCIES.some(
+      (forbidden) =>
+        dependency === forbidden ||
+        (forbidden.endsWith("/") && dependency.startsWith(forbidden))
+    )
+      ? [`${filePath} declares forbidden UI dependency ${dependency}`]
+      : []
+  );
 }
+
+/** Finds legacy shadcn and wrapper paths that must stay deleted. */
+const legacyPathViolations = Effect.fn("quality.legacyPaths")(function* () {
+  const entries = yield* Effect.forEach(
+    FORBIDDEN_UI_PATHS,
+    (filePath) =>
+      Effect.promise(() =>
+        access(filePath).then(
+          () => `${filePath} is a forbidden legacy UI path`,
+          () => null
+        )
+      ),
+    { concurrency: "unbounded" }
+  );
+  return entries.filter((entry): entry is string => entry !== null);
+});
 
 /** Audits import, naming, and JSDoc conventions owned by the repository. */
 const audit = Effect.fn("quality.audit")(function* () {
@@ -256,23 +334,21 @@ const audit = Effect.fn("quality.audit")(function* () {
       ),
     { concurrency: "unbounded" }
   )).flat();
-  const shadcn = (yield* Effect.forEach(
-    SHADCN_CONFIGS,
-    (configPath) =>
-      Effect.tryPromise({
-        catch: () =>
-          new QualityError({ violations: [`Cannot read ${configPath}`] }),
-        try: () => readFile(path.resolve(configPath), "utf8"),
-      }).pipe(
-        Effect.map((source) => shadcnConfigViolations(configPath, source))
+  const manifests = yield* Effect.forEach(
+    PACKAGE_MANIFESTS,
+    (filePath) =>
+      readManifest(filePath).pipe(
+        Effect.map((manifest) => manifestViolations(filePath, manifest))
       ),
     { concurrency: "unbounded" }
-  )).flat();
+  );
+  const legacyPaths = yield* legacyPathViolations();
   const violations = [
     ...naming,
     ...pathViolations(files),
     ...sourceChecks,
-    ...shadcn,
+    ...manifests.flat(),
+    ...legacyPaths,
   ];
   if (violations.length > 0) {
     return yield* new QualityError({ violations });

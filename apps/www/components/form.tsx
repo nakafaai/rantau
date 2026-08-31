@@ -1,5 +1,6 @@
 "use client";
 
+import { Form } from "@heroui/react";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   BackgroundCard,
@@ -19,7 +20,7 @@ type ProfileFormProps = Readonly<{
   onSubmit: (values: ProfileFormValues) => Promise<boolean>;
 }>;
 
-/** Composes typed TanStack Form cards over Shadcn Base UI controls. */
+/** Composes typed TanStack Form state over native HeroUI controls. */
 export function ProfileForm({ current, disabled, onSubmit }: ProfileFormProps) {
   const form = useProfileForm({
     ...profileFormOptions,
@@ -35,7 +36,7 @@ export function ProfileForm({ current, disabled, onSubmit }: ProfileFormProps) {
   return (
     <form.Subscribe selector={(state) => state.isSubmitting}>
       {(isSubmitting) => (
-        <form
+        <Form
           action={() => form.handleSubmit()}
           aria-busy={disabled || isSubmitting}
           className="space-y-6"
@@ -44,7 +45,7 @@ export function ProfileForm({ current, disabled, onSubmit }: ProfileFormProps) {
           <PreferencesCard disabled={disabled} form={form} />
           <BackgroundCard disabled={disabled} form={form} />
           <DocumentsCard disabled={disabled} form={form} />
-        </form>
+        </Form>
       )}
     </form.Subscribe>
   );

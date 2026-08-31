@@ -1,28 +1,26 @@
 "use client";
 
 import {
+  Button,
+  EmptyState,
+  Link,
+  Skeleton,
+  Table,
+  Tooltip,
+  toast,
+} from "@heroui/react";
+import {
   ArrowUpRight01Icon,
   BriefcaseBusinessIcon,
   Loading03Icon,
   Mail01Icon,
   MapsLocation01Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
 import { useMutation, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import { ApplicationSheet } from "@/components/application-sheet";
 import { ApplicationStatusBadge } from "@/components/application-status";
 import { CountryFlag } from "@/components/country-flag";
@@ -50,22 +48,23 @@ function applicationColumnClass(
   region: ApplicationColumnRegion = "body"
 ) {
   if (column === "role") {
-    return "min-w-64 px-3";
+    return "w-[28rem] min-w-[28rem] px-4";
   }
   if (column === "company") {
-    return "min-w-64 px-3";
+    return "w-80 min-w-80 px-4";
   }
   if (column === "location") {
-    return "min-w-64 px-3";
+    return "w-80 min-w-80 px-4";
   }
   if (column === "status") {
-    return "min-w-40 px-3";
+    return region === "header" ? "w-44 min-w-44 after:hidden" : "w-44 min-w-44";
   }
   if (column === "actions") {
-    const layer = region === "header" ? "z-40" : "z-20";
-    return `sticky right-0 ${layer} w-11 min-w-11 max-w-11 overflow-hidden bg-background px-2 shadow-[inset_0_-1px_0_var(--border)] group-hover:bg-muted`;
+    return region === "header"
+      ? "sticky right-0 z-30 w-16 min-w-16 max-w-16 border-s border-separator/50 bg-surface-secondary px-3"
+      : "sticky right-0 z-20 w-16 min-w-16 max-w-16 border-s border-separator/50 bg-surface px-3";
   }
-  return "px-3";
+  return "";
 }
 
 /** Renders one application row with direct links and a pinned action. */
@@ -73,36 +72,44 @@ function ApplicationRow({ record }: Readonly<{ record: ApplicationRecord }>) {
   const { opportunity } = record.opportunity;
 
   return (
-    <TableRow className="group h-14">
-      <TableCell className={applicationColumnClass("role")}>
+    <Table.Row className="group h-16" id={record.application._id}>
+      <Table.Cell className={applicationColumnClass("role")}>
         <div>
-          <a
+          <Link
             className="inline-flex items-center gap-1.5 font-medium hover:underline"
             href={opportunity.directApplyUrl}
             rel="noreferrer"
             target="_blank"
           >
             {opportunity.title}
-            <HugeIcons className="size-4 shrink-0" icon={ArrowUpRight01Icon} />
-          </a>
-          <p className="mt-0.5 text-muted-foreground text-xs">
+            <HugeiconsIcon
+              className="size-4 shrink-0"
+              icon={ArrowUpRight01Icon}
+              strokeWidth={2}
+            />
+          </Link>
+          <p className="mt-0.5 text-muted text-xs">
             {opportunity.employmentType}
           </p>
         </div>
-      </TableCell>
-      <TableCell className={applicationColumnClass("company")}>
-        <a
+      </Table.Cell>
+      <Table.Cell className={applicationColumnClass("company")}>
+        <Link
           className="inline-flex items-center gap-1.5 hover:underline"
           href={opportunity.source.url}
           rel="noreferrer"
           target="_blank"
         >
           {opportunity.company}
-          <HugeIcons className="size-4 shrink-0" icon={ArrowUpRight01Icon} />
-        </a>
-      </TableCell>
-      <TableCell className={applicationColumnClass("location")}>
-        <a
+          <HugeiconsIcon
+            className="size-4 shrink-0"
+            icon={ArrowUpRight01Icon}
+            strokeWidth={2}
+          />
+        </Link>
+      </Table.Cell>
+      <Table.Cell className={applicationColumnClass("location")}>
+        <Link
           className="inline-flex items-center gap-1.5 hover:underline"
           href={applicationMapsUrl(record)}
           rel="noreferrer"
@@ -111,40 +118,48 @@ function ApplicationRow({ record }: Readonly<{ record: ApplicationRecord }>) {
           <CountryFlag
             countryCode={opportunity.countryCode}
             fallback={
-              <HugeIcons className="size-4" icon={MapsLocation01Icon} />
+              <HugeiconsIcon
+                className="size-4"
+                icon={MapsLocation01Icon}
+                strokeWidth={2}
+              />
             }
           />
           {applicationLocation(record)}
-          <HugeIcons className="size-4 shrink-0" icon={ArrowUpRight01Icon} />
-        </a>
-      </TableCell>
-      <TableCell className={applicationColumnClass("status")}>
+          <HugeiconsIcon
+            className="size-4 shrink-0"
+            icon={ArrowUpRight01Icon}
+            strokeWidth={2}
+          />
+        </Link>
+      </Table.Cell>
+      <Table.Cell className={applicationColumnClass("status")}>
         <ApplicationStatusBadge status={record.application.status} />
-      </TableCell>
-      <TableCell className={applicationColumnClass("actions")}>
+      </Table.Cell>
+      <Table.Cell className={applicationColumnClass("actions")}>
         <ApplicationSheet record={record} />
-      </TableCell>
-    </TableRow>
+      </Table.Cell>
+    </Table.Row>
   );
 }
 
 /** Renders stable application rows while Convex hydrates. */
 function ApplicationLoadingRows() {
   return LOADING_ROW_KEYS.slice(0, LOADING_ROWS).map((rowKey) => (
-    <TableRow className="h-14 hover:bg-transparent" key={rowKey}>
+    <Table.Row className="h-16" id={`loading-${rowKey}`} key={rowKey}>
       {(["role", "company", "location", "status", "actions"] as const).map(
         (column) => (
-          <TableCell
+          <Table.Cell
             className={applicationColumnClass(column)}
             key={`${rowKey}-${column}`}
           >
             <Skeleton
               className={column === "actions" ? "mx-auto size-4" : "h-4 w-2/3"}
             />
-          </TableCell>
+          </Table.Cell>
         )
       )}
-    </TableRow>
+    </Table.Row>
   ));
 }
 
@@ -166,7 +181,7 @@ export function Tracker() {
     );
     setMailPending(false);
     if (!sent) {
-      toast.error(common("error"));
+      toast.danger(common("error"));
       return;
     }
     toast.success(t("mailSent"));
@@ -176,59 +191,81 @@ export function Tracker() {
     <section className="flex min-h-0 flex-1 flex-col">
       <Header
         actions={
-          <Button
-            disabled={mailPending}
-            onClick={emailDigest}
-            size="sm"
-            title={t("mailBody")}
-            variant="outline"
-          >
-            <HugeIcons
-              className={mailPending ? "size-4 animate-spin" : "size-4"}
-              icon={mailPending ? Loading03Icon : Mail01Icon}
-            />
-            <span className="hidden sm:inline">{t("mailButton")}</span>
-          </Button>
+          <Tooltip delay={200}>
+            <Button
+              isPending={mailPending}
+              onPress={emailDigest}
+              size="sm"
+              variant="secondary"
+            >
+              <HugeiconsIcon
+                className={mailPending ? "size-4 animate-spin" : "size-4"}
+                icon={mailPending ? Loading03Icon : Mail01Icon}
+                strokeWidth={2}
+              />
+              <span className="hidden sm:inline">{t("mailButton")}</span>
+            </Button>
+            <Tooltip.Content>{t("mailBody")}</Tooltip.Content>
+          </Tooltip>
         }
         title={t("title")}
       />
       <div className="mx-auto flex min-h-0 w-full max-w-[90rem] flex-1 px-4 py-4 sm:px-6">
-        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border">
-          <div className="relative min-h-0 flex-1">
-            <Table
-              className="min-w-full table-auto"
-              containerClassName="h-full min-h-0 overflow-x-auto overflow-y-scroll overscroll-contain [scrollbar-width:thin]"
+        <Table className="min-h-0 w-full min-w-0 flex-1 grid-rows-[minmax(0,1fr)_auto]">
+          <Table.ScrollContainer className="h-full min-h-0 overflow-auto overscroll-contain [container-type:inline-size]">
+            <Table.Content
+              aria-label={t("title")}
+              className={
+                records === undefined || records.length
+                  ? "min-w-[82rem] table-auto"
+                  : "h-full min-w-full table-auto"
+              }
             >
-              <TableHeader className="sticky top-0 z-30 bg-background">
-                <TableRow>
-                  <TableHead
-                    className={applicationColumnClass("role", "header")}
-                  >
-                    {search("role")}
-                  </TableHead>
-                  <TableHead
-                    className={applicationColumnClass("company", "header")}
-                  >
-                    {search("company")}
-                  </TableHead>
-                  <TableHead
-                    className={applicationColumnClass("location", "header")}
-                  >
-                    {search("location")}
-                  </TableHead>
-                  <TableHead
-                    className={applicationColumnClass("status", "header")}
-                  >
-                    {t("status")}
-                  </TableHead>
-                  <TableHead
-                    className={applicationColumnClass("actions", "header")}
-                  >
-                    <span className="sr-only">{search("actions")}</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+              <Table.Header>
+                <Table.Column
+                  className={applicationColumnClass("role", "header")}
+                  id="role"
+                  isRowHeader
+                >
+                  {search("role")}
+                </Table.Column>
+                <Table.Column
+                  className={applicationColumnClass("company", "header")}
+                  id="company"
+                >
+                  {search("company")}
+                </Table.Column>
+                <Table.Column
+                  className={applicationColumnClass("location", "header")}
+                  id="location"
+                >
+                  {search("location")}
+                </Table.Column>
+                <Table.Column
+                  className={applicationColumnClass("status", "header")}
+                  id="status"
+                >
+                  {t("status")}
+                </Table.Column>
+                <Table.Column
+                  className={applicationColumnClass("actions", "header")}
+                  id="actions"
+                >
+                  <span className="sr-only">{search("actions")}</span>
+                </Table.Column>
+              </Table.Header>
+              <Table.Body
+                renderEmptyState={() => (
+                  <EmptyState className="sticky left-0 flex h-full min-h-40 w-[100cqw] flex-col items-center justify-center gap-4 px-6 text-center text-muted text-sm">
+                    <HugeiconsIcon
+                      className="size-5"
+                      icon={BriefcaseBusinessIcon}
+                      strokeWidth={2}
+                    />
+                    {t("empty")}
+                  </EmptyState>
+                )}
+              >
                 {records === undefined ? <ApplicationLoadingRows /> : null}
                 {records?.map((record) => (
                   <ApplicationRow
@@ -236,35 +273,17 @@ export function Tracker() {
                     record={record}
                   />
                 ))}
-                {records?.length === 0 ? (
-                  <TableRow>
-                    <TableCell className="h-24 text-center" colSpan={5}>
-                      <span className="inline-flex items-center gap-2 text-muted-foreground">
-                        <HugeIcons
-                          className="size-4"
-                          icon={BriefcaseBusinessIcon}
-                        />
-                        {t("empty")}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 right-11 z-40 w-px bg-border"
-              data-slot="applications-action-divider"
-            />
-          </div>
-          <footer className="flex min-h-12 shrink-0 items-center border-t bg-muted/20 px-3 py-2 text-muted-foreground text-sm">
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+          <Table.Footer className="min-h-12 text-muted text-sm">
             {records === undefined ? (
               <Skeleton className="h-4 w-24" />
             ) : (
               t("applicationCount", { count: records.length })
             )}
-          </footer>
-        </div>
+          </Table.Footer>
+        </Table>
       </div>
     </section>
   );

@@ -1,23 +1,13 @@
 "use client";
 
+import { Button, Card, Input, toast } from "@heroui/react";
 import { Upload02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
 import { useAction, useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { toast } from "sonner";
 
 type CvProps = Readonly<{
   current: Doc<"profiles"> | null;
@@ -37,7 +27,7 @@ export function Cv({ current, disabled }: CvProps) {
   /** Uploads and extracts the selected PDF through Convex. */
   async function upload() {
     if (file?.type !== "application/pdf" || file.size > 5 * 1024 * 1024) {
-      toast.error(t("cvInvalid"));
+      toast.danger(t("cvInvalid"));
       return;
     }
     setPending(true);
@@ -63,7 +53,7 @@ export function Cv({ current, disabled }: CvProps) {
       );
     setPending(false);
     if (!uploaded) {
-      toast.error(common("error"));
+      toast.danger(common("error"));
       return;
     }
     setFile(null);
@@ -72,11 +62,11 @@ export function Cv({ current, disabled }: CvProps) {
 
   return (
     <Card aria-busy={disabled} inert={disabled}>
-      <CardHeader className="border-b">
-        <CardTitle>{t("cv")}</CardTitle>
-        <CardDescription>{t("cvHelp")}</CardDescription>
-      </CardHeader>
-      <CardContent>
+      <Card.Header>
+        <Card.Title>{t("cv")}</Card.Title>
+        <Card.Description>{t("cvHelp")}</Card.Description>
+      </Card.Header>
+      <Card.Content>
         <Input
           accept="application/pdf"
           aria-label={t("chooseCv")}
@@ -87,33 +77,42 @@ export function Cv({ current, disabled }: CvProps) {
           type="file"
         />
         <Button
-          className="h-auto w-full justify-between border-dashed p-4 text-left"
-          onClick={() => inputRef.current?.click()}
+          className="h-auto w-full justify-between p-4 text-left"
+          onPress={() => inputRef.current?.click()}
           type="button"
-          variant="outline"
+          variant="secondary"
         >
           <span className="min-w-0">
             <span className="block font-medium text-sm">
               {file?.name ?? current?.cvFileName ?? t("chooseCv")}
             </span>
-            <span className="mt-1 block text-muted-foreground text-xs">
+            <span className="mt-1 block text-muted text-xs">
               {t("cvLimit")}
             </span>
           </span>
-          <HugeIcons className="size-4 shrink-0" icon={Upload02Icon} />
+          <HugeiconsIcon
+            className="size-4 shrink-0"
+            icon={Upload02Icon}
+            strokeWidth={2}
+          />
         </Button>
-      </CardContent>
-      <CardFooter className="flex-wrap justify-between gap-4">
-        <p className="text-muted-foreground text-sm">{t("cvSaveHelp")}</p>
+      </Card.Content>
+      <Card.Footer className="flex-wrap justify-between gap-4">
+        <p className="text-muted text-sm">{t("cvSaveHelp")}</p>
         <Button
-          disabled={disabled || pending || !current || !file}
-          onClick={upload}
+          isDisabled={disabled || pending || !current || !file}
+          isPending={pending}
+          onPress={upload}
           size="sm"
         >
-          <HugeIcons className="size-4" icon={Upload02Icon} />
+          <HugeiconsIcon
+            className="size-4"
+            icon={Upload02Icon}
+            strokeWidth={2}
+          />
           {t("upload")}
         </Button>
-      </CardFooter>
+      </Card.Footer>
     </Card>
   );
 }

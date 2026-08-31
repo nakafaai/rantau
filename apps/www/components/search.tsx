@@ -1,11 +1,10 @@
 "use client";
 
+import { Button, Form, Input, toast } from "@heroui/react";
 import { Loading03Icon, Search02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
 import { OpportunityPathway, WorkMode } from "@repo/domain/opportunity";
 import { makePlaceScope } from "@repo/domain/place";
 import { useForm } from "@tanstack/react-form";
@@ -13,7 +12,6 @@ import { useMutation, useQuery } from "convex/react";
 import { Effect, Option, Schema } from "effect";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { Filters, type FilterValue } from "@/components/filters";
 import { Results } from "@/components/results";
 import { SearchHistory } from "@/components/search-history";
@@ -131,13 +129,13 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
         makePlaceScope(value).pipe(Effect.option)
       );
       if (Option.isNone(placeOption)) {
-        toast.error(t("invalidPlace"));
+        toast.danger(t("invalidPlace"));
         return;
       }
       const place = placeOption.value;
       const query = value.query.trim();
       if (!(query || place || value.pathway || value.workMode)) {
-        toast.error(t("missing"));
+        toast.danger(t("missing"));
         return;
       }
 
@@ -152,7 +150,7 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
         () => null
       );
       if (!started) {
-        toast.error(common("error"));
+        toast.danger(common("error"));
         return;
       }
       const params = new URLSearchParams(searchParams.toString());
@@ -178,10 +176,10 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="z-10 shrink-0 border-b bg-background">
+      <header className="z-10 shrink-0 bg-background">
         <div className="mx-auto w-full max-w-[90rem] px-4 py-3 sm:px-6">
           <h1 className="sr-only">{t("title")}</h1>
-          <form
+          <Form
             className="space-y-3"
             onSubmit={(event) => {
               event.preventDefault();
@@ -209,14 +207,16 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
                 {([canSubmit, isSubmitting]) => (
                   <Button
                     className="shrink-0"
-                    disabled={!canSubmit || isSubmitting}
+                    isDisabled={!canSubmit || isSubmitting}
+                    isPending={isSubmitting}
                     type="submit"
                   >
-                    <HugeIcons
+                    <HugeiconsIcon
                       className={
                         isSubmitting ? "size-4 animate-spin" : "size-4"
                       }
                       icon={isSubmitting ? Loading03Icon : Search02Icon}
+                      strokeWidth={2}
                     />
                     {isSubmitting ? t("starting") : t("button")}
                   </Button>
@@ -236,11 +236,7 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
                 })}
               >
                 {(filters) => (
-                  <Filters
-                    disabled={false}
-                    onChange={changeFilters}
-                    value={filters}
-                  />
+                  <Filters onChange={changeFilters} value={filters} />
                 )}
               </form.Subscribe>
               <SearchHistory activeSearchId={searchId} />
@@ -252,22 +248,22 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
               >
                 {(criteriaChanged) =>
                   criteriaChanged ? (
-                    <span className="text-muted-foreground text-sm">
+                    <span className="text-muted text-sm">
                       {t("criteriaChanged")}
                     </span>
                   ) : null
                 }
               </form.Subscribe>
               {running ? (
-                <span className="inline-flex items-center gap-2 text-muted-foreground text-sm">
-                  <span className="size-2 animate-pulse rounded-full bg-primary" />
+                <span className="inline-flex items-center gap-2 text-muted text-sm">
+                  <span className="size-2 animate-pulse rounded-full bg-accent" />
                   {session.stage === "expansion"
                     ? t("expandingResults")
                     : t("streamingResults")}
                 </span>
               ) : null}
               {session?.outcome === "partial" ? (
-                <span className="text-muted-foreground text-sm">
+                <span className="text-muted text-sm">
                   {session.limitation === "source_capacity"
                     ? t("partialCapacity", {
                         count: session.resultCount ?? 0,
@@ -278,7 +274,7 @@ function SearchWorkspace({ profile }: SearchWorkspaceProps) {
                 </span>
               ) : null}
             </div>
-          </form>
+          </Form>
         </div>
       </header>
 

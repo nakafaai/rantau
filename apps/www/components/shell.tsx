@@ -1,40 +1,30 @@
 "use client";
 
 import {
+  Avatar,
+  Button,
+  buttonVariants,
+  cn,
+  Drawer,
+  type Key,
+  Label,
+  Link,
+  ListBox,
+  ScrollShadow,
+  Surface,
+} from "@heroui/react";
+import {
   BriefcaseBusinessIcon,
   FileUserIcon,
+  Menu01Icon,
   Search02Icon,
 } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-} from "@repo/design-system/components/ui/sidebar-content";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuDescription,
-  SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar-menu";
-import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
-import {
-  Sidebar,
-  SidebarInset,
-  SidebarTrigger,
-} from "@repo/design-system/components/ui/sidebar-shell";
-import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { type MouseEvent, Suspense } from "react";
-import { Account } from "@/components/account";
-import { Profile } from "@/components/profile";
-import { Search } from "@/components/search";
-import { Tracker } from "@/components/tracker";
+import type { ReactNode } from "react";
+import { useState } from "react";
+import { DesktopAccount, MobileAccount } from "@/components/account";
 import {
   type WorkspaceRoute,
   workspacePath,
@@ -50,149 +40,190 @@ const destinations = [
   route: WorkspaceRoute;
 }>;
 
-/** Renders the persistent Nakafa workspace around a route-owned page. */
-export function Shell() {
-  const t = useTranslations("common");
-  const pathname = usePathname();
-  const route = workspaceRoute(pathname);
-
-  return (
-    <SidebarProvider>
-      <WorkspaceFrame route={route} title={t(route)} />
-    </SidebarProvider>
-  );
-}
-
-/** Selects the current workspace view without remounting shared providers. */
-function WorkspacePage({ route }: Readonly<{ route: WorkspaceRoute }>) {
-  if (route === "profile") {
-    return <Profile />;
-  }
-  if (route === "applications") {
-    return <Tracker />;
-  }
-  return (
-    <Suspense>
-      <Search />
-    </Suspense>
-  );
-}
-
-type WorkspaceFrameProps = Readonly<{
-  route: WorkspaceRoute;
-  title: string;
+type NavigationProps = Readonly<{
+  activeRoute: WorkspaceRoute;
+  onNavigate?: () => void;
 }>;
 
-/** Composes the responsive workspace body and sidebar without remounting them. */
-function WorkspaceFrame({ route, title }: WorkspaceFrameProps) {
+/** Renders the compact product identity used by both navigation surfaces. */
+function Brand({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
+  const t = useTranslations("common");
+  const locale = useLocale() === "id" ? "id" : "en";
+
+  return (
+    <Link
+      className={cn(
+        buttonVariants({ fullWidth: true, variant: "ghost" }),
+        "h-auto justify-start gap-3 p-2 no-underline hover:no-underline"
+      )}
+      href={workspacePath(locale, "search")}
+      onPress={onNavigate}
+    >
+      <Avatar color="accent" size="sm">
+        <Avatar.Fallback>
+          <HugeiconsIcon
+            className="size-4"
+            icon={BriefcaseBusinessIcon}
+            strokeWidth={2}
+          />
+        </Avatar.Fallback>
+      </Avatar>
+      <span className="grid min-w-0 flex-1 text-left leading-tight">
+        <span className="truncate font-semibold text-sm">{t("brand")}</span>
+        <span className="truncate text-muted text-xs">{t("tagline")}</span>
+      </span>
+    </Link>
+  );
+}
+
+/** Renders the native HeroUI navigation actions for every workspace route. */
+function NavigationLinks({ activeRoute, onNavigate }: NavigationProps) {
+  const t = useTranslations("common");
+  const locale = useLocale() === "id" ? "id" : "en";
+  const router = useRouter();
+
+  /** Navigates one known workspace destination without a document reload. */
+  function navigate(key: Key) {
+    const destination = destinations.find(({ route }) => route === key);
+    if (!destination) {
+      return;
+    }
+    router.push(workspacePath(locale, destination.route), { scroll: false });
+    onNavigate?.();
+  }
+
+  return (
+    <ListBox
+      aria-label={t("workspace")}
+      onSelectionChange={(keys) => {
+        if (keys === "all") {
+          return;
+        }
+        const [key] = keys;
+        if (key !== undefined) {
+          navigate(key);
+        }
+      }}
+      selectedKeys={new Set([activeRoute])}
+      selectionMode="single"
+    >
+      {destinations.map(({ icon, route }) => (
+        <ListBox.Item
+          className="data-[selected=true]:bg-default"
+          id={route}
+          key={route}
+          textValue={t(route)}
+        >
+          <HugeiconsIcon className="size-4" icon={icon} strokeWidth={2} />
+          <Label>{t(route)}</Label>
+        </ListBox.Item>
+      ))}
+    </ListBox>
+  );
+}
+
+/** Renders the persistent desktop sidebar with HeroUI surface hierarchy. */
+function DesktopNavigation({
+  activeRoute,
+}: Pick<NavigationProps, "activeRoute">) {
+  const t = useTranslations("common");
+
+  return (
+    <Surface className="flex h-full min-h-0 flex-col" variant="secondary">
+      <div className="p-3">
+        <Brand />
+      </div>
+      <ScrollShadow className="min-h-0 flex-1 p-3">
+        <p className="px-3 py-2 font-medium text-muted text-xs">
+          {t("workspace")}
+        </p>
+        <NavigationLinks activeRoute={activeRoute} />
+      </ScrollShadow>
+      <div className="p-3">
+        <DesktopAccount />
+      </div>
+    </Surface>
+  );
+}
+
+/** Renders a mobile navigation drawer using HeroUI's native anatomy. */
+function MobileNavigation({
+  activeRoute,
+  onNavigate,
+}: Omit<NavigationProps, "tooltips">) {
+  const t = useTranslations("common");
+
   return (
     <>
-      <SidebarInset>
-        <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center border-b bg-background lg:hidden">
-          <div className="flex w-full items-center gap-3 px-4">
-            <SidebarTrigger />
-            <p className="truncate font-medium text-sm">{title}</p>
-          </div>
-        </header>
-        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-          <WorkspacePage route={route} />
-        </div>
-      </SidebarInset>
-      <AppSidebar activeRoute={route} containerClassName="order-first" />
+      <Drawer.CloseTrigger />
+      <Drawer.Header className="pe-8">
+        <Drawer.Heading className="sr-only">{t("workspace")}</Drawer.Heading>
+        <Brand onNavigate={onNavigate} />
+      </Drawer.Header>
+      <Drawer.Body>
+        <p className="px-3 py-2 font-medium text-muted text-xs">
+          {t("workspace")}
+        </p>
+        <NavigationLinks activeRoute={activeRoute} onNavigate={onNavigate} />
+      </Drawer.Body>
+      <Drawer.Footer>
+        <MobileAccount onNavigate={onNavigate ?? (() => undefined)} />
+      </Drawer.Footer>
     </>
   );
 }
 
-type AppSidebarProps = Readonly<{
-  activeRoute: WorkspaceRoute;
-  containerClassName?: string;
-}>;
+/*
+ * Keep the sidebar composition explicit. HeroUI v3 does not expose the Pro
+ * template's Sidebar primitive, so the shell composes its public Surface,
+ * ListBox, Drawer, ScrollShadow, Avatar, Button, and Surface primitives directly.
+ */
 
-/** Renders clean route navigation and the consolidated account footer. */
-function AppSidebar({ activeRoute, containerClassName }: AppSidebarProps) {
+/** Renders the responsive HeroUI workspace shell without legacy sidebar state. */
+export function Shell({ children }: Readonly<{ children: ReactNode }>) {
   const t = useTranslations("common");
-  const locale = useLocale() === "id" ? "id" : "en";
-  const { setOpenMobile } = useSidebar();
-
-  /** Pushes one semantic workspace link through the native history API. */
-  function navigate(event: MouseEvent<HTMLAnchorElement>) {
-    if (
-      event.defaultPrevented ||
-      event.button !== 0 ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey ||
-      (event.currentTarget.target && event.currentTarget.target !== "_self")
-    ) {
-      return;
-    }
-    event.preventDefault();
-    setOpenMobile(false);
-    const url = new URL(event.currentTarget.href);
-    const destination = `${url.pathname}${url.search}${url.hash}`;
-    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (destination !== current) {
-      window.history.pushState(null, "", destination);
-    }
-  }
+  const pathname = usePathname();
+  const route = workspaceRoute(pathname);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <Sidebar className="z-20" containerClassName={containerClassName}>
-      <SidebarHeader className="border-b">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={
-                <Link
-                  href={workspacePath(locale, "search")}
-                  onClick={navigate}
-                />
-              }
-              size="lg"
-            >
-              <div className="grid size-8 shrink-0 place-items-center rounded-md border bg-background shadow-xs">
-                <HugeIcons className="size-4" icon={BriefcaseBusinessIcon} />
-              </div>
-              <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                <p className="truncate font-medium">{t("brand")}</p>
-                <SidebarMenuDescription>{t("tagline")}</SidebarMenuDescription>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>{t("workspace")}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {destinations.map(({ icon, route }) => (
-                <SidebarMenuItem key={route}>
-                  <SidebarMenuButton
-                    isActive={activeRoute === route}
-                    render={
-                      <Link
-                        href={workspacePath(locale, route)}
-                        onClick={navigate}
-                      />
-                    }
-                    tooltip={t(route)}
-                  >
-                    <HugeIcons className="size-4" icon={icon} />
-                    <span>{t(route)}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter className="border-t">
-        <SidebarMenu>
-          <Account onNavigate={navigate} />
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+    <div className="flex h-svh w-full overflow-hidden bg-background">
+      <aside className="hidden h-full w-64 shrink-0 border-separator border-r lg:block">
+        <DesktopNavigation activeRoute={route} />
+      </aside>
+
+      <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex h-14 shrink-0 items-center gap-3 bg-surface-secondary px-4 lg:hidden">
+          <Button
+            aria-label={t("workspace")}
+            isIconOnly
+            onPress={() => setMobileOpen(true)}
+            size="sm"
+            variant="tertiary"
+          >
+            <HugeiconsIcon
+              className="size-5"
+              icon={Menu01Icon}
+              strokeWidth={2}
+            />
+          </Button>
+          <p className="truncate font-medium text-sm">{t(route)}</p>
+        </header>
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+          {children}
+        </div>
+      </main>
+
+      <Drawer.Backdrop isOpen={mobileOpen} onOpenChange={setMobileOpen}>
+        <Drawer.Content placement="left">
+          <Drawer.Dialog className="w-72">
+            <MobileNavigation
+              activeRoute={route}
+              onNavigate={() => setMobileOpen(false)}
+            />
+          </Drawer.Dialog>
+        </Drawer.Content>
+      </Drawer.Backdrop>
+    </div>
   );
 }

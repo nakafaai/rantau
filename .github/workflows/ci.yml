@@ -72,3 +72,7 @@ jobs:
         env:
           NEXT_PUBLIC_CONVEX_URL: https://ci-placeholder.convex.cloud
         run: pnpm --filter www build
+      - name: Install browser for acceptance tests
+        run: pnpm --filter www exec playwright install --with-deps chromium
+      - name: Run browser acceptance tests
+        run: pnpm --filter www test:e2e

@@ -6,7 +6,7 @@ import {
 import type { ThemeProviderProps } from "next-themes";
 import { ThemeProvider as NextThemeProvider } from "next-themes";
 
-/** Configures Nakafa's concrete themes and delegates system resolution to next-themes. */
+/** Configures HeroUI's light and dark classes through next-themes. */
 export function ThemeProvider({ children, ...properties }: ThemeProviderProps) {
   return (
     <NextThemeProvider

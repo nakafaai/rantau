@@ -6,35 +6,36 @@ export function resultColumnClass(
   region: ResultColumnRegion = "body"
 ) {
   if (columnId === "select") {
-    return "w-11 px-3";
+    return "w-14 min-w-14 px-4";
   }
   if (columnId === "recommendation") {
-    return "min-w-32 px-3";
+    return "w-44 min-w-44 px-4";
   }
   if (columnId === "role") {
-    return "min-w-64 px-3";
+    return "w-[28rem] min-w-[28rem] px-4";
   }
   if (columnId === "company") {
-    return "min-w-52 px-3";
+    return "w-80 min-w-80 px-4";
   }
   if (columnId === "location") {
-    return "min-w-64 px-3";
+    return "w-80 min-w-80 px-4";
   }
   if (columnId === "pathway") {
-    return "min-w-40 px-3";
+    return "w-48 min-w-48 px-4";
   }
   if (columnId === "mode") {
-    return "min-w-32 px-3";
+    return "w-40 min-w-40 px-4";
   }
   if (columnId === "salary") {
-    return "min-w-52 px-3";
+    return "w-60 min-w-60 px-4";
   }
   if (columnId === "source") {
-    return "min-w-48 px-3";
+    return region === "header" ? "w-60 min-w-60 after:hidden" : "w-60 min-w-60";
   }
   if (columnId === "actions") {
-    const layer = region === "header" ? "z-40" : "z-20";
-    return `sticky right-0 ${layer} w-11 min-w-11 max-w-11 overflow-hidden bg-background px-2 shadow-[inset_0_-1px_0_var(--border)] group-hover:bg-muted group-data-[state=selected]:bg-muted`;
+    return region === "header"
+      ? "sticky right-0 z-30 w-16 min-w-16 max-w-16 border-s border-separator/50 bg-surface-secondary px-3"
+      : "sticky right-0 z-20 w-16 min-w-16 max-w-16 border-s border-separator/50 bg-surface px-3";
   }
-  return "px-3";
+  return "";
 }
