@@ -31,9 +31,6 @@ export default defineSchema({
     .index("by_search_and_url", ["searchId", "opportunity.directApplyUrl"]),
   profiles: defineTable({
     ...profileInputValidator.fields,
-    agentMailEmail: v.optional(v.string()),
-    agentMailInboxId: v.optional(v.string()),
-    agentMailProvisioningAt: v.optional(v.number()),
     cvFileName: v.optional(v.string()),
     cvStorageId: v.optional(v.id("_storage")),
     cvText: v.optional(v.string()),
