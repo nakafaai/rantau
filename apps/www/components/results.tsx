@@ -257,7 +257,7 @@ export function Results({
         </Table.Content>
       </Table.ScrollContainer>
 
-      <Table.Footer>
+      <Table.Footer className="min-h-12 overflow-hidden">
         <ResultsFooter
           canNext={table.getCanNextPage()}
           canPrevious={table.getCanPreviousPage()}

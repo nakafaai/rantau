@@ -60,7 +60,10 @@ export function ResultsFooter({
   return (
     <TableFooterContent>
       <div className="flex min-w-0 items-center gap-2" role="status">
-        <span className="whitespace-nowrap">
+        <span className="whitespace-nowrap sm:hidden">
+          {t("resultCount", { total })}
+        </span>
+        <span className="hidden whitespace-nowrap sm:inline">
           {t("resultRange", { from: pageStart, to: pageEnd, total })}
         </span>
         {running || loading ? (
@@ -68,26 +71,39 @@ export function ResultsFooter({
         ) : null}
       </div>
       {failed && visibleRows ? (
-        <span className="min-w-0 flex-1 truncate text-danger" role="alert">
+        <span
+          className="sr-only text-danger md:not-sr-only md:min-w-0 md:flex-1 md:truncate"
+          role="alert"
+        >
           {t("failed")}
         </span>
       ) : null}
       {selectedCount ? (
-        <Button onPress={onSaveSelected} size="sm" variant="secondary">
+        <Button
+          aria-label={t("saveSelected", { count: selectedCount })}
+          className="shrink-0"
+          onPress={onSaveSelected}
+          size="sm"
+          variant="secondary"
+        >
           <HugeiconsIcon
             className="size-4"
             icon={Bookmark01Icon}
             strokeWidth={2}
           />
-          {t("saveSelected", { count: selectedCount })}
+          <span className="hidden sm:inline">
+            {t("saveSelected", { count: selectedCount })}
+          </span>
         </Button>
       ) : null}
-      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:ml-auto lg:w-auto lg:flex-nowrap lg:justify-end lg:gap-4">
-        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start">
-          <span className="whitespace-nowrap">{t("rowsPerPage")}</span>
+      <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden whitespace-nowrap sm:inline">
+            {t("rowsPerPage")}
+          </span>
           <Select
             aria-label={t("rowsPerPage")}
-            className="w-20"
+            className="w-16 sm:w-20"
             onChange={(value) => {
               if (value !== null) {
                 onPageSizeChange(Number(value));
@@ -117,34 +133,33 @@ export function ResultsFooter({
             </Select.Popover>
           </Select>
         </div>
-        <Pagination
-          className="w-full flex-row gap-3 sm:w-auto sm:gap-4"
-          size="sm"
-        >
-          <Pagination.Summary className="hidden whitespace-nowrap sm:block">
-            {t("page", {
-              current: pageIndex + 1,
-              total: Math.max(pageCount, 1),
-            })}
-          </Pagination.Summary>
-          <Pagination.Content>
-            <Pagination.Item>
-              <Pagination.Previous
-                isDisabled={!canPrevious}
-                onPress={onPrevious}
-              >
-                <Pagination.PreviousIcon />
-                <span className="sr-only">{t("previous")}</span>
-              </Pagination.Previous>
-            </Pagination.Item>
-            <Pagination.Item>
-              <Pagination.Next isDisabled={!canNext} onPress={onNext}>
-                <span className="sr-only">{t("next")}</span>
-                <Pagination.NextIcon />
-              </Pagination.Next>
-            </Pagination.Item>
-          </Pagination.Content>
-        </Pagination>
+        {pageCount > 1 ? (
+          <Pagination className="shrink-0 flex-row gap-2 sm:gap-4" size="sm">
+            <Pagination.Summary className="hidden whitespace-nowrap md:block">
+              {t("page", {
+                current: pageIndex + 1,
+                total: pageCount,
+              })}
+            </Pagination.Summary>
+            <Pagination.Content>
+              <Pagination.Item>
+                <Pagination.Previous
+                  isDisabled={!canPrevious}
+                  onPress={onPrevious}
+                >
+                  <Pagination.PreviousIcon />
+                  <span className="sr-only">{t("previous")}</span>
+                </Pagination.Previous>
+              </Pagination.Item>
+              <Pagination.Item>
+                <Pagination.Next isDisabled={!canNext} onPress={onNext}>
+                  <span className="sr-only">{t("next")}</span>
+                  <Pagination.NextIcon />
+                </Pagination.Next>
+              </Pagination.Item>
+            </Pagination.Content>
+          </Pagination>
+        ) : null}
       </div>
     </TableFooterContent>
   );
@@ -155,7 +170,7 @@ type TableFooterContentProps = Readonly<{ children: ReactNode }>;
 /** Provides the responsive content row inside a native HeroUI table footer. */
 function TableFooterContent({ children }: TableFooterContentProps) {
   return (
-    <div className="flex w-full flex-col gap-3 text-muted text-sm lg:flex-row lg:items-center">
+    <div className="flex w-full min-w-0 items-center gap-2 text-muted text-sm sm:gap-4">
       {children}
     </div>
   );

@@ -107,6 +107,7 @@
     "selectPage": "Pilih halaman ini",
     "saveSelected": "Simpan {count}",
     "selectedSaved": "{count} kesempatan tersimpan",
+    "resultCount": "{total} hasil",
     "resultRange": "{from}-{to} dari {total} hasil",
     "rowsPerPage": "Baris per halaman",
     "page": "Halaman {current} dari {total}",
