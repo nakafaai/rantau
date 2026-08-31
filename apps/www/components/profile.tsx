@@ -1,35 +1,38 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import { ProfileInput, WorkAuthorization } from "@repo/domain/profile";
+import { ProfileInput } from "@repo/domain/profile";
 import { useQuery } from "convex/react";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
 import { toast } from "sonner";
 import { Cv } from "@/components/cv";
 import { ProfileForm } from "@/components/form";
 import { Header } from "@/components/header";
 import { useSaveProfile } from "@/hooks/profile";
+import type { ProfileFormValues } from "@/lib/profile-form";
 
-/** Reads one trimmed optional text value from a browser form. */
-function optionalText(formData: FormData, name: string) {
-  return String(formData.get(name) ?? "").trim() || undefined;
+/** Normalizes optional profile text before domain validation. */
+function optionalText(value: string) {
+  return value.trim() || undefined;
 }
 
-/** Reads every checked value for one structured form group. */
-function selectedValues(formData: FormData, name: string) {
-  return formData.getAll(name).flatMap((value) => {
-    const selected = String(value).trim();
+/** Normalizes one controlled multi-select value list. */
+function selectedValues(values: readonly string[]) {
+  return values.flatMap((value) => {
+    const selected = value.trim();
     return selected ? [selected] : [];
   });
 }
 
-/** Reads the two visible language rows without exposing storage grammar. */
-function selectedLanguages(formData: FormData) {
-  return [1, 2].flatMap((index) => {
-    const language = optionalText(formData, `language${index}`);
-    const level = optionalText(formData, `level${index}`);
+/** Reads the two controlled language rows without storage grammar. */
+function selectedLanguages(values: ProfileFormValues) {
+  return [
+    { language: values.language1, level: values.level1 },
+    { language: values.language2, level: values.level2 },
+  ].flatMap(({ language: rawLanguage, level: rawLevel }) => {
+    const language = optionalText(rawLanguage);
+    const level = optionalText(rawLevel);
     return language && level ? [{ language, level }] : [];
   });
 }
@@ -42,36 +45,30 @@ export function Profile() {
   const account = useQuery(api.accounts.current);
   const current = useQuery(api.profiles.get);
   const saveProfile = useSaveProfile(account?.userId);
-  const [pending, setPending] = useState(false);
 
   /** Validates one structured profile and persists it through Convex. */
-  async function submit(formData: FormData) {
-    const otherSkill = optionalText(formData, "otherSkill");
-    const role = optionalText(formData, "role");
-    const country = optionalText(formData, "country");
-    const education = optionalText(formData, "education");
-    const license = optionalText(formData, "license");
-    const workAuthorization = Option.getOrUndefined(
-      Schema.decodeUnknownOption(WorkAuthorization)(
-        optionalText(formData, "workAuthorization")
-      )
-    );
+  async function submit(values: ProfileFormValues) {
+    const otherSkill = optionalText(values.otherSkill);
+    const role = optionalText(values.role);
+    const country = optionalText(values.country);
+    const education = optionalText(values.education);
+    const license = optionalText(values.license);
     const candidate = {
       desiredLocations: country ? [country] : [],
       desiredRoles: role ? [role] : [],
-      documents: selectedValues(formData, "documents"),
+      documents: selectedValues(values.documents),
       education: education ? [education] : [],
-      experienceYears: Number(formData.get("experience") ?? 0),
-      languages: selectedLanguages(formData),
+      experienceYears: values.experience ?? 0,
+      languages: selectedLanguages(values),
       licenses: license ? [license] : [],
       locale,
-      pathways: selectedValues(formData, "pathways"),
+      pathways: selectedValues(values.pathways),
       skills: [
-        ...selectedValues(formData, "skills"),
+        ...selectedValues(values.skills),
         ...(otherSkill ? [otherSkill] : []),
       ],
-      workAuthorization,
-      workModes: selectedValues(formData, "workModes"),
+      workAuthorization: values.workAuthorization,
+      workModes: selectedValues(values.workModes),
     };
     const decoded = await Effect.runPromise(
       Schema.decodeUnknownEffect(ProfileInput)(candidate).pipe(Effect.option)
@@ -81,7 +78,6 @@ export function Profile() {
       toast.error(common("error"));
       return false;
     }
-    setPending(true);
     const saved = await saveProfile({
       ...decoded.value,
       desiredLocations: [...decoded.value.desiredLocations],
@@ -97,7 +93,6 @@ export function Profile() {
       () => true,
       () => false
     );
-    setPending(false);
     if (!saved) {
       toast.error(common("error"));
       return false;
@@ -116,7 +111,6 @@ export function Profile() {
             disabled={current === undefined || account === undefined}
             key={`${current?._id ?? "new"}-${current?.updatedAt ?? 0}`}
             onSubmit={submit}
-            pending={pending}
           />
           <Cv current={current ?? null} disabled={current === undefined} />
         </div>
