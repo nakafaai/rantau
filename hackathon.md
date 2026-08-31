@@ -13,7 +13,7 @@
 - **AI model:** `google/gemini-3.7-flash` through Vercel AI Gateway
 - **Interface:** HeroUI v3 with React Aria, Tailwind CSS 4, Hugeicons, TanStack Table, and TanStack Form
 - **Started:** 2026-08-30T04:20:15Z
-- **Last updated:** 2026-08-31T19:41:47Z
+- **Last updated:** 2026-08-31T21:00:00Z
 
 ## Log
 
@@ -118,3 +118,9 @@ Adopted the official HeroUI Sky preset semantic palette across light and dark ap
 PR #53 exact head `fa503967dda13db9ab888b19c016c677de2ae038` passed Verify and React Doctor, then merged as `b73a46b07a975da2640015cc2c574cc0cb128593`. Local verification passed formatting, Effect source checks, repository policy, all package typechecks, 103 Vitest tests with full configured coverage, the static Next.js production build, four desktop and mobile Playwright checks, React Doctor at 100 out of 100, and HeroUI Doctor for the web app.
 
 Deployed the merged commit to `dusty-toad-573` with static deployment `d62dbe64-a0d3-42ca-a8ec-5c66583998a3`. Production browser checks confirmed distinct dark Card and field layers, zero document overflow at 1440 and 390 pixel viewports, a 40 pixel mobile results footer, and no browser warnings or errors. The published Sky CSS asset matches the merged local artifact byte for byte at SHA-256 `ba0e110371fefba8c5926bbde03f155cf40228b611886526b0550603858cc244`; canonical workspace routes return 200, the legacy Indonesian `index.html` route redirects with 308, and an unknown route returns 404.
+
+### 2026-08-31 - 86154fc
+
+Replaced the Sky palette with the official HeroUI Airbnb preset and rebuilt the authentication switch, result details, application details, empty states, and table headers from native HeroUI v3 compound components. Result and application headers now stay inside their single scroll owner, while empty tables retain the same column geometry as populated tables (`packages/design-system/styles/globals.css`, `apps/www/components/auth.tsx`, `apps/www/components/result`, `apps/www/components/application`, `apps/www/components/opportunity`).
+
+Grouped capability files under one-word directories and migrated every multiword presentation key to kebab-case without changing domain contracts. Local verification passes formatting, Effect source checks, repository quality contracts, all package typechecks, 103 Vitest tests with full configured coverage, the static Next.js production build, and six Playwright checks across Desktop Chrome and Pixel 7 (`apps/www/messages`, `apps/www/e2e/auth.e2e.ts`).
