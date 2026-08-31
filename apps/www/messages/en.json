@@ -107,6 +107,7 @@
     "selectPage": "Select this page",
     "saveSelected": "Save {count}",
     "selectedSaved": "Saved {count} opportunities",
+    "resultCount": "{total, plural, one {# result} other {# results}}",
     "resultRange": "{from}-{to} of {total} results",
     "rowsPerPage": "Rows per page",
     "page": "Page {current} of {total}",
