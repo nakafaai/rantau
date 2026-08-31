@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Button,
-  Chip,
-  Drawer,
-  Label,
-  Link,
-  ListBox,
-  Select,
-} from "@heroui/react";
+import { Button, Chip, Drawer, Label, ListBox, Select } from "@heroui/react";
 import { Cancel01Icon, FilterAddIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useTranslations } from "next-intl";
@@ -140,20 +132,6 @@ export function Filters({ onChange, value }: FiltersProps) {
                   </Select.Popover>
                 </Select>
               </div>
-              <p className="text-muted text-sm">
-                {t.rich("geographyAttribution", {
-                  link: (children) => (
-                    <Link
-                      href="https://github.com/dr5hn/countrystatecity-npm"
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      {children}
-                      <Link.Icon />
-                    </Link>
-                  ),
-                })}
-              </p>
             </Drawer.Body>
             <Drawer.Footer className="justify-between">
               <Button
