@@ -159,62 +159,72 @@ export function Results({ failed, loading, records, running }: ResultsProps) {
       aria-busy={loading || running}
       className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border"
     >
-      <Table
-        className="min-w-full table-auto"
-        containerClassName="min-h-0 flex-1 overflow-auto overscroll-contain [scrollbar-gutter:stable]"
-      >
-        <TableHeader className="sticky top-0 z-10 bg-background">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead
-                  className={resultColumnClass(header.column.id, "header")}
-                  key={header.id}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow
-              aria-selected={row.getIsSelected()}
-              className="group h-14"
-              data-state={row.getIsSelected() ? "selected" : undefined}
-              key={row.id}
-            >
-              {row.getVisibleCells().map((cell) => (
+      <div className="relative min-h-0 flex-1">
+        <Table
+          className="min-w-full table-auto"
+          containerClassName="h-full min-h-0 overflow-auto overscroll-contain [scrollbar-gutter:stable]"
+        >
+          <TableHeader className="sticky top-0 z-10 bg-background">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    className={resultColumnClass(header.column.id, "header")}
+                    key={header.id}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => (
+              <TableRow
+                aria-selected={row.getIsSelected()}
+                className="group h-14"
+                data-state={row.getIsSelected() ? "selected" : undefined}
+                key={row.id}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell
+                    className={resultColumnClass(cell.column.id)}
+                    key={cell.id}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+            {loadingRows ? (
+              <LoadingRows
+                columns={table.getAllLeafColumns().map((column) => column.id)}
+                count={loadingRows}
+              />
+            ) : null}
+            {rows.length || loadingRows ? null : (
+              <TableRow>
                 <TableCell
-                  className={resultColumnClass(cell.column.id)}
-                  key={cell.id}
+                  className="h-24 text-center"
+                  colSpan={columns.length}
                 >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  {failed ? t("failed") : t("noResults")}
                 </TableCell>
-              ))}
-            </TableRow>
-          ))}
-          {loadingRows ? (
-            <LoadingRows
-              columns={table.getAllLeafColumns().map((column) => column.id)}
-              count={loadingRows}
-            />
-          ) : null}
-          {rows.length || loadingRows ? null : (
-            <TableRow>
-              <TableCell className="h-24 text-center" colSpan={columns.length}>
-                {failed ? t("failed") : t("noResults")}
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-11 z-40 w-px bg-border"
+          data-slot="results-action-divider"
+        />
+      </div>
 
       <ResultsFooter
         canNext={table.getCanNextPage()}

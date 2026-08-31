@@ -34,7 +34,7 @@ export function resultColumnClass(
   }
   if (columnId === "actions") {
     const layer = region === "header" ? "z-30" : "z-20";
-    return `sticky right-0 ${layer} w-12 bg-background px-2 before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-border before:content-[''] group-hover:bg-muted group-data-[state=selected]:bg-muted`;
+    return `sticky right-0 ${layer} w-11 bg-background px-2 group-hover:bg-muted group-data-[state=selected]:bg-muted`;
   }
   return "px-3";
 }
