@@ -13,7 +13,7 @@
 - **AI model:** `google/gemini-3.7-flash` through Vercel AI Gateway
 - **Interface:** HeroUI v3 with React Aria, Tailwind CSS 4, Hugeicons, TanStack Table, and TanStack Form
 - **Started:** 2026-08-30T04:20:15Z
-- **Last updated:** 2026-08-31T21:00:00Z
+- **Last updated:** 2026-08-31T21:11:56Z
 
 ## Log
 
@@ -124,3 +124,11 @@ Deployed the merged commit to `dusty-toad-573` with static deployment `d62dbe64-
 Replaced the Sky palette with the official HeroUI Airbnb preset and rebuilt the authentication switch, result details, application details, empty states, and table headers from native HeroUI v3 compound components. Result and application headers now stay inside their single scroll owner, while empty tables retain the same column geometry as populated tables (`packages/design-system/styles/globals.css`, `apps/www/components/auth.tsx`, `apps/www/components/result`, `apps/www/components/application`, `apps/www/components/opportunity`).
 
 Grouped capability files under one-word directories and migrated every multiword presentation key to kebab-case without changing domain contracts. Local verification passes formatting, Effect source checks, repository quality contracts, all package typechecks, 103 Vitest tests with full configured coverage, the static Next.js production build, and six Playwright checks across Desktop Chrome and Pixel 7 (`apps/www/messages`, `apps/www/e2e/auth.e2e.ts`).
+
+### 2026-08-31 - HeroUI Airbnb production release
+
+Merged PR #55 after exact head `2730e6ff1880dbb75441c24756bb507d484b2599` passed Verify and React Doctor. Deployed merge commit `e19efbe11070c1b3c0a55fd053b6146ee3e672db` to the isolated Rantau backend and published 73 static files as deployment `abc4f6ad-255d-4286-abe3-eba02371e98a`.
+
+Production browser geometry kept the result header at the top of its scroll container after a 520 pixel vertical scroll and kept the pinned action header and row cells aligned after the maximum 1487 pixel horizontal scroll. The document had zero page overflow, and the empty result retained the same header columns with a bounded title and description.
+
+Canonical English and Indonesian routes return 200, `/id/index.html` redirects to `/id/` with 308, and an unknown route returns 404. The live Airbnb CSS matches the merged local artifact byte for byte at SHA-256 `06a82bc4bebca06500fb2b29e2c412294fea9aca2a653a477c957053dfb7fdf3`.
