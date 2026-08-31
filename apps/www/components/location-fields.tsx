@@ -158,7 +158,7 @@ export function LocationFields({ onChange, value }: LocationFieldsProps) {
           <Input
             id="search-region"
             placeholder={
-              regionsLoading ? t("loadingPlaces") : t("chooseRegion")
+              regionsLoading ? t("loading-places") : t("choose-region")
             }
           />
           <ComboBox.Trigger />
@@ -167,7 +167,7 @@ export function LocationFields({ onChange, value }: LocationFieldsProps) {
           <ListBox
             renderEmptyState={() => (
               <EmptyState className="p-4 text-muted text-sm">
-                {t("noPlaces")}
+                {t("no-places")}
               </EmptyState>
             )}
           >
@@ -199,7 +199,7 @@ export function LocationFields({ onChange, value }: LocationFieldsProps) {
         <ComboBox.InputGroup>
           <Input
             id="search-city"
-            placeholder={citiesLoading ? t("loadingPlaces") : t("chooseCity")}
+            placeholder={citiesLoading ? t("loading-places") : t("choose-city")}
           />
           <ComboBox.Trigger />
         </ComboBox.InputGroup>
@@ -207,7 +207,7 @@ export function LocationFields({ onChange, value }: LocationFieldsProps) {
           <ListBox
             renderEmptyState={() => (
               <EmptyState className="p-4 text-muted text-sm">
-                {t("noPlaces")}
+                {t("no-places")}
               </EmptyState>
             )}
           >

@@ -1,6 +1,8 @@
 "use client";
 
 import { EmptyState, Skeleton, Table, toast } from "@heroui/react";
+import { SearchRemoveIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   flexRender,
@@ -14,12 +16,12 @@ import {
 } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
-import { useResultColumns } from "@/components/columns";
-import { OpportunitySheet } from "@/components/opportunity";
-import { ResultsFooter } from "@/components/results-footer";
+import { OpportunitySheet } from "@/components/opportunity/sheet";
+import { resultColumnClass } from "@/components/result/column";
+import { useResultColumns } from "@/components/result/columns";
+import { ResultsFooter } from "@/components/result/footer";
 import { useSaveApplication, useSaveApplications } from "@/hooks/applications";
 import type { OpportunityRecord } from "@/lib/opportunity";
-import { resultColumnClass } from "@/lib/result-column";
 
 const LOADING_ROW_COUNT = 6;
 const LOADING_ROW_KEYS = [
@@ -140,12 +142,15 @@ export function Results({
   const loadingRows =
     running || loading ? Math.max(LOADING_ROW_COUNT - rows.length, 0) : 0;
   const [activeSort] = sorting;
-  let emptyMessage = t("noResults");
+  let emptyMessage = t("no-results");
+  let emptyTitle = t("no-results-title");
   if (failed) {
     emptyMessage = t("failed");
+    emptyTitle = t("failed-title");
   }
   if (sourceCapacityReached) {
-    emptyMessage = t("failedCapacity");
+    emptyMessage = t("failed-capacity");
+    emptyTitle = t("failed-capacity-title");
   }
 
   /** Saves every unsaved selected page row through one Convex mutation. */
@@ -158,7 +163,7 @@ export function Results({
         opportunityIds: selected.map((row) => row.original.opportunity._id),
       });
       setSelection({});
-      toast.success(t("selectedSaved", { count: selected.length }));
+      toast.success(t("selected-saved", { count: selected.length }));
     } catch {
       toast.danger(common("error"));
     }
@@ -172,11 +177,7 @@ export function Results({
       <Table.ScrollContainer className="h-full min-h-0 overflow-auto overscroll-contain [container-type:inline-size]">
         <Table.Content
           aria-label={t("title")}
-          className={
-            rows.length || loadingRows
-              ? "min-w-[112rem] table-auto"
-              : "h-full min-w-full table-auto"
-          }
+          className="min-w-[112rem] table-auto"
           onSortChange={(descriptor) =>
             setSorting([
               {
@@ -194,7 +195,7 @@ export function Results({
               : undefined
           }
         >
-          <Table.Header>
+          <Table.Header className="sticky top-0 z-20 bg-surface-secondary">
             {table.getHeaderGroups()[0]?.headers.map((header) => (
               <Table.Column
                 allowsSorting={header.column.id === "recommendation"}
@@ -225,8 +226,17 @@ export function Results({
           </Table.Header>
           <Table.Body
             renderEmptyState={() => (
-              <EmptyState className="sticky left-0 flex h-full min-h-40 w-[100cqw] flex-col items-center justify-center gap-4 px-6 text-center text-muted text-sm">
-                {emptyMessage}
+              <EmptyState className="sticky left-0 flex min-h-64 w-[100cqw] flex-col items-center justify-center gap-3 px-6 text-center">
+                <HugeiconsIcon
+                  aria-hidden="true"
+                  className="size-6 text-muted"
+                  icon={SearchRemoveIcon}
+                  strokeWidth={2}
+                />
+                <div className="max-w-lg">
+                  <p className="font-medium text-foreground">{emptyTitle}</p>
+                  <p className="mt-1 text-muted text-sm">{emptyMessage}</p>
+                </div>
               </EmptyState>
             )}
           >

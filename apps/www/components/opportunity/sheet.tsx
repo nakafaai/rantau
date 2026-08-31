@@ -1,12 +1,13 @@
 "use client";
 
 import {
+  Alert,
   Button,
   buttonVariants,
+  Card,
   Chip,
   Drawer,
   Link,
-  Surface,
   toast,
 } from "@heroui/react";
 import {
@@ -20,34 +21,13 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useTranslations } from "next-intl";
 import { CountryFlag } from "@/components/country-flag";
-import { Source, SourceContent, SourceTrigger } from "@/components/source";
+import { PathwayBadge } from "@/components/opportunity/badge";
 import { useSaveApplication } from "@/hooks/applications";
 import {
   locationLabel,
   mapsUrl,
   type OpportunityRecord,
 } from "@/lib/opportunity";
-
-const pathwayColors = {
-  apprenticeship: "warning",
-  ausbildung: "accent",
-  internship: "success",
-  job: "accent",
-  vocational: "danger",
-} as const;
-
-/** Renders a color-distinct pathway badge for rapid scanning. */
-export function PathwayBadge({ record }: { record: OpportunityRecord }) {
-  const t = useTranslations("search");
-  const {
-    opportunity: { pathway },
-  } = record.opportunity;
-  return (
-    <Chip color={pathwayColors[pathway]} size="sm" variant="soft">
-      {t(pathway)}
-    </Chip>
-  );
-}
 
 type OpportunitySheetProps = Readonly<{
   onOpenChange: (open: boolean) => void;
@@ -71,10 +51,9 @@ export function OpportunitySheet({
 
   const { opportunity: stored, readiness, hasProfile } = record;
   const { opportunity } = stored;
-  let readinessText = t("requirementsUnknown");
-  if (readiness.length > 0) {
-    readinessText = hasProfile ? t("readinessCompared") : t("profileNeeded");
-  }
+  const readinessText = hasProfile
+    ? t("readiness-compared")
+    : t("profile-needed");
 
   /** Saves the active source-backed opportunity. */
   async function saveOpportunity() {
@@ -89,7 +68,7 @@ export function OpportunitySheet({
   return (
     <Drawer.Backdrop isOpen={open} onOpenChange={onOpenChange}>
       <Drawer.Content placement="right">
-        <Drawer.Dialog className="w-full max-w-2xl sm:w-[42rem]">
+        <Drawer.Dialog className="w-full max-w-xl sm:w-[36rem]">
           <Drawer.CloseTrigger />
           <Drawer.Header className="pe-8">
             <div className="flex flex-wrap items-center gap-2">
@@ -97,40 +76,51 @@ export function OpportunitySheet({
               <Chip size="sm" variant="soft">
                 {t(opportunity.workMode)}
               </Chip>
-              <CountryFlag countryCode={opportunity.countryCode} />
             </div>
             <Drawer.Heading className="font-semibold text-lg">
               {opportunity.title}
             </Drawer.Heading>
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-muted text-sm">
-              <Link
-                href={opportunity.source.url}
-                rel="noreferrer"
-                target="_blank"
-              >
+              <span className="inline-flex min-w-0 items-center gap-1.5">
                 <HugeiconsIcon
-                  className="size-4"
+                  aria-hidden="true"
+                  className="size-4 shrink-0"
                   icon={Building02Icon}
                   strokeWidth={2}
                 />
-                {opportunity.company}
+                <span className="truncate">{opportunity.company}</span>
+              </span>
+              <Link href={mapsUrl(record)} rel="noreferrer" target="_blank">
+                <CountryFlag
+                  countryCode={opportunity.countryCode}
+                  fallback={
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      className="size-4"
+                      icon={MapsLocation01Icon}
+                      strokeWidth={2}
+                    />
+                  }
+                />
+                {locationLabel(record)}
                 <Link.Icon>
                   <HugeiconsIcon
+                    aria-hidden="true"
                     className="size-4"
                     icon={ArrowUpRight01Icon}
                     strokeWidth={2}
                   />
                 </Link.Icon>
               </Link>
-              <Link href={mapsUrl(record)} rel="noreferrer" target="_blank">
-                <HugeiconsIcon
-                  className="size-4"
-                  icon={MapsLocation01Icon}
-                  strokeWidth={2}
-                />
-                {locationLabel(record)}
+              <Link
+                href={opportunity.source.url}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {opportunity.source.name}
                 <Link.Icon>
                   <HugeiconsIcon
+                    aria-hidden="true"
                     className="size-4"
                     icon={ArrowUpRight01Icon}
                     strokeWidth={2}
@@ -140,73 +130,101 @@ export function OpportunitySheet({
             </div>
           </Drawer.Header>
 
-          <Drawer.Body className="space-y-7">
-            <p className="text-foreground leading-relaxed">
+          <Drawer.Body className="grid content-start gap-4">
+            <p className="px-1 text-foreground leading-relaxed">
               {opportunity.summary}
             </p>
 
-            <section className="space-y-3">
-              <h3 className="font-medium text-sm">{t("readiness")}</h3>
-              <p className="text-muted text-sm">{readinessText}</p>
-              {readiness.length ? (
-                <ul className="space-y-2 text-sm">
-                  {readiness.map((step) => (
-                    <li
-                      className="flex items-start gap-2"
-                      key={`${step.category}-${step.description}`}
-                    >
-                      <HugeiconsIcon
-                        className={
-                          step.status === "ready"
-                            ? "mt-0.5 size-4 text-success"
-                            : "mt-0.5 size-4 text-accent"
-                        }
-                        icon={
-                          step.status === "ready"
-                            ? CheckmarkCircle02Icon
-                            : AlertCircleIcon
-                        }
-                        strokeWidth={2}
-                      />
-                      <span className="min-w-0 flex-1 leading-relaxed">
-                        {step.description}
-                      </span>
-                      <Chip
-                        className="mt-0.5"
-                        color={step.status === "ready" ? "success" : "warning"}
-                        size="sm"
-                        variant="soft"
+            {readiness.length ? (
+              <Card>
+                <Card.Header>
+                  <Card.Title>{t("readiness")}</Card.Title>
+                  <Card.Description>{readinessText}</Card.Description>
+                </Card.Header>
+                <Card.Content>
+                  <ul className="divide-y divide-separator text-sm">
+                    {readiness.map((step) => (
+                      <li
+                        className="flex items-start gap-2 py-3 first:pt-1 last:pb-1"
+                        key={`${step.category}-${step.description}`}
                       >
-                        {step.status === "ready"
-                          ? t("readyRequirement")
-                          : t("reviewRequirement")}
-                      </Chip>
+                        <HugeiconsIcon
+                          aria-hidden="true"
+                          className={
+                            step.status === "ready"
+                              ? "mt-0.5 size-4 shrink-0 text-success"
+                              : "mt-0.5 size-4 shrink-0 text-accent"
+                          }
+                          icon={
+                            step.status === "ready"
+                              ? CheckmarkCircle02Icon
+                              : AlertCircleIcon
+                          }
+                          strokeWidth={2}
+                        />
+                        <span className="min-w-0 flex-1 leading-relaxed">
+                          {step.description}
+                        </span>
+                        <Chip
+                          className="mt-0.5 shrink-0"
+                          color={
+                            step.status === "ready" ? "success" : "warning"
+                          }
+                          size="sm"
+                          variant="soft"
+                        >
+                          {step.status === "ready"
+                            ? t("ready-requirement")
+                            : t("review-requirement")}
+                        </Chip>
+                      </li>
+                    ))}
+                  </ul>
+                </Card.Content>
+              </Card>
+            ) : (
+              <Alert>
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>{t("requirements-unavailable")}</Alert.Title>
+                  <Alert.Description>
+                    {t("requirements-unknown")}
+                  </Alert.Description>
+                </Alert.Content>
+              </Alert>
+            )}
+
+            <Card>
+              <Card.Header>
+                <Card.Title>{t("steps")}</Card.Title>
+              </Card.Header>
+              <Card.Content>
+                <ol className="grid gap-3 text-sm">
+                  {opportunity.applicationSteps.map((step, index) => (
+                    <li
+                      className="grid grid-cols-[auto_1fr] items-start gap-3"
+                      key={step}
+                    >
+                      <span className="grid size-7 place-items-center rounded-full bg-surface-secondary font-medium text-xs">
+                        {index + 1}
+                      </span>
+                      <span className="pt-1 leading-relaxed">{step}</span>
                     </li>
                   ))}
-                </ul>
-              ) : null}
-            </section>
-
-            <section className="space-y-3">
-              <h3 className="font-medium text-sm">{t("steps")}</h3>
-              <ol className="list-decimal space-y-2 pl-5 text-sm marker:font-medium marker:text-muted">
-                {opportunity.applicationSteps.map((step) => (
-                  <li className="pl-1 leading-relaxed" key={step}>
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </section>
+                </ol>
+              </Card.Content>
+            </Card>
 
             {opportunity.support.length ? (
-              <section className="space-y-3">
-                <h3 className="font-medium text-sm">{t("support")}</h3>
-                <div className="grid gap-2 text-sm">
+              <Card>
+                <Card.Header>
+                  <Card.Title>{t("support")}</Card.Title>
+                </Card.Header>
+                <Card.Content className="divide-y divide-separator">
                   {opportunity.support.map((resource) => (
-                    <Surface
-                      className="space-y-1 rounded-2xl p-4"
+                    <div
+                      className="space-y-1 py-3 first:pt-1 last:pb-1"
                       key={`${resource.name}-${resource.description}`}
-                      variant="secondary"
                     >
                       {resource.url ? (
                         <Link
@@ -217,6 +235,7 @@ export function OpportunitySheet({
                         >
                           {resource.name}
                           <HugeiconsIcon
+                            aria-hidden="true"
                             className="size-4"
                             icon={ArrowUpRight01Icon}
                             strokeWidth={2}
@@ -228,23 +247,11 @@ export function OpportunitySheet({
                       <p className="text-muted leading-relaxed">
                         {resource.description}
                       </p>
-                    </Surface>
+                    </div>
                   ))}
-                </div>
-              </section>
+                </Card.Content>
+              </Card>
             ) : null}
-
-            <section className="space-y-2">
-              <h3 className="font-medium text-sm">{t("source")}</h3>
-              <Source href={opportunity.source.url}>
-                <SourceTrigger label={opportunity.source.name} />
-                <SourceContent
-                  description={opportunity.summary}
-                  kind={opportunity.source.kind}
-                  title={opportunity.title}
-                />
-              </Source>
-            </section>
           </Drawer.Body>
 
           <Drawer.Footer>

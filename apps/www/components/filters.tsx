@@ -51,15 +51,15 @@ export function Filters({ onChange, value }: FiltersProps) {
           icon={FilterAddIcon}
           strokeWidth={2}
         />
-        {t("addFilter")}
+        {t("add-filter")}
       </Button>
       <Drawer.Backdrop isOpen={open} onOpenChange={changeOpen}>
         <Drawer.Content placement="right">
           <Drawer.Dialog className="w-full sm:max-w-md">
             <Drawer.CloseTrigger />
             <Drawer.Header>
-              <Drawer.Heading>{t("advancedFilters")}</Drawer.Heading>
-              <p className="text-muted text-sm">{t("advancedFiltersHelp")}</p>
+              <Drawer.Heading>{t("advanced-filters")}</Drawer.Heading>
+              <p className="text-muted text-sm">{t("advanced-filters-help")}</p>
             </Drawer.Header>
             <Drawer.Body className="space-y-6">
               <LocationFields
@@ -76,7 +76,7 @@ export function Filters({ onChange, value }: FiltersProps) {
                         pathways.find((pathway) => pathway === key) ?? "",
                     })
                   }
-                  placeholder={t("anyPathway")}
+                  placeholder={t("any-pathway")}
                   value={draft.pathway || null}
                   variant="secondary"
                 >
@@ -109,11 +109,11 @@ export function Filters({ onChange, value }: FiltersProps) {
                         workModes.find((workMode) => workMode === key) ?? "",
                     })
                   }
-                  placeholder={t("anyWorkMode")}
+                  placeholder={t("any-work-mode")}
                   value={draft.workMode || null}
                   variant="secondary"
                 >
-                  <Label>{t("workMode")}</Label>
+                  <Label>{t("work-mode")}</Label>
                   <Select.Trigger>
                     <Select.Value />
                     <Select.Indicator />
@@ -151,10 +151,10 @@ export function Filters({ onChange, value }: FiltersProps) {
                 type="button"
                 variant="tertiary"
               >
-                {t("clearAll")}
+                {t("clear-all")}
               </Button>
               <Button onPress={apply} type="button">
-                {t("applyFilters")}
+                {t("apply-filters")}
               </Button>
             </Drawer.Footer>
           </Drawer.Dialog>
@@ -184,7 +184,7 @@ export function Filters({ onChange, value }: FiltersProps) {
       ) : null}
       {value.region ? (
         <FilterChip
-          label={t("regionShort")}
+          label={t("region-short")}
           onClear={() =>
             onChange({ ...value, city: "", region: "", regionCode: "" })
           }
@@ -207,7 +207,7 @@ export function Filters({ onChange, value }: FiltersProps) {
       ) : null}
       {value.workMode ? (
         <FilterChip
-          label={t("workMode")}
+          label={t("work-mode")}
           onClear={() => onChange({ ...value, workMode: "" })}
           value={t(value.workMode)}
         />

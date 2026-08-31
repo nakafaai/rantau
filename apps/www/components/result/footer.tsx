@@ -11,7 +11,6 @@ import {
 import { Bookmark01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
 
 const pageSizes = [10, 25, 50] as const;
 
@@ -58,13 +57,13 @@ export function ResultsFooter({
   const t = useTranslations("search");
 
   return (
-    <TableFooterContent>
+    <div className="flex w-full min-w-0 items-center gap-2 text-muted text-sm sm:gap-4">
       <div className="flex min-w-0 items-center gap-2" role="status">
         <span className="whitespace-nowrap sm:hidden">
-          {t("resultCount", { total })}
+          {t("result-count", { total })}
         </span>
         <span className="hidden whitespace-nowrap sm:inline">
-          {t("resultRange", { from: pageStart, to: pageEnd, total })}
+          {t("result-range", { from: pageStart, to: pageEnd, total })}
         </span>
         {running || loading ? (
           <Spinner aria-label={t("working")} size="sm" />
@@ -80,7 +79,7 @@ export function ResultsFooter({
       ) : null}
       {selectedCount ? (
         <Button
-          aria-label={t("saveSelected", { count: selectedCount })}
+          aria-label={t("save-selected", { count: selectedCount })}
           className="shrink-0"
           onPress={onSaveSelected}
           size="sm"
@@ -92,17 +91,17 @@ export function ResultsFooter({
             strokeWidth={2}
           />
           <span className="hidden sm:inline">
-            {t("saveSelected", { count: selectedCount })}
+            {t("save-selected", { count: selectedCount })}
           </span>
         </Button>
       ) : null}
       <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
         <div className="flex shrink-0 items-center gap-2">
           <span className="hidden whitespace-nowrap sm:inline">
-            {t("rowsPerPage")}
+            {t("rows-per-page")}
           </span>
           <Select
-            aria-label={t("rowsPerPage")}
+            aria-label={t("rows-per-page")}
             className="w-16 sm:w-20"
             onChange={(value) => {
               if (value !== null) {
@@ -112,7 +111,7 @@ export function ResultsFooter({
             placeholder={String(pageSize)}
             value={String(pageSize)}
           >
-            <Label className="sr-only">{t("rowsPerPage")}</Label>
+            <Label className="sr-only">{t("rows-per-page")}</Label>
             <Select.Trigger>
               <Select.Value />
               <Select.Indicator />
@@ -161,17 +160,6 @@ export function ResultsFooter({
           </Pagination>
         ) : null}
       </div>
-    </TableFooterContent>
-  );
-}
-
-type TableFooterContentProps = Readonly<{ children: ReactNode }>;
-
-/** Provides the responsive content row inside a native HeroUI table footer. */
-function TableFooterContent({ children }: TableFooterContentProps) {
-  return (
-    <div className="flex w-full min-w-0 items-center gap-2 text-muted text-sm sm:gap-4">
-      {children}
     </div>
   );
 }

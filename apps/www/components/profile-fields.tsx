@@ -58,7 +58,7 @@ export const PreferencesCard = withProfileForm({
                     id={field.name}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    placeholder={t("rolesPlaceholder")}
+                    placeholder={t("roles-placeholder")}
                     value={field.state.value}
                     variant="secondary"
                   />
@@ -118,7 +118,7 @@ export const PreferencesCard = withProfileForm({
                   value={field.state.value}
                   variant="secondary"
                 >
-                  <Label>{t("workModes")}</Label>
+                  <Label>{t("work-modes")}</Label>
                   {workModes.map((mode) => (
                     <Checkbox key={mode} value={mode}>
                       <Checkbox.Content>
@@ -137,7 +137,7 @@ export const PreferencesCard = withProfileForm({
         <SettingsFooter
           disabled={disabled}
           form={form}
-          helper={t("preferencesSaveHelp")}
+          helper={t("preferences-save-help")}
           label={t("save")}
         />
       </Card>
@@ -156,11 +156,11 @@ export const BackgroundCard = withProfileForm({
       <Card>
         <Card.Header>
           <Card.Title>{t("background")}</Card.Title>
-          <Card.Description>{t("backgroundHelp")}</Card.Description>
+          <Card.Description>{t("background-help")}</Card.Description>
         </Card.Header>
         <Card.Content className="gap-4">
           <Fieldset>
-            <Fieldset.Legend>{t("experienceTitle")}</Fieldset.Legend>
+            <Fieldset.Legend>{t("experience-title")}</Fieldset.Legend>
             <FieldGroup>
               <form.Field name="education">
                 {(field) => (
@@ -172,7 +172,7 @@ export const BackgroundCard = withProfileForm({
                       onChange={(event) =>
                         field.handleChange(event.target.value)
                       }
-                      placeholder={t("educationPlaceholder")}
+                      placeholder={t("education-placeholder")}
                       value={field.state.value}
                       variant="secondary"
                     />
@@ -219,7 +219,7 @@ export const BackgroundCard = withProfileForm({
                       <Checkbox.Control>
                         <Checkbox.Indicator />
                       </Checkbox.Control>
-                      {t(`skillOptions.${skill.key}`)}
+                      {t(`skill-options.${skill.key}`)}
                     </Checkbox.Content>
                   </Checkbox>
                 ))}
@@ -230,12 +230,12 @@ export const BackgroundCard = withProfileForm({
           <form.Field name="otherSkill">
             {(field) => (
               <TextField name={field.name}>
-                <Label>{t("otherSkill")}</Label>
+                <Label>{t("other-skill")}</Label>
                 <Input
                   id={field.name}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.value)}
-                  placeholder={t("skillPlaceholder")}
+                  placeholder={t("skill-placeholder")}
                   value={field.state.value}
                   variant="secondary"
                 />
@@ -256,7 +256,7 @@ export const BackgroundCard = withProfileForm({
                         onChange={(key: Key | null) =>
                           field.handleChange(key === null ? "" : String(key))
                         }
-                        placeholder={t("languagePlaceholder")}
+                        placeholder={t("language-placeholder")}
                         value={field.state.value || null}
                         variant="secondary"
                       >
@@ -270,10 +270,10 @@ export const BackgroundCard = withProfileForm({
                               <ListBox.Item
                                 id={option.value}
                                 key={option.value}
-                                textValue={t(`languageOptions.${option.key}`)}
+                                textValue={t(`language-options.${option.key}`)}
                               >
                                 <CountryFlag countryCode={option.countryCode} />
-                                {t(`languageOptions.${option.key}`)}
+                                {t(`language-options.${option.key}`)}
                                 <ListBox.ItemIndicator />
                               </ListBox.Item>
                             ))}
@@ -285,12 +285,12 @@ export const BackgroundCard = withProfileForm({
                   <form.Field name={position === 1 ? "level1" : "level2"}>
                     {(field) => (
                       <Select
-                        aria-label={`${t("levelPlaceholder")} ${position}`}
+                        aria-label={`${t("level-placeholder")} ${position}`}
                         name={field.name}
                         onChange={(key: Key | null) =>
                           field.handleChange(key === null ? "" : String(key))
                         }
-                        placeholder={t("levelPlaceholder")}
+                        placeholder={t("level-placeholder")}
                         value={field.state.value || null}
                         variant="secondary"
                       >
@@ -323,7 +323,7 @@ export const BackgroundCard = withProfileForm({
         <SettingsFooter
           disabled={disabled}
           form={form}
-          helper={t("backgroundSaveHelp")}
+          helper={t("background-save-help")}
           label={t("save")}
         />
       </Card>
@@ -342,7 +342,7 @@ export const DocumentsCard = withProfileForm({
       <Card>
         <Card.Header>
           <Card.Title>{t("documents")}</Card.Title>
-          <Card.Description>{t("documentsHelp")}</Card.Description>
+          <Card.Description>{t("documents-help")}</Card.Description>
         </Card.Header>
         <Card.Content className="gap-4">
           <form.Field mode="array" name="documents">
@@ -353,14 +353,14 @@ export const DocumentsCard = withProfileForm({
                 value={field.state.value}
                 variant="secondary"
               >
-                <Label>{t("availableDocuments")}</Label>
+                <Label>{t("available-documents")}</Label>
                 {documentOptions.map((document) => (
                   <Checkbox key={document.value} value={document.value}>
                     <Checkbox.Content>
                       <Checkbox.Control>
                         <Checkbox.Indicator />
                       </Checkbox.Control>
-                      {t(`documentOptions.${document.key}`)}
+                      {t(`document-options.${document.key}`)}
                     </Checkbox.Content>
                   </Checkbox>
                 ))}
@@ -376,7 +376,7 @@ export const DocumentsCard = withProfileForm({
                   id={field.name}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.value)}
-                  placeholder={t("licensePlaceholder")}
+                  placeholder={t("license-placeholder")}
                   value={field.state.value}
                   variant="secondary"
                 />
@@ -387,7 +387,7 @@ export const DocumentsCard = withProfileForm({
           <form.Field name="workAuthorization">
             {(field) => (
               <Select
-                aria-label={t("workAuthorization")}
+                aria-label={t("work-authorization")}
                 name={field.name}
                 onChange={(key: Key | null) => {
                   const value = key === null ? "" : String(key);
@@ -430,7 +430,7 @@ export const DocumentsCard = withProfileForm({
         <SettingsFooter
           disabled={disabled}
           form={form}
-          helper={t("documentsSaveHelp")}
+          helper={t("documents-save-help")}
           label={t("save")}
         />
       </Card>

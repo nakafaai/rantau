@@ -28,8 +28,8 @@ import {
 import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { DeleteApplicationDialog } from "@/components/application-delete";
-import { ApplicationStatusBadge } from "@/components/application-status";
+import { DeleteApplicationDialog } from "@/components/application/delete";
+import { ApplicationStatusBadge } from "@/components/application/status";
 import { CountryFlag } from "@/components/country-flag";
 import {
   useDeleteApplication,
@@ -141,57 +141,60 @@ export function ApplicationSheet({
               <Drawer.Header className="pe-8">
                 <ApplicationStatusBadge status={record.application.status} />
                 <Drawer.Heading>{opportunity.title}</Drawer.Heading>
-                <div className="flex min-w-0 items-center gap-1.5 text-muted text-sm">
-                  <CountryFlag countryCode={opportunity.countryCode} />
-                  <span className="truncate">
-                    {opportunity.company} · {applicationLocation(record)}
-                  </span>
-                </div>
-              </Drawer.Header>
-              <Drawer.Body className="space-y-6">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Link
-                    aria-label={opportunity.company}
-                    className={buttonVariants({ variant: "secondary" })}
-                    href={opportunity.source.url}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-muted text-sm">
+                  <span className="inline-flex min-w-0 items-center gap-1.5">
                     <HugeiconsIcon
-                      className="size-4"
+                      aria-hidden="true"
+                      className="size-4 shrink-0"
                       icon={Building02Icon}
                       strokeWidth={2}
                     />
                     <span className="truncate">{opportunity.company}</span>
-                    <HugeiconsIcon
-                      className="size-4"
-                      icon={ArrowUpRight01Icon}
-                      strokeWidth={2}
-                    />
-                  </Link>
+                  </span>
                   <Link
-                    aria-label={applicationLocation(record)}
-                    className={buttonVariants({ variant: "secondary" })}
                     href={applicationMapsUrl(record)}
                     rel="noreferrer"
                     target="_blank"
                   >
-                    <HugeiconsIcon
-                      className="size-4"
-                      icon={MapsLocation01Icon}
-                      strokeWidth={2}
+                    <CountryFlag
+                      countryCode={opportunity.countryCode}
+                      fallback={
+                        <HugeiconsIcon
+                          aria-hidden="true"
+                          className="size-4"
+                          icon={MapsLocation01Icon}
+                          strokeWidth={2}
+                        />
+                      }
                     />
-                    <span className="truncate">
-                      {applicationLocation(record)}
-                    </span>
-                    <HugeiconsIcon
-                      className="size-4"
-                      icon={ArrowUpRight01Icon}
-                      strokeWidth={2}
-                    />
+                    {applicationLocation(record)}
+                    <Link.Icon>
+                      <HugeiconsIcon
+                        aria-hidden="true"
+                        className="size-4"
+                        icon={ArrowUpRight01Icon}
+                        strokeWidth={2}
+                      />
+                    </Link.Icon>
+                  </Link>
+                  <Link
+                    href={opportunity.source.url}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    {opportunity.source.name}
+                    <Link.Icon>
+                      <HugeiconsIcon
+                        aria-hidden="true"
+                        className="size-4"
+                        icon={ArrowUpRight01Icon}
+                        strokeWidth={2}
+                      />
+                    </Link.Icon>
                   </Link>
                 </div>
-
+              </Drawer.Header>
+              <Drawer.Body className="space-y-6">
                 <Select
                   id={statusId}
                   isDisabled={next.length === 0}
@@ -201,12 +204,12 @@ export function ApplicationSheet({
                   value={selectedStatus}
                   variant="secondary"
                 >
-                  <Label>{t("nextStatus")}</Label>
+                  <Label>{t("next-status")}</Label>
                   <Select.Trigger>
                     <Select.Value />
                     <Select.Indicator />
                   </Select.Trigger>
-                  <Description>{t("statusHelp")}</Description>
+                  <Description>{t("status-help")}</Description>
                   <Select.Popover>
                     <ListBox>
                       {availableStatuses.map((statusOption) => (
@@ -235,7 +238,7 @@ export function ApplicationSheet({
                     variant="secondary"
                   />
                   <Description id={`${notesId}-help`}>
-                    {t("notesHelp")}
+                    {t("notes-help")}
                   </Description>
                 </div>
               </Drawer.Body>

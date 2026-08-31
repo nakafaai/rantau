@@ -21,8 +21,8 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { ApplicationSheet } from "@/components/application-sheet";
-import { ApplicationStatusBadge } from "@/components/application-status";
+import { ApplicationSheet } from "@/components/application/sheet";
+import { ApplicationStatusBadge } from "@/components/application/status";
 import { CountryFlag } from "@/components/country-flag";
 import { Header } from "@/components/header";
 import {
@@ -184,7 +184,7 @@ export function Tracker() {
       toast.danger(common("error"));
       return;
     }
-    toast.success(t("mailSent"));
+    toast.success(t("mail-sent"));
   }
 
   return (
@@ -203,9 +203,9 @@ export function Tracker() {
                 icon={mailPending ? Loading03Icon : Mail01Icon}
                 strokeWidth={2}
               />
-              <span className="hidden sm:inline">{t("mailButton")}</span>
+              <span className="hidden sm:inline">{t("mail-button")}</span>
             </Button>
-            <Tooltip.Content>{t("mailBody")}</Tooltip.Content>
+            <Tooltip.Content>{t("mail-body")}</Tooltip.Content>
           </Tooltip>
         }
         title={t("title")}
@@ -215,13 +215,9 @@ export function Tracker() {
           <Table.ScrollContainer className="h-full min-h-0 overflow-auto overscroll-contain [container-type:inline-size]">
             <Table.Content
               aria-label={t("title")}
-              className={
-                records === undefined || records.length
-                  ? "min-w-[82rem] table-auto"
-                  : "h-full min-w-full table-auto"
-              }
+              className="min-w-[82rem] table-auto"
             >
-              <Table.Header>
+              <Table.Header className="sticky top-0 z-20 bg-surface-secondary">
                 <Table.Column
                   className={applicationColumnClass("role", "header")}
                   id="role"
@@ -256,7 +252,7 @@ export function Tracker() {
               </Table.Header>
               <Table.Body
                 renderEmptyState={() => (
-                  <EmptyState className="sticky left-0 flex h-full min-h-40 w-[100cqw] flex-col items-center justify-center gap-4 px-6 text-center text-muted text-sm">
+                  <EmptyState className="sticky left-0 flex min-h-64 w-[100cqw] flex-col items-center justify-center gap-3 px-6 text-center text-muted text-sm">
                     <HugeiconsIcon
                       className="size-5"
                       icon={BriefcaseBusinessIcon}
@@ -280,7 +276,7 @@ export function Tracker() {
             {records === undefined ? (
               <Skeleton className="h-4 w-24" />
             ) : (
-              t("applicationCount", { count: records.length })
+              t("application-count", { count: records.length })
             )}
           </Table.Footer>
         </Table>

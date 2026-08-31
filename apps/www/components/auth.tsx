@@ -184,7 +184,7 @@ export function Auth() {
                                   />
                                   {isInvalid ? (
                                     <FieldError id={errorId}>
-                                      {t("nameInvalid")}
+                                      {t("name-invalid")}
                                     </FieldError>
                                   ) : null}
                                 </TextField>
@@ -221,7 +221,7 @@ export function Auth() {
                             />
                             {isInvalid ? (
                               <FieldError id={errorId}>
-                                {t("emailInvalid")}
+                                {t("email-invalid")}
                               </FieldError>
                             ) : null}
                           </TextField>
@@ -263,12 +263,12 @@ export function Auth() {
                                 />
                                 {isInvalid ? (
                                   <FieldError id={errorId}>
-                                    {t("passwordRule")}
+                                    {t("password-rule")}
                                   </FieldError>
                                 ) : null}
                                 {!isInvalid && flow === "signUp" ? (
                                   <Description id={helpId}>
-                                    {t("passwordRule")}
+                                    {t("password-rule")}
                                   </Description>
                                 ) : null}
                               </TextField>
@@ -284,14 +284,14 @@ export function Auth() {
                   >
                     {([isValid, isSubmitting]) => (
                       <Button
-                        className="w-full"
+                        fullWidth
                         isDisabled={!isValid || isSubmitting}
                         isPending={isSubmitting}
                         type="submit"
                       >
                         <form.Subscribe selector={(state) => state.values.flow}>
                           {(flow) =>
-                            flow === "signUp" ? t("signUp") : t("signIn")
+                            flow === "signUp" ? t("sign-up") : t("sign-in")
                           }
                         </form.Subscribe>
                         {isSubmitting ? (
@@ -308,22 +308,26 @@ export function Auth() {
                   </form.Subscribe>
                 </Form>
               </Card.Content>
-              <Card.Footer>
+              <Card.Footer className="justify-center gap-1">
                 <form.Subscribe selector={(state) => state.values.flow}>
                   {(flow) => (
-                    <Button
-                      className="h-auto w-full text-muted"
-                      onPress={() =>
-                        form.setFieldValue(
-                          "flow",
-                          flow === "signUp" ? "signIn" : "signUp"
-                        )
-                      }
-                      variant="tertiary"
-                    >
-                      {flow === "signUp" ? t("existing") : t("new")}{" "}
-                      {flow === "signUp" ? t("signIn") : t("signUp")}
-                    </Button>
+                    <>
+                      <span className="text-muted text-sm">
+                        {flow === "signUp" ? t("existing") : t("new")}
+                      </span>
+                      <Button
+                        onPress={() =>
+                          form.setFieldValue(
+                            "flow",
+                            flow === "signUp" ? "signIn" : "signUp"
+                          )
+                        }
+                        size="sm"
+                        variant="ghost"
+                      >
+                        {flow === "signUp" ? t("sign-in") : t("sign-up")}
+                      </Button>
+                    </>
                   )}
                 </form.Subscribe>
               </Card.Footer>

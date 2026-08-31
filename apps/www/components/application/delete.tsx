@@ -31,9 +31,9 @@ export function DeleteApplicationDialog({
                 <AlertDialog.CloseTrigger />
                 <AlertDialog.Header>
                   <AlertDialog.Icon status="danger" />
-                  <AlertDialog.Heading>{t("deleteTitle")}</AlertDialog.Heading>
+                  <AlertDialog.Heading>{t("delete-title")}</AlertDialog.Heading>
                 </AlertDialog.Header>
-                <AlertDialog.Body>{t("deleteBody")}</AlertDialog.Body>
+                <AlertDialog.Body>{t("delete-body")}</AlertDialog.Body>
                 <AlertDialog.Footer>
                   <Button slot="close" type="button" variant="tertiary">
                     {t("cancel")}

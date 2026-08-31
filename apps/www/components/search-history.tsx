@@ -98,19 +98,19 @@ export function SearchHistory({ activeSearchId }: SearchHistoryProps) {
           <Drawer.Dialog className="w-full sm:max-w-md">
             <Drawer.CloseTrigger />
             <Drawer.Header>
-              <Drawer.Heading>{t("historyTitle")}</Drawer.Heading>
-              <p className="text-muted text-sm">{t("historyHelp")}</p>
+              <Drawer.Heading>{t("history-title")}</Drawer.Heading>
+              <p className="text-muted text-sm">{t("history-help")}</p>
             </Drawer.Header>
             <Drawer.Body>
               <ScrollShadow className="h-full">
                 {status === "LoadingFirstPage" ? (
                   <div className="flex h-32 items-center justify-center">
-                    <Spinner aria-label={t("historyLoading")} size="md" />
+                    <Spinner aria-label={t("history-loading")} size="md" />
                   </div>
                 ) : null}
                 {status !== "LoadingFirstPage" && results.length === 0 ? (
                   <p className="p-6 text-center text-muted text-sm">
-                    {t("historyEmpty")}
+                    {t("history-empty")}
                   </p>
                 ) : null}
                 <ul className="divide-y divide-separator">
@@ -164,7 +164,7 @@ export function SearchHistory({ activeSearchId }: SearchHistoryProps) {
                                 {searchTimestamp(search.createdAt, locale)}
                               </span>
                               <Chip size="sm" variant="tertiary">
-                                {t("historyResults", {
+                                {t("history-results", {
                                   count: search.resultCount ?? 0,
                                 })}
                               </Chip>
@@ -194,7 +194,7 @@ export function SearchHistory({ activeSearchId }: SearchHistoryProps) {
                   type="button"
                   variant="secondary"
                 >
-                  {t("historyMore")}
+                  {t("history-more")}
                 </Button>
               </Drawer.Footer>
             ) : null}

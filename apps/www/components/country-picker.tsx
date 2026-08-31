@@ -75,7 +75,7 @@ export function CountryPicker({
       <ComboBox.InputGroup>
         <Input
           id={id}
-          placeholder={failed ? t("placesUnavailable") : t("chooseCountry")}
+          placeholder={failed ? t("places-unavailable") : t("choose-country")}
         />
         <ComboBox.Trigger />
       </ComboBox.InputGroup>
@@ -83,7 +83,7 @@ export function CountryPicker({
         <ListBox
           renderEmptyState={() => (
             <EmptyState className="p-4 text-muted text-sm">
-              {t("noPlaces")}
+              {t("no-places")}
             </EmptyState>
           )}
         >
