@@ -4,17 +4,17 @@ Rantau helps people find job and training opportunities with structured location
 
 ## Development
 
-Rantau requires Node.js 24 and pnpm 11.
+Rantau requires Node.js 24 and Bun 1.4.
 
 ```sh
-pnpm install
-pnpm dev
+bun install
+bun run dev
 ```
 
 Run the complete validation suite before submitting changes:
 
 ```sh
-pnpm verify
+bun run verify
 ```
 
 ## Data attribution

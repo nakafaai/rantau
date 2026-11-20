@@ -3,24 +3,31 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "@effect/vitest": "4.0.0-rc.112",
+      "effect": "4.0.0-rc.112",
+      "typescript": "npm:@typescript/typescript6@6.0.2"
+    }
+  },
   "scripts": {
     "build": "turbo run build",
     "clean": "turbo run clean && git clean -xdf .turbo node_modules coverage",
-    "deploy": "pnpm --filter @repo/backend deploy:static",
+    "deploy": "bun run --filter @repo/backend deploy:static",
     "dev": "turbo run dev --filter=www --filter=@repo/backend",
     "dev:web": "turbo run dev --filter=www",
-    "doctor": "pnpm --filter www run doctor",
+    "doctor": "bun run --filter www doctor",
     "effect:source:check": "node scripts/effect-source.ts check",
     "format": "ultracite fix apps packages scripts package.json turbo.json tsconfig.base.json biome.jsonc",
-    "lint": "pnpm effect:source:check && pnpm quality && ultracite check apps packages scripts package.json turbo.json tsconfig.base.json biome.jsonc",
+    "lint": "bun run effect:source:check && bun run quality && ultracite check apps packages scripts package.json turbo.json tsconfig.base.json biome.jsonc",
     "quality": "node scripts/quality.ts",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "verify": "bun run format && bun run lint && bun run typecheck && bun run test && bun run build"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.10",
@@ -33,8 +40,19 @@
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "ultracite": "7.10.6"
   },
-  "packageManager": "pnpm@11.24.0",
+  "packageManager": "bun@1.4.4",
   "engines": {
     "node": ">=24.0.0 <25.0.0"
-  }
+  },
+  "patchedDependencies": {
+    "@agentmail/convex@0.1.0": "patches/@agentmail__convex@0.1.0.patch"
+  },
+  "trustedDependencies": [
+    "@parcel/watcher",
+    "@swc/core",
+    "esbuild",
+    "msgpackr-extract",
+    "protobufjs",
+    "sharp"
+  ]
 }
