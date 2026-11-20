@@ -4,7 +4,7 @@ Build for longevity. Keep the product direct, typed, accessible, and easy to ver
 
 ## Stack
 
-- Package manager: pnpm 11
+- Package manager: Bun 1.4
 - Monorepo: Turborepo
 - Frontend: Next.js 16, React 19, Tailwind CSS 4, HeroUI React v3
 - Backend: Convex with official components first
@@ -67,11 +67,11 @@ Read `CONTEXT.md` before changing domain language. Read relevant ADRs before str
 
 Run the smallest useful check first, then expand:
 
-1. `pnpm format`
-2. `pnpm lint`
-3. `pnpm typecheck`
-4. `pnpm test`
-5. `pnpm build`
+1. `bun run format`
+2. `bun run lint`
+3. `bun run typecheck`
+4. `bun run test`
+5. `bun run build`
 6. Browser acceptance for the core journey
 
 Before completion, audit Git state, task-owned processes, temporary files, deployments, browser tabs, branches, worktrees, stashes, and generated artifacts.

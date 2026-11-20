@@ -7,8 +7,8 @@
     "build": "next build",
     "clean": "git clean -xdf .next out node_modules .turbo",
     "dev": "next dev --turbopack -p 3000",
-    "doctor": "pnpm dlx react-doctor@0.9.12",
-    "start": "npx serve out -l 3000",
+    "doctor": "bunx react-doctor@0.9.12",
+    "start": "serve out -l 3000",
     "test": "vitest run --passWithNoTests",
     "test:e2e": "playwright test",
     "typecheck": "next typegen && tsc --noEmit"

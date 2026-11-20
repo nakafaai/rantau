@@ -24,7 +24,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `pnpm exec serve out -l ${port} --no-clipboard`,
+    command: `bunx serve out -l ${port} --no-clipboard`,
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
     url: `http://127.0.0.1:${port}/id/`,

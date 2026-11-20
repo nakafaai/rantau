@@ -1,0 +1,3 @@
+[install]
+# Save exact versions, matching the former pnpm savePrefix "".
+exact = true
